@@ -1,101 +1,224 @@
-import Image from "next/image";
+'use client';
+
+import {useEffect, useState} from 'react';
+
+const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
+  ETRTOWidth * 2 + ETRTODiameter;
+
+const ETRTOtoCircumference = (
+  ETRTOWidth: number,
+  ETRTODiameter: number,
+): number => Math.PI * ETRTOtoDiameter(ETRTOWidth, ETRTODiameter);
+
+const gearInches = (
+  tireDiameter: number,
+  chainringTeeth: number,
+  sprocketTeeth: number,
+): number => (tireDiameter * chainringTeeth) / sprocketTeeth;
+
+const TIRE_DB = {
+  'Schwalbe Kojak 16"': {ETRTOSize: [32, 349]},
+  'Schwalbe Marathon Racer 16"': {ETRTOSize: [35, 349]},
+  'Schwalbe One 16"': {ETRTOSize: [35, 349]},
+  'Schwalbe Green Marathon 16"': {ETRTOSize: [35, 349]},
+  'Schwalbe Green Marathon 20"': {ETRTOSize: [47, 406]},
+  'Surly ExtraTerrestrial 26"x46': {ETRTOSize: [46, 559]},
+  'Specialized Ground Control Grid T7 29"x2.2"': {ETRTOSize: [54, 622]},
+};
+type TireID = keyof typeof TIRE_DB | 'custom';
+
+const CASSETTE_DB = {
+  'Shimano Alivio CS-HG400 9 Speed 11-28T': {
+    sprockets: [11, 12, 13, 14, 16, 18, 21, 24, 28],
+  },
+  'Shimano Alivio CS-HG400 9 Speed 11-32T': {
+    sprockets: [11, 12, 14, 16, 18, 21, 24, 28, 32],
+  },
+  'Shimano Alivio CS-HG400 9 Speed 11-34T': {
+    sprockets: [11, 13, 15, 17, 20, 23, 26, 30, 34],
+  },
+  'Shimano Alivio CS-HG400 9 Speed 11-36T': {
+    sprockets: [11, 13, 15, 17, 20, 23, 26, 30, 36],
+  },
+  'Shimano Alivio CS-HG400 9 Speed 12-36T': {
+    sprockets: [12, 14, 16, 18, 21, 24, 28, 32, 36],
+  },
+};
+type CassetteID = keyof typeof CASSETTE_DB | 'custom';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [ETRTOWidth, setETRTOWidth] = useState<number>(0);
+  const [ETRTODiameter, setETRTODiameter] = useState<number>(0);
+  const [chainringTeeth, setChainringTeeth] = useState<number>(0);
+  const [sprocketCount, setSprocketCount] = useState<number>(0);
+  const [sprocketTeeth, setSprocketTeeth] = useState<number[]>([]);
+  const [cassetteID, setCassetteID] = useState<CassetteID>('custom');
+  const [tireID, setTireID] = useState<TireID>('custom');
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    setSprocketTeeth((sprocketTeeth) => [
+      ...sprocketTeeth.slice(0, sprocketCount),
+      ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
+    ]);
+  }, [sprocketCount]);
+
+  useEffect(() => {
+    if (cassetteID !== 'custom') {
+      const cassette = CASSETTE_DB[cassetteID];
+      setSprocketCount(cassette.sprockets.length);
+      setSprocketTeeth(cassette.sprockets);
+    }
+  }, [cassetteID]);
+
+  useEffect(() => {
+    if (tireID !== 'custom') {
+      const tire = TIRE_DB[tireID];
+      setETRTOWidth(tire.ETRTOSize[0]);
+      setETRTODiameter(tire.ETRTOSize[1]);
+    }
+  }, [tireID]);
+
+  return (
+    <div className="App">
+      <table>
+        <tr>
+          <td>
+            <label>Tire</label>
+          </td>
+          <td>
+            <select
+              onChange={(e) => setTireID(e.target.value as TireID)}
+              value={tireID}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            >
+              <option value="custom">Custom</option>
+              {Object.entries(TIRE_DB).map(([name]) => (
+                <option value={name} key={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label>ETRTO Width</label>
+          </td>
+          <td>
+            <input
+              type="number"
+              onChange={(e) => {
+                setETRTOWidth(e.target.valueAsNumber);
+                setTireID('custom');
+              }}
+              value={ETRTOWidth}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label>ETRTO Diameter</label>
+          </td>
+          <td>
+            <input
+              type="number"
+              onChange={(e) => {
+                setETRTODiameter(e.target.valueAsNumber);
+                setTireID('custom');
+              }}
+              value={ETRTODiameter}
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label>Tire Diameter</label>
+          </td>
+          <td>
+            <input
+              type="number"
+              disabled
+              value={ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4}
+              className="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+            />
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label>Tire Circumference</label>
+          </td>
+          <td>
+            <input
+              type="number"
+              disabled
+              value={ETRTOtoCircumference(ETRTOWidth, ETRTODiameter)}
+              className="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+            />
+          </td>
+        </tr>
+      </table>
+      <div>
+        <label>Chainring Teeth</label>
+        <input
+          type="number"
+          onChange={(e) => setChainringTeeth(e.target.valueAsNumber)}
+          value={chainringTeeth}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+      </div>
+      <div>
+        <label>Cassette</label>
+        <select
+          onChange={(e) => setCassetteID(e.target.value as CassetteID)}
+          value={cassetteID}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <option value="custom">Custom</option>
+          {Object.entries(CASSETTE_DB).map(([name]) => (
+            <option value={name} key={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <label>Sprockets</label>
+        <input
+          type="number"
+          onChange={(e) => {
+            setSprocketCount(e.target.valueAsNumber);
+            setCassetteID('custom');
+          }}
+          value={sprocketCount}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        />
+      </div>
+      <div style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
+        {Array(sprocketCount)
+          .fill(0)
+          .map((v, i) => (
+            <div key={i}>
+              <input
+                type="number"
+                onChange={(e) => {
+                  setSprocketTeeth(
+                    sprocketTeeth.with(i, e.target.valueAsNumber),
+                  );
+                  setCassetteID('custom');
+                }}
+                value={sprocketTeeth[i]}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              />
+              <div>
+                {gearInches(
+                  ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
+                  chainringTeeth,
+                  sprocketTeeth[i],
+                )}
+              </div>
+            </div>
+          ))}
+      </div>
     </div>
   );
 }
