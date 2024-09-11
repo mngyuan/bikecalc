@@ -198,11 +198,12 @@ const GearInchesTable = ({
   ...Array(sprocketCount)
     .fill(0)
     .map((v, i) => {
-      const gI = gearInches(
-        ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
-        chainringTeeth,
-        sprocketTeeth[i] * (ratio || 1),
-      );
+      const gI =
+        gearInches(
+          ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
+          chainringTeeth,
+          sprocketTeeth[i] * (ratio || 1),
+        ) || 0;
       return (
         <div
           key={i}
