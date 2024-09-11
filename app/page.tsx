@@ -132,6 +132,12 @@ const CASSETTE_DB: Record<string, Cassette> = {
   },
 };
 type CassetteID = keyof typeof CASSETTE_DB;
+// Type guard
+const isInternallyGearedHub = (
+  cassette: Cassette | InternallyGearedHub,
+): cassette is InternallyGearedHub => {
+  return 'isIGH' in cassette;
+};
 
 interface Bike {
   tire: TireID;
@@ -242,17 +248,18 @@ const BikeCalculator = ({
   const [chainringTeeth, setChainringTeeth] = useState<number[]>(
     bike ? bike.chainringTeeth : [0],
   );
+  const cassette = bike ? CASSETTE_DB[bike.cassette] : undefined;
   const [sprocketCount, setSprocketCount] = useState<number>(
-    bike
-      ? !CASSETTE_DB[bike.cassette].isIGH
-        ? CASSETTE_DB[bike.cassette].sprockets.length
+    cassette
+      ? !isInternallyGearedHub(cassette)
+        ? cassette.sprockets.length
         : 0
       : 0,
   );
   const [sprocketTeeth, setSprocketTeeth] = useState<number[]>(
-    bike
-      ? !CASSETTE_DB[bike.cassette].isIGH
-        ? CASSETTE_DB[bike.cassette].sprockets
+    cassette
+      ? !isInternallyGearedHub(cassette)
+        ? cassette.sprockets
         : []
       : [],
   );
