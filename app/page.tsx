@@ -16,6 +16,57 @@ const gearInches = (
   sprocketTeeth: number,
 ): number => (tireDiameter * chainringTeeth) / sprocketTeeth;
 
+type ColorValueHex = `#${string}`;
+
+function interpolateColor(
+  color1: ColorValueHex,
+  color2: ColorValueHex,
+  factor: number,
+) {
+  const c1 = parseInt(color1.slice(1), 16);
+  const c2 = parseInt(color2.slice(1), 16);
+
+  const r1 = (c1 >> 16) & 0xff;
+  const g1 = (c1 >> 8) & 0xff;
+  const b1 = c1 & 0xff;
+
+  const r2 = (c2 >> 16) & 0xff;
+  const g2 = (c2 >> 8) & 0xff;
+  const b2 = c2 & 0xff;
+
+  const r = Math.round(r1 + factor * (r2 - r1));
+  const g = Math.round(g1 + factor * (g2 - g1));
+  const b = Math.round(b1 + factor * (b2 - b1));
+
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b)
+    .toString(16)
+    .slice(1)
+    .toUpperCase()}`;
+}
+
+function createMapRangeToColor(
+  colorMin: ColorValueHex,
+  colorMid: ColorValueHex,
+  colorMax: ColorValueHex,
+) {
+  return function (value: number, min: number, max: number) {
+    const midpoint = (min + max) / 2;
+
+    if (value <= midpoint) {
+      // Scale value from min to midpoint (0 to 1)
+      const factor = (value - min) / (midpoint - min);
+      return interpolateColor(colorMin, colorMid, factor);
+    } else {
+      // Scale value from midpoint to max (0 to 1)
+      const factor = (value - midpoint) / (max - midpoint);
+      return interpolateColor(colorMid, colorMax, factor);
+    }
+  };
+}
+
+const mapGearInchesToColor = (gearInches: number) =>
+  createMapRangeToColor('#56bb8a', '#fed666', '#e67c73')(gearInches, 20, 120);
+
 const TIRE_DB = {
   'Schwalbe Kojak 16"': {ETRTOSize: [32, 349]},
   'Schwalbe Marathon 16"': {ETRTOSize: [35, 349]},
@@ -39,6 +90,17 @@ interface InternallyGearedHub {
 type Cassette = ExternalCassette | InternallyGearedHub;
 
 const CASSETTE_DB: Record<string, Cassette> = {
+  'Shimano Alfine 8 Speed Hub': {
+    ratios: [0.527, 0.644, 0.748, 0.851, 1, 1.223, 1.419, 1.615],
+    isIGH: true,
+  },
+  'Shimano Alfine 11 Speed Hub': {
+    ratios: [
+      0.527, 0.681, 0.77, 0.878, 0.995, 1.134, 1.292, 1.462, 1.667, 1.888,
+      2.153,
+    ],
+    isIGH: true,
+  },
   'Shimano Alivio CS-HG400 9 Speed 11-28T': {
     sprockets: [11, 12, 13, 14, 16, 18, 21, 24, 28],
   },
@@ -66,13 +128,14 @@ const CASSETTE_DB: Record<string, Cassette> = {
   'Sturmey Archer S-RF3': {
     ratios: [0.75, 1, 1.3333333],
     isIGH: true,
+    // TODO: would be nice for IGH to specify maximum sprockets
   },
 };
 type CassetteID = keyof typeof CASSETTE_DB;
 
 interface Bike {
   tire: TireID;
-  chainringTeeth: number;
+  chainringTeeth: number[];
   cassette: CassetteID;
   // Needs to be separately specified for IGH bikes
   sprockets?: number[];
@@ -81,48 +144,90 @@ interface Bike {
 const BIKE_DB: Record<string, Bike> = {
   'Brompton A Line': {
     tire: 'Schwalbe Kojak 16"',
-    chainringTeeth: 44,
+    chainringTeeth: [44],
     cassette: 'Sturmey Archer BSR',
     sprockets: [13],
   },
   'Brompton C Line 3 speed': {
     // Discontinued
     tire: 'Schwalbe Marathon 16"',
-    chainringTeeth: 50,
+    chainringTeeth: [50],
     cassette: 'Sturmey Archer BSR',
     sprockets: [13],
   },
   'Brompton C Line 6 speed': {
     tire: 'Schwalbe Marathon Racer 16"',
-    chainringTeeth: 50,
+    chainringTeeth: [50],
     cassette: 'Sturmey Archer BWR',
     sprockets: [13, 16],
   },
   'Cranston R9 Max 9 speed': {
     tire: 'Schwalbe Green Marathon 16"',
-    chainringTeeth: 53,
+    chainringTeeth: [53],
     cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
   },
   'Cranston R20 Max 9 speed': {
     tire: 'Schwalbe Green Marathon 20"',
-    chainringTeeth: 53,
+    chainringTeeth: [53],
     cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
   },
   'Surly Disc Trucker': {
     tire: 'Surly ExtraTerrestrial 26"x46',
-    chainringTeeth: 48, // TODO: need to fix
+    chainringTeeth: [48, 36, 26],
     cassette: 'Shimano Alivio CS-HG400 9 Speed 11-34T',
   },
 };
 
 type BikeID = keyof typeof BIKE_DB;
 
+const GearInchesTable = ({
+  sprocketCount,
+  sprocketTeeth,
+  chainringTeeth,
+  ETRTODiameter,
+  ETRTOWidth,
+  ratio,
+}: {
+  sprocketCount: number;
+  sprocketTeeth: number[];
+  chainringTeeth: number;
+  ETRTODiameter: number;
+  ETRTOWidth: number;
+  ratio?: number;
+}) => [
+  ...Array(sprocketCount)
+    .fill(0)
+    .map((v, i) => {
+      const gI = gearInches(
+        ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
+        chainringTeeth,
+        sprocketTeeth[i] * (ratio || 1),
+      );
+      return (
+        <div
+          key={i}
+          className={`w-9 text-right ${i === 0 ? 'ml-2' : ''}`}
+          style={{backgroundColor: mapGearInchesToColor(gI)}}
+        >
+          {Math.round(gI)}
+        </div>
+      );
+    }),
+  ...(ratio != undefined
+    ? [
+        <div key="ratio" className="pl-2">
+          {ratio.toFixed(3)}
+        </div>,
+      ]
+    : []),
+];
+
 const BikeCalculator = ({
   bike,
-  onCustomize,
+  onCustomized,
 }: {
   bike?: Bike;
-  onCustomize: () => void;
+  onCustomized: (customized: boolean) => void;
 }) => {
   const [ETRTOWidth, setETRTOWidth] = useState<number>(
     bike ? TIRE_DB[bike.tire].ETRTOSize[0] : 0,
@@ -130,8 +235,11 @@ const BikeCalculator = ({
   const [ETRTODiameter, setETRTODiameter] = useState<number>(
     bike ? TIRE_DB[bike.tire].ETRTOSize[1] : 0,
   );
-  const [chainringTeeth, setChainringTeeth] = useState<number>(
-    bike ? bike.chainringTeeth : 0,
+  const [chainringCount, setChainringCount] = useState<number>(
+    bike ? bike.chainringTeeth.length : 1,
+  );
+  const [chainringTeeth, setChainringTeeth] = useState<number[]>(
+    bike ? bike.chainringTeeth : [0],
   );
   const [sprocketCount, setSprocketCount] = useState<number>(
     bike
@@ -153,6 +261,14 @@ const BikeCalculator = ({
   const [tireID, setTireID] = useState<TireID | 'custom'>(
     bike ? bike.tire : 'custom',
   );
+
+  // TODO: just use length
+  useEffect(() => {
+    setChainringTeeth((chainringTeeth) => [
+      ...chainringTeeth.slice(0, chainringCount),
+      ...Array(Math.max(chainringCount - chainringTeeth.length, 0)),
+    ]);
+  }, [chainringCount]);
 
   useEffect(() => {
     setSprocketTeeth((sprocketTeeth) => [
@@ -181,8 +297,18 @@ const BikeCalculator = ({
   }, [tireID]);
 
   useEffect(() => {
-    // TODO: This runs even when props changed ...
-    // onCustomize();
+    // TODO: not working properly
+    if (bike) {
+      // onCustomized(
+      //   ETRTOWidth !== TIRE_DB[bike.tire].ETRTOSize[0] ||
+      //     ETRTODiameter !== TIRE_DB[bike.tire].ETRTOSize[1] ||
+      //     chainringTeeth !== bike.chainringTeeth ||
+      //     sprocketCount !== (bike.sprockets?.length ?? 0) ||
+      //     sprocketTeeth !== bike.sprockets ||
+      //     cassetteID !== bike.cassette ||
+      //     tireID !== bike.tire,
+      // );
+    }
   }, [
     ETRTOWidth,
     ETRTODiameter,
@@ -191,6 +317,8 @@ const BikeCalculator = ({
     sprocketTeeth,
     cassetteID,
     tireID,
+    bike,
+    onCustomized,
   ]);
 
   // When prop updates
@@ -198,6 +326,7 @@ const BikeCalculator = ({
     if (bike) {
       setTireID(bike.tire);
       setCassetteID(bike.cassette);
+      setChainringCount(bike.chainringTeeth.length);
       setChainringTeeth(bike.chainringTeeth);
       if (bike.sprockets) {
         setSprocketCount(bike.sprockets.length);
@@ -205,6 +334,27 @@ const BikeCalculator = ({
       }
     }
   }, [bike]);
+
+  const CassetteGearInchesTable = chainringTeeth.map((chainringTeeth, i) =>
+    (cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH
+      ? CASSETTE_DB[cassetteID].ratios
+      : [undefined]
+    ).map((ratio) => (
+      <div className="flex flex-row" key={i}>
+        <div className="w-32 text-right">{chainringTeeth}T</div>
+        <GearInchesTable
+          {...{
+            sprocketCount,
+            sprocketTeeth,
+            chainringTeeth,
+            ETRTODiameter,
+            ETRTOWidth,
+            ratio,
+          }}
+        />
+      </div>
+    )),
+  );
 
   return (
     <div className="App">
@@ -296,16 +446,37 @@ const BikeCalculator = ({
       <div className="m-4">
         <div className="flex flex-row items-center">
           <div className="px-2 w-32">
-            <label>Chainring Teeth</label>
+            <label>Chainrings</label>
           </div>
           <div className="px-2">
             <input
               type="number"
-              onChange={(e) => setChainringTeeth(e.target.valueAsNumber)}
-              value={chainringTeeth}
+              onChange={(e) => setChainringCount(e.target.valueAsNumber)}
+              value={chainringCount}
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             />
           </div>
+        </div>
+        <div className="flex flex-row items-center">
+          <div className="px-2 w-32">
+            <label>Chainring Teeth</label>
+          </div>
+          {Array(chainringCount)
+            .fill(0)
+            .map((v, i) => (
+              <div key={i} className={i === 0 ? 'pl-2' : ''}>
+                <input
+                  type="number"
+                  onChange={(e) =>
+                    setChainringTeeth(
+                      chainringTeeth.with(i, e.target.valueAsNumber),
+                    )
+                  }
+                  value={chainringTeeth[i]}
+                  className="w-9 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                />
+              </div>
+            ))}
         </div>
         <div className="flex flex-row items-center">
           <div className="px-2 w-32">
@@ -389,44 +560,7 @@ const BikeCalculator = ({
               </div>
             ))}
         </div>
-        {cassetteID !== 'custom' &&
-          CASSETTE_DB[cassetteID].isIGH &&
-          CASSETTE_DB[cassetteID].ratios.map((ratio, i) => (
-            <div className="flex flex-row" key={i}>
-              <div className="w-32"></div>
-              {Array(sprocketCount)
-                .fill(0)
-                .map((v, i) => (
-                  <div key={i} className="w-9 text-right">
-                    {Math.round(
-                      gearInches(
-                        ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
-                        chainringTeeth,
-                        sprocketTeeth[i] * ratio,
-                      ),
-                    )}
-                  </div>
-                ))}
-            </div>
-          ))}
-        {!CASSETTE_DB[cassetteID]?.isIGH && (
-          <div className="flex flex-row">
-            <div className="w-32"></div>
-            {Array(sprocketCount)
-              .fill(0)
-              .map((v, i) => (
-                <div key={i} className="w-9 text-right">
-                  {Math.round(
-                    gearInches(
-                      ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
-                      chainringTeeth,
-                      sprocketTeeth[i],
-                    ),
-                  )}
-                </div>
-              ))}
-          </div>
-        )}
+        {CassetteGearInchesTable}
         <table></table>
       </div>
     </div>
@@ -457,7 +591,7 @@ export default function Home() {
       </div>
       <BikeCalculator
         bike={BIKE_DB[bikeID]}
-        onCustomize={() => setBikeID('custom')}
+        onCustomized={(customized) => customized && setBikeID('custom')}
       />
     </div>
   );
