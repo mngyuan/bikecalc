@@ -1,5 +1,6 @@
 'use client';
 
+import {on} from 'events';
 import {useEffect, useState} from 'react';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
@@ -224,7 +225,6 @@ const configEqualToBike = (
           (sprocket, i) => bike.sprockets && sprocket === bike.sprockets[i],
         )
       : true);
-  console.log(tiresEqual, chainringsEqual, cassettesEqual);
   return tiresEqual && chainringsEqual && cassettesEqual;
 };
 
@@ -278,6 +278,11 @@ const BikeCalculator = ({
   bike?: Bike;
   onCustomized: (customized: boolean) => void;
 }) => {
+  const [tireID, setTireID] = useState<TireID | 'custom'>(
+    bike ? bike.tire : 'custom',
+  );
+  // ETRTO state is quasi-derived/computed from props bike.tire TireID, but can be overridden by user
+  // so remember to set these when setting tireID. see https://react.dev/learn/you-might-not-need-an-effect
   const [ETRTOWidth, setETRTOWidth] = useState<number>(
     bike ? TIRE_DB[bike.tire].ETRTOSize[0] : 0,
   );
@@ -290,80 +295,26 @@ const BikeCalculator = ({
   const [chainringTeeth, setChainringTeeth] = useState<number[]>(
     bike ? bike.chainringTeeth : [0],
   );
+  const [cassetteID, setCassetteID] = useState<CassetteID | 'custom'>(
+    bike ? bike.cassette : 'custom',
+  );
   const cassette = bike ? CASSETTE_DB[bike.cassette] : undefined;
   const [sprocketCount, setSprocketCount] = useState<number>(
     cassette
       ? !isInternallyGearedHub(cassette)
         ? cassette.sprockets.length
-        : 0
+        : bike?.sprockets?.length || 0
       : 0,
   );
   const [sprocketTeeth, setSprocketTeeth] = useState<number[]>(
     cassette
       ? !isInternallyGearedHub(cassette)
         ? cassette.sprockets
-        : []
+        : bike?.sprockets || []
       : [],
   );
-  const [cassetteID, setCassetteID] = useState<CassetteID | 'custom'>(
-    bike ? bike.cassette : 'custom',
-  );
-  const [tireID, setTireID] = useState<TireID | 'custom'>(
-    bike ? bike.tire : 'custom',
-  );
-
-  // TODO: just use length
-  useEffect(() => {
-    setChainringTeeth((chainringTeeth) => [
-      ...chainringTeeth.slice(0, chainringCount),
-      ...Array(Math.max(chainringCount - chainringTeeth.length, 0)),
-    ]);
-  }, [chainringCount]);
 
   useEffect(() => {
-    setSprocketTeeth((sprocketTeeth) => [
-      ...sprocketTeeth.slice(0, sprocketCount),
-      ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
-    ]);
-  }, [sprocketCount]);
-
-  useEffect(() => {
-    if (cassetteID !== 'custom') {
-      const cassette = CASSETTE_DB[cassetteID];
-      if (cassette.isIGH) {
-      } else {
-        setSprocketCount(cassette.sprockets.length);
-        setSprocketTeeth(cassette.sprockets);
-      }
-    }
-  }, [cassetteID]);
-
-  useEffect(() => {
-    if (tireID !== 'custom') {
-      const tire = TIRE_DB[tireID];
-      setETRTOWidth(tire.ETRTOSize[0]);
-      setETRTODiameter(tire.ETRTOSize[1]);
-    }
-  }, [tireID]);
-
-  // When prop updates
-  useEffect(() => {
-    console.log('bike update', bike);
-    if (bike) {
-      setTireID(bike.tire);
-      setCassetteID(bike.cassette);
-      setChainringCount(bike.chainringTeeth.length);
-      setChainringTeeth(bike.chainringTeeth);
-      if (bike.sprockets) {
-        setSprocketCount(bike.sprockets.length);
-        setSprocketTeeth(bike.sprockets);
-      }
-    }
-  }, [bike]);
-
-  useEffect(() => {
-    // TODO: not working properly
-    console.log('bike check', bike);
     if (bike) {
       onCustomized(
         !(
@@ -426,7 +377,12 @@ const BikeCalculator = ({
             </td>
             <td className="px-2">
               <select
-                onChange={(e) => setTireID(e.target.value as TireID)}
+                onChange={(e) => {
+                  const tire = TIRE_DB[e.target.value as TireID];
+                  setTireID(e.target.value as TireID);
+                  setETRTOWidth(tire.ETRTOSize[0]);
+                  setETRTODiameter(tire.ETRTOSize[1]);
+                }}
                 value={tireID}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
@@ -511,7 +467,14 @@ const BikeCalculator = ({
           <div className="px-2">
             <input
               type="number"
-              onChange={(e) => setChainringCount(e.target.valueAsNumber)}
+              onChange={(e) => {
+                const chainringCount = e.target.valueAsNumber;
+                setChainringCount(chainringCount);
+                setChainringTeeth([
+                  ...chainringTeeth.slice(0, chainringCount),
+                  ...Array(Math.max(chainringCount - chainringTeeth.length, 0)),
+                ]);
+              }}
               value={chainringCount}
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             />
@@ -544,7 +507,18 @@ const BikeCalculator = ({
           </div>
           <div className="px-2">
             <select
-              onChange={(e) => setCassetteID(e.target.value as CassetteID)}
+              onChange={(e) => {
+                const cassetteID = e.target.value as CassetteID;
+                setCassetteID(cassetteID);
+                if (cassetteID !== 'custom') {
+                  const cassette = CASSETTE_DB[cassetteID];
+                  if (cassette.isIGH) {
+                  } else {
+                    setSprocketCount(cassette.sprockets.length);
+                    setSprocketTeeth(cassette.sprockets);
+                  }
+                }
+              }}
               value={cassetteID}
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             >
@@ -563,10 +537,18 @@ const BikeCalculator = ({
             <input
               type="number"
               onChange={(e) => {
-                setSprocketCount(e.target.valueAsNumber);
-                if (!CASSETTE_DB[cassetteID].isIGH) {
+                const sprocketCount = e.target.valueAsNumber;
+                setSprocketCount(sprocketCount);
+                if (
+                  cassetteID !== 'custom' &&
+                  !CASSETTE_DB[cassetteID]?.isIGH
+                ) {
                   setCassetteID('custom');
                 }
+                setSprocketTeeth([
+                  ...sprocketTeeth.slice(0, sprocketCount),
+                  ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
+                ]);
               }}
               value={sprocketCount}
               className="w-12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -655,10 +637,12 @@ export default function Home() {
           }`}
         ></div>
       </div>
+      {/* key prop supplied to force reset state when bike prop changes. see
+      https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes */}
       <BikeCalculator
         bike={BIKE_DB[bikeID]}
+        key={bikeID}
         onCustomized={(customized) => {
-          console.log({customized});
           setCustomized(customized);
           if (customized) {
             // setBikeID('custom');
