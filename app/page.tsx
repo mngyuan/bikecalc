@@ -186,6 +186,48 @@ const BIKE_DB: Record<string, Bike> = {
 
 type BikeID = keyof typeof BIKE_DB;
 
+const configEqualToBike = (
+  {
+    ETRTOWidth,
+    ETRTODiameter,
+    chainringTeeth,
+    sprocketTeeth,
+    tireID,
+    cassetteID,
+  }: {
+    ETRTOWidth: number;
+    ETRTODiameter: number;
+    chainringTeeth: number[];
+    sprocketTeeth: number[];
+    tireID: TireID;
+    cassetteID: CassetteID;
+  },
+  bike: Bike,
+): boolean => {
+  const bikeTire = TIRE_DB[tireID];
+  const tiresEqual =
+    tireID === bike.tire &&
+    ETRTOWidth === bikeTire.ETRTOSize[0] &&
+    ETRTODiameter === bikeTire.ETRTOSize[1];
+  const chainringsEqual =
+    chainringTeeth.length === bike.chainringTeeth.length &&
+    chainringTeeth.every(
+      (chainring, i) => chainring === bike.chainringTeeth[i],
+    );
+  const bikeCassette = CASSETTE_DB[bike.cassette];
+  const cassettesEqual =
+    bike.cassette === cassetteID &&
+    (bikeCassette.isIGH
+      ? !!bike.sprockets &&
+        sprocketTeeth.length === bike.sprockets.length &&
+        sprocketTeeth.every(
+          (sprocket, i) => bike.sprockets && sprocket === bike.sprockets[i],
+        )
+      : true);
+  console.log(tiresEqual, chainringsEqual, cassettesEqual);
+  return tiresEqual && chainringsEqual && cassettesEqual;
+};
+
 const GearInchesTable = ({
   sprocketCount,
   sprocketTeeth,
@@ -304,18 +346,42 @@ const BikeCalculator = ({
     }
   }, [tireID]);
 
+  // When prop updates
+  useEffect(() => {
+    console.log('bike update', bike);
+    if (bike) {
+      setTireID(bike.tire);
+      setCassetteID(bike.cassette);
+      setChainringCount(bike.chainringTeeth.length);
+      setChainringTeeth(bike.chainringTeeth);
+      if (bike.sprockets) {
+        setSprocketCount(bike.sprockets.length);
+        setSprocketTeeth(bike.sprockets);
+      }
+    }
+  }, [bike]);
+
   useEffect(() => {
     // TODO: not working properly
+    console.log('bike check', bike);
     if (bike) {
-      // onCustomized(
-      //   ETRTOWidth !== TIRE_DB[bike.tire].ETRTOSize[0] ||
-      //     ETRTODiameter !== TIRE_DB[bike.tire].ETRTOSize[1] ||
-      //     chainringTeeth !== bike.chainringTeeth ||
-      //     sprocketCount !== (bike.sprockets?.length ?? 0) ||
-      //     sprocketTeeth !== bike.sprockets ||
-      //     cassetteID !== bike.cassette ||
-      //     tireID !== bike.tire,
-      // );
+      onCustomized(
+        !(
+          tireID !== 'custom' &&
+          cassetteID !== 'custom' &&
+          configEqualToBike(
+            {
+              ETRTOWidth,
+              ETRTODiameter,
+              chainringTeeth,
+              sprocketTeeth,
+              tireID,
+              cassetteID,
+            },
+            bike,
+          )
+        ),
+      );
     }
   }, [
     ETRTOWidth,
@@ -329,25 +395,11 @@ const BikeCalculator = ({
     onCustomized,
   ]);
 
-  // When prop updates
-  useEffect(() => {
-    if (bike) {
-      setTireID(bike.tire);
-      setCassetteID(bike.cassette);
-      setChainringCount(bike.chainringTeeth.length);
-      setChainringTeeth(bike.chainringTeeth);
-      if (bike.sprockets) {
-        setSprocketCount(bike.sprockets.length);
-        setSprocketTeeth(bike.sprockets);
-      }
-    }
-  }, [bike]);
-
-  const CassetteGearInchesTable = chainringTeeth.map((chainringTeeth, i) =>
+  const CassetteGearInchesTable = chainringTeeth.map((chainringTeeth) =>
     (cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH
       ? CASSETTE_DB[cassetteID].ratios
       : [undefined]
-    ).map((ratio) => (
+    ).map((ratio, i) => (
       <div className="flex flex-row" key={i}>
         <div className="w-32 text-right">{chainringTeeth}T</div>
         <GearInchesTable
@@ -365,7 +417,7 @@ const BikeCalculator = ({
   );
 
   return (
-    <div className="App">
+    <div className="bike-calc">
       <table className="m-4">
         <tbody>
           <tr>
@@ -577,6 +629,7 @@ const BikeCalculator = ({
 
 export default function Home() {
   const [bikeID, setBikeID] = useState<BikeID | 'custom'>('custom');
+  const [customized, setCustomized] = useState<boolean>(false);
 
   return (
     <div>
@@ -596,10 +649,21 @@ export default function Home() {
             </option>
           ))}
         </select>
+        <div
+          className={`bg-blue-500 rounded-full w-4 h-4 ${
+            customized ? '' : 'hidden'
+          }`}
+        ></div>
       </div>
       <BikeCalculator
         bike={BIKE_DB[bikeID]}
-        onCustomized={(customized) => customized && setBikeID('custom')}
+        onCustomized={(customized) => {
+          console.log({customized});
+          setCustomized(customized);
+          if (customized) {
+            // setBikeID('custom');
+          }
+        }}
       />
     </div>
   );
