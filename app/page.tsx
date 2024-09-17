@@ -69,13 +69,53 @@ const mapGearInchesToColor = (gearInches: number) =>
   createMapRangeToColor('#56bb8a', '#fed666', '#e67c73')(gearInches, 20, 120);
 
 const TIRE_DB = {
+  'Schwalbe Billy Bonkers 16"': {ETRTOSize: [50, 305]},
   'Schwalbe Kojak 16"': {ETRTOSize: [32, 349]},
   'Schwalbe Marathon 16"': {ETRTOSize: [35, 349]},
   'Schwalbe Marathon Racer 16"': {ETRTOSize: [35, 349]},
   'Schwalbe One 16"': {ETRTOSize: [35, 349]},
   'Schwalbe Green Marathon 16"': {ETRTOSize: [35, 349]},
+  'Schwalbe Billy Bonkers 18"': {ETRTOSize: [50, 355]},
+  'Schwalbe G-One Allround 20"': {ETRTOSize: [54, 406]},
   'Schwalbe Green Marathon 20"': {ETRTOSize: [47, 406]},
+  'Schwalbe Billy Bonkers 20"x1.5"': {ETRTOSize: [40, 406]},
+  'Schwalbe Billy Bonkers 20"x2.0"': {ETRTOSize: [50, 406]},
+  'Schwalbe Billy Bonkers 24"': {ETRTOSize: [50, 507]},
+  'Schwalbe Crazy Bob 24"': {ETRTOSize: [60, 507]},
+  'Schwalbe Big Apple 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Big Ben 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Billy Bonkers 26"x2.0"': {ETRTOSize: [50, 559]},
+  'Schwalbe Billy Bonkers 26"x2.10"': {ETRTOSize: [54, 559]},
+  'Schwalbe Billy Bonkers 26"x2.25"': {ETRTOSize: [57, 559]},
+  'Schwalbe Crazy Bob 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Dirty Dan 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Fat Frank 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Hans Dampf 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Ice Spiker/Ice Spiker Pro 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Magic Mary 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Nobby Nic 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Rock Razor 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Rocket Ron 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Space 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Super Moto 26"': {ETRTOSize: [60, 559]},
+  'Schwalbe Magic Mary 26" (64-559)': {ETRTOSize: [64, 559]},
   'Surly ExtraTerrestrial 26"x46': {ETRTOSize: [46, 559]},
+  'Schwalbe Dirty Dan 27.5"': {ETRTOSize: [60, 584]},
+  'Schwalbe Hans Dampf 27.5"': {ETRTOSize: [60, 584]},
+  'Schwalbe Magic Mary 27.5"': {ETRTOSize: [60, 584]},
+  'Schwalbe Nobby Nic 27.5"': {ETRTOSize: [60, 584]},
+  'Schwalbe Rock Razor 27.5"': {ETRTOSize: [60, 584]},
+  'Schwalbe Big Apple 28"x2.0"': {ETRTOSize: [50, 622]},
+  'Schwalbe Big Apple Plus 28"x2.15"': {ETRTOSize: [50, 622]},
+  'Schwalbe Big Apple 28"x2.15"': {ETRTOSize: [55, 622]},
+  'Schwalbe Big Ben 28"x2.15"': {ETRTOSize: [55, 622]},
+  'Schwalbe Marathon Almotion 28"': {ETRTOSize: [55, 622]},
+  'Schwalbe Big Apple 29"': {ETRTOSize: [60, 622]},
+  'Schwalbe Hans Dampf 29"': {ETRTOSize: [60, 622]},
+  'Schwalbe Magic Mary 29"': {ETRTOSize: [60, 622]},
+  'Schwalbe Nobby Nic 29"': {ETRTOSize: [60, 622]},
+  'Schwalbe Racing Ralph 29"': {ETRTOSize: [60, 622]},
+  'Schwalbe Super Moto 29"': {ETRTOSize: [60, 622]},
   'Specialized Ground Control Grid T7 29"x2.2"': {ETRTOSize: [54, 622]},
 };
 type TireID = keyof typeof TIRE_DB;
@@ -167,6 +207,12 @@ const BIKE_DB: Record<string, Bike> = {
     chainringTeeth: [50],
     cassette: 'Sturmey Archer BWR',
     sprockets: [13, 16],
+  },
+  'Brompton G Line': {
+    tire: 'Schwalbe G-One Allround 20"',
+    chainringTeeth: [54],
+    cassette: 'Shimano Alfine 8 Speed Hub',
+    sprockets: [20],
   },
   'Cranston R9 Max 9 speed': {
     tire: 'Schwalbe Green Marathon 16"',
@@ -378,10 +424,13 @@ const BikeCalculator = ({
             <td className="px-2">
               <select
                 onChange={(e) => {
-                  const tire = TIRE_DB[e.target.value as TireID];
-                  setTireID(e.target.value as TireID);
-                  setETRTOWidth(tire.ETRTOSize[0]);
-                  setETRTODiameter(tire.ETRTOSize[1]);
+                  const tireID = e.target.value as TireID | 'custom';
+                  setTireID(tireID);
+                  if (tireID !== 'custom') {
+                    const tire = TIRE_DB[tireID];
+                    setETRTOWidth(tire.ETRTOSize[0]);
+                    setETRTODiameter(tire.ETRTOSize[1]);
+                  }
                 }}
                 value={tireID}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
