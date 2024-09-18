@@ -109,12 +109,17 @@ const TIRE_DB = {
   'Schwalbe One 16"': {ETRTOSize: [35, 349]},
   'Schwalbe Green Marathon 16"': {ETRTOSize: [35, 349]},
   'Schwalbe Billy Bonkers 18"': {ETRTOSize: [50, 355]},
+  'Kenda Booster Pro 20"x2.4"': {ETRTOSize: [61, 406]},
+  'Odyssey Path Pro 20"x2.4"': {ETRTOSize: [60, 406]},
   'Schwalbe G-One Allround 20"': {ETRTOSize: [54, 406]},
   'Schwalbe Green Marathon 20"': {ETRTOSize: [47, 406]},
   'Schwalbe Billy Bonkers 20"x1.5"': {ETRTOSize: [40, 406]},
   'Schwalbe Billy Bonkers 20"x2.0"': {ETRTOSize: [50, 406]},
+  'Kenda Booster Pro 24"x2.2"': {ETRTOSize: [56, 507]},
   'Schwalbe Billy Bonkers 24"': {ETRTOSize: [50, 507]},
   'Schwalbe Crazy Bob 24"': {ETRTOSize: [60, 507]},
+  'Kenda Booster Pro 26"x2.2"': {ETRTOSize: [56, 559]},
+  'Kenda Booster Pro 26"x2.4"': {ETRTOSize: [61, 559]},
   'Schwalbe Big Apple 26"': {ETRTOSize: [60, 559]},
   'Schwalbe Big Ben 26"': {ETRTOSize: [60, 559]},
   'Schwalbe Billy Bonkers 26"x2.0"': {ETRTOSize: [50, 559]},
@@ -133,6 +138,10 @@ const TIRE_DB = {
   'Schwalbe Super Moto 26"': {ETRTOSize: [60, 559]},
   'Schwalbe Magic Mary 26" (64-559)': {ETRTOSize: [64, 559]},
   'Surly ExtraTerrestrial 26"x46': {ETRTOSize: [46, 559]},
+  'Kenda Booster Pro 27.5"x2.2"': {ETRTOSize: [56, 584]},
+  'Kenda Booster Pro 27.5"x2.4"': {ETRTOSize: [61, 584]},
+  'Kenda Booster Pro 27.5"x2.6"': {ETRTOSize: [66, 584]},
+  'Kenda Booster Pro 27.5"x2.8"': {ETRTOSize: [71, 584]},
   'Schwalbe Dirty Dan 27.5"': {ETRTOSize: [60, 584]},
   'Schwalbe Hans Dampf 27.5"': {ETRTOSize: [60, 584]},
   'Schwalbe Magic Mary 27.5"': {ETRTOSize: [60, 584]},
@@ -143,6 +152,9 @@ const TIRE_DB = {
   'Schwalbe Big Apple 28"x2.15"': {ETRTOSize: [55, 622]},
   'Schwalbe Big Ben 28"x2.15"': {ETRTOSize: [55, 622]},
   'Schwalbe Marathon Almotion 28"': {ETRTOSize: [55, 622]},
+  'Kenda Booster Pro 29"x2.2"': {ETRTOSize: [56, 622]},
+  'Kenda Booster Pro 29"x2.4"': {ETRTOSize: [61, 622]},
+  'Kenda Booster Pro 29"x2.6"': {ETRTOSize: [66, 622]},
   'Schwalbe Big Apple 29"': {ETRTOSize: [60, 622]},
   'Schwalbe Hans Dampf 29"': {ETRTOSize: [60, 622]},
   'Schwalbe Magic Mary 29"': {ETRTOSize: [60, 622]},
@@ -164,6 +176,22 @@ interface InternallyGearedHub {
 type Cassette = ExternalCassette | InternallyGearedHub;
 
 const CASSETTE_DB: Record<string, Cassette> = {
+  'Microshift Advent X H-Series 10 Speed 11-48T': {
+    sprockets: [11, 13, 15, 18, 21, 24, 28, 34, 40, 48],
+  },
+  'Microshift G-Series 11 Speed 11-46T': {
+    sprockets: [11, 13, 15, 18, 21, 24, 28, 32, 36, 40, 46],
+  },
+  'Microshift H-Series 10 Speed 11-42T ': {
+    sprockets: [11, 13, 15, 18, 21, 24, 28, 32, 36, 42],
+  },
+  'Rohloff Speedhub 500/14': {
+    ratios: [
+      0.279, 0.316, 0.36, 0.409, 0.464, 0.528, 0.6, 0.682, 0.774, 0.881, 1.0,
+      1.135, 1.292, 1.467,
+    ],
+    isIGH: true,
+  },
   'Shimano Alfine 8 Speed Hub': {
     ratios: [0.527, 0.644, 0.748, 0.851, 1, 1.223, 1.419, 1.615],
     isIGH: true,
@@ -190,6 +218,24 @@ const CASSETTE_DB: Record<string, Cassette> = {
   'Shimano Alivio CS-HG400 9 Speed 12-36T': {
     sprockets: [12, 14, 16, 18, 21, 24, 28, 32, 36],
   },
+  'SRAM PG-1130 11 Speed 11-26T': {
+    sprockets: [11, 12, 13, 14, 15, 16, 17, 19, 21, 23, 26],
+  },
+  'SRAM PG-1130 11 Speed 11-28T': {
+    sprockets: [11, 12, 13, 14, 15, 16, 17, 19, 22, 25, 28],
+  },
+  'SRAM PG-1130 11 Speed 11-32T': {
+    sprockets: [11, 12, 13, 14, 15, 17, 19, 22, 25, 28, 32],
+  },
+  'SRAM PG-1130 11 Speed 11-36T': {
+    sprockets: [11, 12, 13, 15, 17, 19, 22, 25, 28, 32, 36],
+  },
+  'SRAM PG-1130 11 Speed 11-42T': {
+    sprockets: [11, 13, 15, 17, 19, 22, 25, 28, 32, 36, 42],
+  },
+  'SRAM XPLR PG-1231 12 Speed 11-44T': {
+    sprockets: [11, 12, 13, 15, 17, 19, 21, 24, 28, 32, 38, 44],
+  },
   'Sturmey Archer BSR': {
     // THink this is the same hub as S-RF3
     ratios: [0.75, 1, 1.3333333],
@@ -203,6 +249,14 @@ const CASSETTE_DB: Record<string, Cassette> = {
     ratios: [0.75, 1, 1.3333333],
     isIGH: true,
     // TODO: would be nice for IGH to specify maximum sprockets
+  },
+  'Sturmey Archer S-RF5': {
+    ratios: [0.733, 0.885, 1, 1.212, 1.464],
+    isIGH: true,
+  },
+  'Sturmey Archer X-RF8': {
+    ratios: [1, 1.3, 1.48, 1.69, 1.92, 2.2, 2.5, 3.25],
+    isIGH: true,
   },
 };
 type CassetteID = keyof typeof CASSETTE_DB;
@@ -222,6 +276,22 @@ interface Bike {
 }
 
 const BIKE_DB: Record<string, Bike> = {
+  // Cannot identify this cassette
+  // 'Bike Friday All-Packa 1x9': {
+  'Bike Friday All-Packa 1x11': {
+    tire: 'Kenda Booster Pro 20"x2.4"',
+    chainringTeeth: [42],
+    cassette: 'SRAM PG-1130 11 Speed 11-42T',
+  },
+  'Bike Friday All-Packa 1x12': {
+    tire: 'Kenda Booster Pro 20"x2.4"',
+    chainringTeeth: [42],
+    cassette: 'SRAM XPLR PG-1231 12 Speed 11-44T',
+  },
+  // Cannot identify this cassette, same one probably
+  // 'Bike Friday All-Packa 2x': {
+  // Not sure sprockets
+  // 'Bike Friday All-Packa Rohloff': {
   'Brompton A Line': {
     tire: 'Schwalbe Kojak 16"',
     chainringTeeth: [44],
