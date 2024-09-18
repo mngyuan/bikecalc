@@ -10,11 +10,26 @@ const ETRTOtoCircumference = (
   ETRTODiameter: number,
 ): number => Math.PI * ETRTOtoDiameter(ETRTOWidth, ETRTODiameter);
 
+// Theoretical size of the same tire in inches which would have the equivalent development with a 1:1 gear ratio
 const gearInches = (
-  tireDiameter: number,
+  ETRTOWidth: number,
+  ETRTODiameter: number,
   chainringTeeth: number,
   sprocketTeeth: number,
-): number => (tireDiameter * chainringTeeth) / sprocketTeeth;
+): number =>
+  ((ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4) * chainringTeeth) /
+  sprocketTeeth;
+
+// How far the bike travels in meters for one complete revolution of the pedals
+const metersDevelopment = (
+  ETRTOWidth: number,
+  ETRTODiameter: number,
+  chainringTeeth: number,
+  sprocketTeeth: number,
+) =>
+  (ETRTOtoCircumference(ETRTOWidth, ETRTODiameter) * chainringTeeth) /
+  1000 /
+  sprocketTeeth;
 
 type ColorValueHex = `#${string}`;
 
@@ -44,7 +59,7 @@ function interpolateColor(
     .toUpperCase()}`;
 }
 
-function createMapRangeToColor(
+function createMapRangeWithMidToColor(
   colorMin: ColorValueHex,
   colorMid: ColorValueHex,
   colorMax: ColorValueHex,
@@ -64,8 +79,27 @@ function createMapRangeToColor(
   };
 }
 
+function createMapRangeToColor(
+  colorMin: ColorValueHex,
+  colorMax: ColorValueHex,
+) {
+  return function (value: number, min: number, max: number) {
+    // Scale value from min to max (0 to 1)
+    const factor = (value - min) / (max - min);
+    return interpolateColor(colorMin, colorMax, factor);
+  };
+}
+
 const mapGearInchesToColor = (gearInches: number) =>
-  createMapRangeToColor('#56bb8a', '#fed666', '#e67c73')(gearInches, 20, 120);
+  createMapRangeWithMidToColor('#56bb8a', '#fed666', '#e67c73')(
+    gearInches,
+    20,
+    120,
+  );
+
+const mapMetersDevelopmentToColor = (metersDevelopment: number) =>
+  // map from very light blue to dark blue
+  createMapRangeToColor('#d0e2f3', '#3d85c6')(metersDevelopment, 1, 10);
 
 const TIRE_DB = {
   'Schwalbe Billy Bonkers 16"': {ETRTOSize: [50, 305]},
@@ -273,12 +307,15 @@ const configEqualToBike = (
   return tiresEqual && chainringsEqual && cassettesEqual;
 };
 
-const GearInchesTable = ({
+const CalculationsTable = ({
   sprocketCount,
   sprocketTeeth,
   chainringTeeth,
   ETRTODiameter,
   ETRTOWidth,
+  calculation,
+  calculationColoration,
+  formatNumber = (n: number) => Math.round(n),
   ratio,
 }: {
   sprocketCount: number;
@@ -286,14 +323,23 @@ const GearInchesTable = ({
   chainringTeeth: number;
   ETRTODiameter: number;
   ETRTOWidth: number;
+  calculation: (
+    ETRTOWidth: number,
+    ETRTODiameter: number,
+    chainringTeeth: number,
+    sprocketTeeth: number,
+  ) => number;
+  calculationColoration: (calculationResult: number) => string;
+  formatNumber?: (n: number) => number | string;
   ratio?: number;
 }) => [
   ...Array(sprocketCount)
     .fill(0)
     .map((v, i) => {
       const gI =
-        gearInches(
-          ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
+        calculation(
+          ETRTOWidth,
+          ETRTODiameter,
           chainringTeeth,
           sprocketTeeth[i] / (ratio || 1),
         ) || 0;
@@ -301,9 +347,9 @@ const GearInchesTable = ({
         <div
           key={i}
           className={`w-9 text-right ${i === 0 ? 'ml-2' : ''}`}
-          style={{backgroundColor: mapGearInchesToColor(gI)}}
+          style={{backgroundColor: calculationColoration(gI)}}
         >
-          {Math.round(gI)}
+          {formatNumber(gI)}
         </div>
       );
     }),
@@ -358,6 +404,9 @@ const BikeCalculator = ({
         : bike?.sprockets || []
       : [],
   );
+  const [calculationToDisplay, setCalculationToDisplay] = useState<
+    'gearInches' | 'metersDevelopment'
+  >('gearInches');
 
   useEffect(() => {
     if (bike) {
@@ -391,14 +440,14 @@ const BikeCalculator = ({
     onCustomized,
   ]);
 
-  const CassetteGearInchesTable = chainringTeeth.map((chainringTeeth) =>
+  const CompleteCalculationsTable = chainringTeeth.map((chainringTeeth) =>
     (cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH
       ? CASSETTE_DB[cassetteID].ratios.toReversed()
       : [undefined]
     ).map((ratio, i) => (
       <div className="flex flex-row" key={i}>
-        <div className="w-32 text-right">{chainringTeeth}T</div>
-        <GearInchesTable
+        <div className="pl-2">{chainringTeeth}T</div>
+        <CalculationsTable
           {...{
             sprocketCount,
             sprocketTeeth,
@@ -406,6 +455,18 @@ const BikeCalculator = ({
             ETRTODiameter,
             ETRTOWidth,
             ratio,
+            calculation:
+              calculationToDisplay === 'gearInches'
+                ? gearInches
+                : metersDevelopment,
+            calculationColoration:
+              calculationToDisplay === 'gearInches'
+                ? mapGearInchesToColor
+                : mapMetersDevelopmentToColor,
+            formatNumber:
+              calculationToDisplay === 'gearInches'
+                ? (n) => Math.round(n)
+                : (n) => n.toFixed(2),
           }}
         />
       </div>
@@ -650,7 +711,26 @@ const BikeCalculator = ({
               </div>
             ))}
         </div>
-        {CassetteGearInchesTable}
+      </div>
+      <div className="m-4">
+        <div className="flex flex-row items-center">
+          <div className="px-2">
+            <label>Calculation to display</label>
+          </div>
+          <select
+            onChange={(e) =>
+              setCalculationToDisplay(
+                e.target.value as 'gearInches' | 'metersDevelopment',
+              )
+            }
+            value={calculationToDisplay}
+            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          >
+            <option value="gearInches">Gear Inches</option>
+            <option value="metersDevelopment">Meters Development</option>
+          </select>
+        </div>
+        {CompleteCalculationsTable}
       </div>
     </div>
   );
