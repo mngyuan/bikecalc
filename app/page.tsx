@@ -1,6 +1,5 @@
 'use client';
 
-import {on} from 'events';
 import {useEffect, useState} from 'react';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
@@ -296,7 +295,7 @@ const GearInchesTable = ({
         gearInches(
           ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4,
           chainringTeeth,
-          sprocketTeeth[i] * (ratio || 1),
+          sprocketTeeth[i] / (ratio || 1),
         ) || 0;
       return (
         <div
@@ -394,7 +393,7 @@ const BikeCalculator = ({
 
   const CassetteGearInchesTable = chainringTeeth.map((chainringTeeth) =>
     (cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH
-      ? CASSETTE_DB[cassetteID].ratios
+      ? CASSETTE_DB[cassetteID].ratios.toReversed()
       : [undefined]
     ).map((ratio, i) => (
       <div className="flex flex-row" key={i}>
@@ -641,7 +640,7 @@ const BikeCalculator = ({
                     setSprocketTeeth(
                       sprocketTeeth.with(i, e.target.valueAsNumber),
                     );
-                    if (!CASSETTE_DB[cassetteID].isIGH) {
+                    if (!CASSETTE_DB[cassetteID]?.isIGH) {
                       setCassetteID('custom');
                     }
                   }}
@@ -652,7 +651,6 @@ const BikeCalculator = ({
             ))}
         </div>
         {CassetteGearInchesTable}
-        <table></table>
       </div>
     </div>
   );
