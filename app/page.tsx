@@ -147,6 +147,7 @@ const TIRE_DB = {
   'Schwalbe Magic Mary 27.5"': {ETRTOSize: [60, 584]},
   'Schwalbe Nobby Nic 27.5"': {ETRTOSize: [60, 584]},
   'Schwalbe Rock Razor 27.5"': {ETRTOSize: [60, 584]},
+  'Vee GP Vee 27.5"x2.35"': {ETRTOSize: [60, 584]},
   'Schwalbe Big Apple 28"x2.0"': {ETRTOSize: [50, 622]},
   'Schwalbe Big Apple Plus 28"x2.15"': {ETRTOSize: [50, 622]},
   'Schwalbe Big Apple 28"x2.15"': {ETRTOSize: [55, 622]},
@@ -258,6 +259,9 @@ const CASSETTE_DB: Record<string, Cassette> = {
     ratios: [1, 1.3, 1.48, 1.69, 1.92, 2.2, 2.5, 3.25],
     isIGH: true,
   },
+  'SunRace 10 Speed 11-51T': {
+    sprockets: [11, 13, 15, 18, 23, 28, 33, 39, 45, 51],
+  }
 };
 type CassetteID = keyof typeof CASSETTE_DB;
 // Type guard
@@ -327,6 +331,11 @@ const BIKE_DB: Record<string, Bike> = {
     chainringTeeth: [53],
     cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
   },
+  'Marin Larkspur 1': {
+    tire: 'Vee GP Vee 27.5"x2.35"',
+    chainringTeeth: [38],
+    cassette: 'SunRace 10 Speed 11-51T',
+  },
   'Surly Disc Trucker': {
     tire: 'Surly ExtraTerrestrial 26"x46',
     chainringTeeth: [48, 36, 26],
@@ -354,7 +363,7 @@ const configEqualToBike = (
   },
   bike: Bike,
 ): boolean => {
-  const bikeTire = TIRE_DB[tireID];
+  const bikeTire = TIRE_DB[bike.tire];
   const tiresEqual =
     tireID === bike.tire &&
     ETRTOWidth === bikeTire.ETRTOSize[0] &&
