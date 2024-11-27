@@ -1,6 +1,22 @@
 'use client';
 
 import {useEffect, useState} from 'react';
+import {InfoIcon} from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -176,6 +192,7 @@ interface InternallyGearedHub {
 }
 type Cassette = ExternalCassette | InternallyGearedHub;
 
+// prettier-ignore
 const CASSETTE_DB: Record<string, Cassette> = {
   'Microshift Advent X H-Series 10 Speed 11-48T': {
     sprockets: [11, 13, 15, 18, 21, 24, 28, 34, 40, 48],
@@ -386,6 +403,19 @@ const configEqualToBike = (
   return tiresEqual && chainringsEqual && cassettesEqual;
 };
 
+const InfoTooltip = ({content}) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger className="inline-flex items-center">
+        <InfoIcon className="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors" />
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs">
+        <p className="text-sm">{content}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 const CalculationsTable = ({
   sprocketCount,
   sprocketTeeth,
@@ -553,265 +583,284 @@ const BikeCalculator = ({
   );
 
   return (
-    <div className="bike-calc">
-      <table className="m-4">
-        <tbody>
-          <tr>
-            <td className="px-2">
-              <label>Tire</label>
-            </td>
-            <td className="px-2">
-              <select
-                onChange={(e) => {
-                  const tireID = e.target.value as TireID | 'custom';
-                  setTireID(tireID);
-                  if (tireID !== 'custom') {
-                    const tire = TIRE_DB[tireID];
-                    setETRTOWidth(tire.ETRTOSize[0]);
-                    setETRTODiameter(tire.ETRTOSize[1]);
-                  }
-                }}
-                value={tireID}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              >
-                <option value="custom">Custom</option>
-                {Object.entries(TIRE_DB).map(([name]) => (
-                  <option value={name} key={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td className="px-2">
-              <label>ETRTO Width</label>
-            </td>
-            <td className="px-2">
-              <input
-                type="number"
-                onChange={(e) => {
-                  setETRTOWidth(e.target.valueAsNumber);
-                  setTireID('custom');
-                }}
-                value={ETRTOWidth}
-                className="w-14 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </td>
-          </tr>
-          <tr>
-            <td className="px-2">
-              <label>ETRTO Diameter</label>
-            </td>
-            <td className="px-2">
-              <input
-                type="number"
-                onChange={(e) => {
-                  setETRTODiameter(e.target.valueAsNumber);
-                  setTireID('custom');
-                }}
-                value={ETRTODiameter}
-                className="w-14 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </td>
-          </tr>
-          <tr>
-            <td className="px-2">
-              <label>Tire Diameter</label>
-            </td>
-            <td className="px-2">
-              <input
-                type="number"
-                disabled
-                value={(
-                  ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4
-                ).toFixed(2)}
-                className="w-14 text-right  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
-              />
-            </td>
-          </tr>
-          <tr>
-            <td className="px-2">
-              <label>Tire Circumference</label>
-            </td>
-            <td className="px-2">
-              <input
-                type="number"
-                disabled
-                value={Math.round(
-                  ETRTOtoCircumference(ETRTOWidth, ETRTODiameter),
-                )}
-                className="w-14 text-right  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div className="m-4">
-        <div className="flex flex-row items-center">
-          <div className="px-2 w-32">
-            <label>Chainrings</label>
-          </div>
-          <div className="px-2">
-            <input
-              type="number"
-              onChange={(e) => {
-                const chainringCount = e.target.valueAsNumber;
-                setChainringCount(chainringCount);
-                setChainringTeeth([
-                  ...chainringTeeth.slice(0, chainringCount),
-                  ...Array(Math.max(chainringCount - chainringTeeth.length, 0)),
-                ]);
-              }}
-              value={chainringCount}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            />
-          </div>
-        </div>
-        <div className="flex flex-row items-center">
-          <div className="px-2 w-32">
-            <label>Chainring Teeth</label>
-          </div>
-          {Array(chainringCount)
-            .fill(0)
-            .map((v, i) => (
-              <div key={i} className={i === 0 ? 'pl-2' : ''}>
-                <input
-                  type="number"
-                  onChange={(e) =>
-                    setChainringTeeth(
-                      chainringTeeth.with(i, e.target.valueAsNumber),
-                    )
-                  }
-                  value={chainringTeeth[i]}
-                  className="w-9 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                />
-              </div>
-            ))}
-        </div>
-        <div className="flex flex-row items-center">
-          <div className="px-2 w-32">
-            <label>Cassette / Hub</label>
-          </div>
-          <div className="px-2">
-            <select
-              onChange={(e) => {
-                const cassetteID = e.target.value as CassetteID;
-                setCassetteID(cassetteID);
-                if (cassetteID !== 'custom') {
-                  const cassette = CASSETTE_DB[cassetteID];
-                  if (cassette.isIGH) {
-                  } else {
-                    setSprocketCount(cassette.sprockets.length);
-                    setSprocketTeeth(cassette.sprockets);
-                  }
-                }
-              }}
-              value={cassetteID}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            >
-              <option value="custom">Custom</option>
-              {Object.entries(CASSETTE_DB).map(([name]) => (
-                <option value={name} key={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="px-2">
-            <label>Sprockets</label>
-          </div>
-          <div className="px-2">
-            <input
-              type="number"
-              onChange={(e) => {
-                const sprocketCount = e.target.valueAsNumber;
-                setSprocketCount(sprocketCount);
-                if (
-                  cassetteID !== 'custom' &&
-                  !CASSETTE_DB[cassetteID]?.isIGH
-                ) {
-                  setCassetteID('custom');
-                }
-                setSprocketTeeth([
-                  ...sprocketTeeth.slice(0, sprocketCount),
-                  ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
-                ]);
-              }}
-              value={sprocketCount}
-              className="w-12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            />
-          </div>
-        </div>
-        {cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH && (
-          <div className="flex flex-row items-center">
-            <div className="px-2 w-32">
-              <label>Ratios</label>
-            </div>
-            <div>
-              {Array(CASSETTE_DB[cassetteID].ratios.length)
-                .fill(0)
-                .map((v, i) => (
-                  <span key={i} className={i === 0 ? 'pl-2' : ''}>
-                    <input
-                      type="number"
-                      disabled
-                      value={(
-                        CASSETTE_DB[cassetteID] as InternallyGearedHub
-                      ).ratios[i].toFixed(2)}
-                      className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
-                    />
-                  </span>
-                ))}
-            </div>
-          </div>
-        )}
-        <div className="flex flex-row items-center">
-          <div className="px-2 w-32">
-            <label>Sprocket Teeth</label>
-          </div>
-          {Array(sprocketCount)
-            .fill(0)
-            .map((v, i) => (
-              <div key={i} className={i === 0 ? 'pl-2' : ''}>
+    <TooltipProvider>
+      <div className="bike-calc">
+        <table className="m-4">
+          <tbody>
+            <tr>
+              <td className="px-2">
+                <label>Tire</label>{' '}
+                <InfoTooltip content="The part of the wheel which sits on the wheel's rim. It's actual diameter varies from its imperial naming, which affects gear ratios and meters development." />
+              </td>
+              <td className="px-2">
+                <Select
+                  onValueChange={(value) => {
+                    const tireID = value as TireID | 'custom';
+                    setTireID(tireID);
+                    if (tireID !== 'custom') {
+                      const tire = TIRE_DB[tireID];
+                      setETRTOWidth(tire.ETRTOSize[0]);
+                      setETRTODiameter(tire.ETRTOSize[1]);
+                    }
+                  }}
+                  value={tireID}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a tire..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">Custom</SelectItem>
+                    {Object.entries(TIRE_DB).map(([name]) => (
+                      <SelectItem value={name} key={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </td>
+            </tr>
+            <tr>
+              <td className="px-2">
+                <label>ETRTO Width</label>
+              </td>
+              <td className="px-2">
                 <input
                   type="number"
                   onChange={(e) => {
-                    setSprocketTeeth(
-                      sprocketTeeth.with(i, e.target.valueAsNumber),
-                    );
-                    if (!CASSETTE_DB[cassetteID]?.isIGH) {
-                      setCassetteID('custom');
-                    }
+                    setETRTOWidth(e.target.valueAsNumber);
+                    setTireID('custom');
                   }}
-                  value={sprocketTeeth[i]}
-                  className="w-9 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={ETRTOWidth}
+                  className="w-14 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
-              </div>
-            ))}
-        </div>
-      </div>
-      <div className="m-4">
-        <div className="flex flex-row items-center">
-          <div className="px-2">
-            <label>Calculation to display</label>
+              </td>
+            </tr>
+            <tr>
+              <td className="px-2">
+                <label>ETRTO Diameter</label>
+              </td>
+              <td className="px-2">
+                <input
+                  type="number"
+                  onChange={(e) => {
+                    setETRTODiameter(e.target.valueAsNumber);
+                    setTireID('custom');
+                  }}
+                  value={ETRTODiameter}
+                  className="w-14 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="px-2">
+                <label>Tire Diameter</label>
+              </td>
+              <td className="px-2">
+                <input
+                  type="number"
+                  disabled
+                  value={(
+                    ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4
+                  ).toFixed(2)}
+                  className="w-14 text-right  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                />
+              </td>
+            </tr>
+            <tr>
+              <td className="px-2">
+                <label>Tire Circumference</label>
+              </td>
+              <td className="px-2">
+                <input
+                  type="number"
+                  disabled
+                  value={Math.round(
+                    ETRTOtoCircumference(ETRTOWidth, ETRTODiameter),
+                  )}
+                  className="w-14 text-right  [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="m-4">
+          <div className="flex flex-row items-center">
+            <div className="px-2 w-32">
+              <label>Chainrings</label>
+            </div>
+            <div className="px-2">
+              <input
+                type="number"
+                onChange={(e) => {
+                  const chainringCount = e.target.valueAsNumber;
+                  setChainringCount(chainringCount);
+                  setChainringTeeth([
+                    ...chainringTeeth.slice(0, chainringCount),
+                    ...Array(
+                      Math.max(chainringCount - chainringTeeth.length, 0),
+                    ),
+                  ]);
+                }}
+                value={chainringCount}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              />
+            </div>
           </div>
-          <select
-            onChange={(e) =>
-              setCalculationToDisplay(
-                e.target.value as 'gearInches' | 'metersDevelopment',
-              )
-            }
-            value={calculationToDisplay}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          >
-            <option value="gearInches">Gear Inches</option>
-            <option value="metersDevelopment">Meters Development</option>
-          </select>
+          <div className="flex flex-row items-center">
+            <div className="px-2 w-32">
+              <label>Chainring Teeth</label>
+            </div>
+            {Array(chainringCount)
+              .fill(0)
+              .map((v, i) => (
+                <div key={i} className={i === 0 ? 'pl-2' : ''}>
+                  <input
+                    type="number"
+                    onChange={(e) =>
+                      setChainringTeeth(
+                        chainringTeeth.with(i, e.target.valueAsNumber),
+                      )
+                    }
+                    value={chainringTeeth[i]}
+                    className="w-9 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  />
+                </div>
+              ))}
+          </div>
+          <div className="flex flex-row items-center">
+            <div className="px-2 w-32">
+              <label>Cassette / Hub</label>
+            </div>
+            <div className="px-2">
+              <Select
+                onValueChange={(value) => {
+                  const cassetteID = value as CassetteID;
+                  setCassetteID(cassetteID);
+                  if (cassetteID !== 'custom') {
+                    const cassette = CASSETTE_DB[cassetteID];
+                    if (cassette.isIGH) {
+                    } else {
+                      setSprocketCount(cassette.sprockets.length);
+                      setSprocketTeeth(cassette.sprockets);
+                    }
+                  }
+                }}
+                value={cassetteID}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a cassette..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Custom</SelectItem>
+                  {Object.entries(CASSETTE_DB).map(([name]) => (
+                    <SelectItem value={name} key={name}>
+                      {name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="px-2">
+              <label>Sprockets</label>
+            </div>
+            <div className="px-2">
+              <input
+                type="number"
+                onChange={(e) => {
+                  const sprocketCount = e.target.valueAsNumber;
+                  setSprocketCount(sprocketCount);
+                  if (
+                    cassetteID !== 'custom' &&
+                    !CASSETTE_DB[cassetteID]?.isIGH
+                  ) {
+                    setCassetteID('custom');
+                  }
+                  setSprocketTeeth([
+                    ...sprocketTeeth.slice(0, sprocketCount),
+                    ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
+                  ]);
+                }}
+                value={sprocketCount}
+                className="w-12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              />
+            </div>
+          </div>
+          {cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH && (
+            <div className="flex flex-row items-center">
+              <div className="px-2 w-32">
+                <label>Ratios</label>
+              </div>
+              <div>
+                {Array(CASSETTE_DB[cassetteID].ratios.length)
+                  .fill(0)
+                  .map((v, i) => (
+                    <span key={i} className={i === 0 ? 'pl-2' : ''}>
+                      <input
+                        type="number"
+                        disabled
+                        value={(CASSETTE_DB[
+                          cassetteID
+                        ] as InternallyGearedHub).ratios[i].toFixed(2)}
+                        className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                      />
+                    </span>
+                  ))}
+              </div>
+            </div>
+          )}
+          <div className="flex flex-row items-center">
+            <div className="px-2 w-32">
+              <label>Sprocket Teeth</label>
+            </div>
+            {Array(sprocketCount)
+              .fill(0)
+              .map((v, i) => (
+                <div key={i} className={i === 0 ? 'pl-2' : ''}>
+                  <input
+                    type="number"
+                    onChange={(e) => {
+                      setSprocketTeeth(
+                        sprocketTeeth.with(i, e.target.valueAsNumber),
+                      );
+                      if (!CASSETTE_DB[cassetteID]?.isIGH) {
+                        setCassetteID('custom');
+                      }
+                    }}
+                    value={sprocketTeeth[i]}
+                    className="w-9 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  />
+                </div>
+              ))}
+          </div>
         </div>
-        {CompleteCalculationsTable}
+        <div className="m-4">
+          <div className="flex flex-row items-center">
+            <div className="px-2">
+              <label>Calculation to display</label>
+            </div>
+            <Select
+              onValueChange={(value) =>
+                setCalculationToDisplay(
+                  value as 'gearInches' | 'metersDevelopment',
+                )
+              }
+              value={calculationToDisplay}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose a calculation..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gearInches">Gear Inches</SelectItem>
+                <SelectItem value="metersDevelopment">
+                  Meters Development
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {CompleteCalculationsTable}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 
@@ -825,18 +874,22 @@ export default function Home() {
         <label>Bike</label>
       </div>
       <div className="px-2">
-        <select
-          onChange={(e) => setBikeID(e.target.value as BikeID)}
+        <Select
+          onValueChange={(value) => setBikeID(value as BikeID)}
           value={bikeID}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         >
-          <option value="custom">Custom</option>
-          {Object.entries(BIKE_DB).map(([name]) => (
-            <option value={name} key={name}>
-              {name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose a bike..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="custom">Custom</SelectItem>
+            {Object.entries(BIKE_DB).map(([name]) => (
+              <SelectItem value={name} key={name}>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div
           className={`bg-blue-500 rounded-full w-4 h-4 ${
             customized ? '' : 'hidden'
