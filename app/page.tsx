@@ -2,21 +2,21 @@
 
 import {useEffect, useState} from 'react';
 import {InfoIcon} from 'lucide-react';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -589,7 +589,7 @@ const BikeCalculator = ({
           <tbody>
             <tr>
               <td className="px-2">
-                <label>Tire</label>{' '}
+                <Label>Tire</Label>{' '}
                 <InfoTooltip content="The part of the wheel which sits on the wheel's rim. It's actual diameter varies from its imperial naming, which affects gear ratios and meters development." />
               </td>
               <td className="px-2">
@@ -621,10 +621,10 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <label>ETRTO Width</label>
+                <Label>ETRTO Width</Label>
               </td>
               <td className="px-2">
-                <input
+                <Input
                   type="number"
                   onChange={(e) => {
                     setETRTOWidth(e.target.valueAsNumber);
@@ -637,10 +637,10 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <label>ETRTO Diameter</label>
+                <Label>ETRTO Diameter</Label>
               </td>
               <td className="px-2">
-                <input
+                <Input
                   type="number"
                   onChange={(e) => {
                     setETRTODiameter(e.target.valueAsNumber);
@@ -653,10 +653,10 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <label>Tire Diameter</label>
+                <Label>Tire Diameter</Label>
               </td>
               <td className="px-2">
-                <input
+                <Input
                   type="number"
                   disabled
                   value={(
@@ -668,10 +668,10 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <label>Tire Circumference</label>
+                <Label>Tire Circumference</Label>
               </td>
               <td className="px-2">
-                <input
+                <Input
                   type="number"
                   disabled
                   value={Math.round(
@@ -686,10 +686,10 @@ const BikeCalculator = ({
         <div className="m-4">
           <div className="flex flex-row items-center">
             <div className="px-2 w-32">
-              <label>Chainrings</label>
+              <Label>Chainrings</Label>
             </div>
             <div className="px-2">
-              <input
+              <Input
                 type="number"
                 onChange={(e) => {
                   const chainringCount = e.target.valueAsNumber;
@@ -708,13 +708,13 @@ const BikeCalculator = ({
           </div>
           <div className="flex flex-row items-center">
             <div className="px-2 w-32">
-              <label>Chainring Teeth</label>
+              <Label>Chainring Teeth</Label>
             </div>
             {Array(chainringCount)
               .fill(0)
               .map((v, i) => (
                 <div key={i} className={i === 0 ? 'pl-2' : ''}>
-                  <input
+                  <Input
                     type="number"
                     onChange={(e) =>
                       setChainringTeeth(
@@ -729,7 +729,7 @@ const BikeCalculator = ({
           </div>
           <div className="flex flex-row items-center">
             <div className="px-2 w-32">
-              <label>Cassette / Hub</label>
+              <Label>Cassette / Hub</Label>
             </div>
             <div className="px-2">
               <Select
@@ -761,10 +761,10 @@ const BikeCalculator = ({
               </Select>
             </div>
             <div className="px-2">
-              <label>Sprockets</label>
+              <Label>Sprockets</Label>
             </div>
             <div className="px-2">
-              <input
+              <Input
                 type="number"
                 onChange={(e) => {
                   const sprocketCount = e.target.valueAsNumber;
@@ -788,14 +788,14 @@ const BikeCalculator = ({
           {cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH && (
             <div className="flex flex-row items-center">
               <div className="px-2 w-32">
-                <label>Ratios</label>
+                <Label>Ratios</Label>
               </div>
               <div>
                 {Array(CASSETTE_DB[cassetteID].ratios.length)
                   .fill(0)
                   .map((v, i) => (
                     <span key={i} className={i === 0 ? 'pl-2' : ''}>
-                      <input
+                      <Input
                         type="number"
                         disabled
                         value={(CASSETTE_DB[
@@ -810,13 +810,13 @@ const BikeCalculator = ({
           )}
           <div className="flex flex-row items-center">
             <div className="px-2 w-32">
-              <label>Sprocket Teeth</label>
+              <Label>Sprocket Teeth</Label>
             </div>
             {Array(sprocketCount)
               .fill(0)
               .map((v, i) => (
                 <div key={i} className={i === 0 ? 'pl-2' : ''}>
-                  <input
+                  <Input
                     type="number"
                     onChange={(e) => {
                       setSprocketTeeth(
@@ -836,7 +836,7 @@ const BikeCalculator = ({
         <div className="m-4">
           <div className="flex flex-row items-center">
             <div className="px-2">
-              <label>Calculation to display</label>
+              <Label>Calculation to display</Label>
             </div>
             <Select
               onValueChange={(value) =>
@@ -871,7 +871,7 @@ export default function Home() {
   return (
     <div>
       <div className="px-2">
-        <label>Bike</label>
+        <Label>Bike</Label>
       </div>
       <div className="px-2">
         <Select
