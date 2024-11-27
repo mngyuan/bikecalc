@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useEffect, useState, ReactNode} from 'react';
 import {InfoIcon} from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -396,7 +396,7 @@ const configEqualToBike = (
   return tiresEqual && chainringsEqual && cassettesEqual;
 };
 
-const InfoTooltip = ({content}) => {
+const InfoTooltip = ({content}: {content: ReactNode}) => {
   return (
     <Tooltip>
       <TooltipTrigger className="inline-flex items-center">
@@ -783,9 +783,9 @@ const BikeCalculator = ({
                       <Input
                         type="number"
                         disabled
-                        value={(CASSETTE_DB[
-                          cassetteID
-                        ] as InternallyGearedHub).ratios[i].toFixed(2)}
+                        value={(
+                          CASSETTE_DB[cassetteID] as InternallyGearedHub
+                        ).ratios[i].toFixed(2)}
                         className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
                       />
                     </span>
