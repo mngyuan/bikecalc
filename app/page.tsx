@@ -5,13 +5,6 @@ import {InfoIcon} from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -593,9 +586,9 @@ const BikeCalculator = ({
                 <InfoTooltip content="The part of the wheel which sits on the wheel's rim. It's actual diameter varies from its imperial naming, which affects gear ratios and meters development." />
               </td>
               <td className="px-2">
-                <Select
-                  onValueChange={(value) => {
-                    const tireID = value as TireID | 'custom';
+                <select
+                  onChange={(e) => {
+                    const tireID = e.target.value as TireID | 'custom';
                     setTireID(tireID);
                     if (tireID !== 'custom') {
                       const tire = TIRE_DB[tireID];
@@ -604,19 +597,15 @@ const BikeCalculator = ({
                     }
                   }}
                   value={tireID}
+                  className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose a tire..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="custom">Custom</SelectItem>
-                    {Object.entries(TIRE_DB).map(([name]) => (
-                      <SelectItem value={name} key={name}>
-                        {name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="custom">Custom</option>
+                  {Object.entries(TIRE_DB).map(([name]) => (
+                    <option value={name} key={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
               </td>
             </tr>
             <tr>
@@ -732,9 +721,9 @@ const BikeCalculator = ({
               <Label>Cassette / Hub</Label>
             </div>
             <div className="px-2">
-              <Select
-                onValueChange={(value) => {
-                  const cassetteID = value as CassetteID;
+              <select
+                onChange={(e) => {
+                  const cassetteID = e.target.value as CassetteID;
                   setCassetteID(cassetteID);
                   if (cassetteID !== 'custom') {
                     const cassette = CASSETTE_DB[cassetteID];
@@ -746,19 +735,15 @@ const BikeCalculator = ({
                   }
                 }}
                 value={cassetteID}
+                className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a cassette..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="custom">Custom</SelectItem>
-                  {Object.entries(CASSETTE_DB).map(([name]) => (
-                    <SelectItem value={name} key={name}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="custom">Custom</option>
+                {Object.entries(CASSETTE_DB).map(([name]) => (
+                  <option value={name} key={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="px-2">
               <Label>Sprockets</Label>
@@ -838,24 +823,18 @@ const BikeCalculator = ({
             <div className="px-2">
               <Label>Calculation to display</Label>
             </div>
-            <Select
-              onValueChange={(value) =>
+            <select
+              onChange={(e) =>
                 setCalculationToDisplay(
-                  value as 'gearInches' | 'metersDevelopment',
+                  e.target.value as 'gearInches' | 'metersDevelopment',
                 )
               }
               value={calculationToDisplay}
+              className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a calculation..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gearInches">Gear Inches</SelectItem>
-                <SelectItem value="metersDevelopment">
-                  Meters Development
-                </SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="gearInches">Gear Inches</option>
+              <option value="metersDevelopment">Meters Development</option>
+            </select>
           </div>
           {CompleteCalculationsTable}
         </div>
@@ -874,22 +853,18 @@ export default function Home() {
         <Label>Bike</Label>
       </div>
       <div className="px-2">
-        <Select
-          onValueChange={(value) => setBikeID(value as BikeID)}
+        <select
+          onChange={(e) => setBikeID(e.target.value as BikeID)}
           value={bikeID}
+          className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a bike..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="custom">Custom</SelectItem>
-            {Object.entries(BIKE_DB).map(([name]) => (
-              <SelectItem value={name} key={name}>
-                {name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="custom">Custom</option>
+          {Object.entries(BIKE_DB).map(([name]) => (
+            <option value={name} key={name}>
+              {name}
+            </option>
+          ))}
+        </select>
         <div
           className={`bg-blue-500 rounded-full w-4 h-4 ${
             customized ? '' : 'hidden'
