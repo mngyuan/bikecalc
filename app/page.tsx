@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import BikeViewer from '@/components/BikeViewer';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -467,9 +468,11 @@ const CalculationsTable = ({
 const BikeCalculator = ({
   bike,
   onCustomized,
+  className = '',
 }: {
   bike?: Bike;
   onCustomized: (customized: boolean) => void;
+  className?: string;
 }) => {
   const [tireID, setTireID] = useState<TireID | 'custom'>(
     bike ? bike.tire : 'custom',
@@ -577,7 +580,7 @@ const BikeCalculator = ({
 
   return (
     <TooltipProvider>
-      <div className="bike-calc">
+      <div className={`bike-calc ${className}`}>
         <table className="m-4">
           <tbody>
             <tr>
@@ -597,7 +600,7 @@ const BikeCalculator = ({
                     }
                   }}
                   value={tireID}
-                  className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+                  className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
                 >
                   <option value="custom">Custom</option>
                   {Object.entries(TIRE_DB).map(([name]) => (
@@ -610,7 +613,8 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <Label>ETRTO Width</Label>
+                <Label>ETRTO Width</Label>{' '}
+                <InfoTooltip content="The width in millimeters of the inflated tire. ETRTO stands for European Tire & Rim Technical Organization." />
               </td>
               <td className="px-2">
                 <Input
@@ -626,7 +630,8 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <Label>ETRTO Diameter</Label>
+                <Label>ETRTO Diameter</Label>{' '}
+                <InfoTooltip content="The inner diameter in millimeters of the inflated tire." />
               </td>
               <td className="px-2">
                 <Input
@@ -642,7 +647,8 @@ const BikeCalculator = ({
             </tr>
             <tr>
               <td className="px-2">
-                <Label>Tire Diameter</Label>
+                <Label>Tire Diameter</Label>{' '}
+                <InfoTooltip content="The outer diameter in millimeters of the inflated tire, calculated from ETRTO size." />
               </td>
               <td className="px-2">
                 <Input
@@ -735,7 +741,7 @@ const BikeCalculator = ({
                   }
                 }}
                 value={cassetteID}
-                className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+                className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
               >
                 <option value="custom">Custom</option>
                 {Object.entries(CASSETTE_DB).map(([name]) => (
@@ -783,9 +789,9 @@ const BikeCalculator = ({
                       <Input
                         type="number"
                         disabled
-                        value={(
-                          CASSETTE_DB[cassetteID] as InternallyGearedHub
-                        ).ratios[i].toFixed(2)}
+                        value={(CASSETTE_DB[
+                          cassetteID
+                        ] as InternallyGearedHub).ratios[i].toFixed(2)}
                         className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
                       />
                     </span>
@@ -821,7 +827,27 @@ const BikeCalculator = ({
         <div className="m-4">
           <div className="flex flex-row items-center">
             <div className="px-2">
-              <Label>Calculation to display</Label>
+              <Label>Calculation to display</Label>{' '}
+              <InfoTooltip
+                content={
+                  <div>
+                    <p>
+                      Both gear inches and meters development measure the
+                      difficulty of pedaling.
+                    </p>
+                    <p>
+                      <i>Gear Inches</i>: The effective diameter of the wheel if
+                      it were a fixed gear. Lower gear inches are easier to
+                      pedal.
+                    </p>
+                    <p>
+                      <i>Meters Development</i>: The distance the bike travels
+                      in meters for one complete pedal revolution. Lower meters
+                      development are easier to pedal.
+                    </p>
+                  </div>
+                }
+              />
             </div>
             <select
               onChange={(e) =>
@@ -830,7 +856,7 @@ const BikeCalculator = ({
                 )
               }
               value={calculationToDisplay}
-              className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+              className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
             >
               <option value="gearInches">Gear Inches</option>
               <option value="metersDevelopment">Meters Development</option>
@@ -849,6 +875,7 @@ export default function Home() {
 
   return (
     <div>
+      <BikeViewer className="w-full h-full" />
       <div className="px-2">
         <Label>Bike</Label>
       </div>
@@ -856,7 +883,7 @@ export default function Home() {
         <select
           onChange={(e) => setBikeID(e.target.value as BikeID)}
           value={bikeID}
-          className="flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+          className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
         >
           <option value="custom">Custom</option>
           {Object.entries(BIKE_DB).map(([name]) => (
@@ -882,6 +909,7 @@ export default function Home() {
             // setBikeID('custom');
           }
         }}
+        className="relative"
       />
     </div>
   );
