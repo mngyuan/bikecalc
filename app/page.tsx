@@ -1,19 +1,24 @@
 'use client';
 
-import {useEffect, useState, ReactNode} from 'react';
-import {InfoIcon, SaveIcon} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {SaveIcon} from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Button} from '@/components/ui/button';
 import {Separator} from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import BikeViewer from '@/components/BikeViewer';
+import {TooltipProvider} from '@/components/ui/tooltip';
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {
+  Bike,
+  BIKE_DB,
+  BikeID,
+  CASSETTE_DB,
+  CassetteID,
+  InternallyGearedHub,
+  isInternallyGearedHub,
+  TIRE_DB,
+  TireID,
+} from '@/lib/data';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -114,251 +119,6 @@ const mapMetersDevelopmentToColor = (metersDevelopment: number) =>
   // map from very light blue to dark blue
   createMapRangeToColor('#d0e2f3', '#3d85c6')(metersDevelopment, 1, 10);
 
-const TIRE_DB = {
-  'Schwalbe Billy Bonkers 16"': {ETRTOSize: [50, 305]},
-  'Schwalbe Kojak 16"': {ETRTOSize: [32, 349]},
-  'Schwalbe Marathon 16"': {ETRTOSize: [35, 349]},
-  'Schwalbe Marathon Racer 16"': {ETRTOSize: [35, 349]},
-  'Schwalbe One 16"': {ETRTOSize: [35, 349]},
-  'Schwalbe Green Marathon 16"': {ETRTOSize: [35, 349]},
-  'Schwalbe Billy Bonkers 18"': {ETRTOSize: [50, 355]},
-  'Kenda Booster Pro 20"x2.4"': {ETRTOSize: [61, 406]},
-  'Odyssey Path Pro 20"x2.4"': {ETRTOSize: [60, 406]},
-  'Schwalbe G-One Allround 20"': {ETRTOSize: [54, 406]},
-  'Schwalbe Green Marathon 20"': {ETRTOSize: [47, 406]},
-  'Schwalbe Billy Bonkers 20"x1.5"': {ETRTOSize: [40, 406]},
-  'Schwalbe Billy Bonkers 20"x2.0"': {ETRTOSize: [50, 406]},
-  'Kenda Booster Pro 24"x2.2"': {ETRTOSize: [56, 507]},
-  'Schwalbe Billy Bonkers 24"': {ETRTOSize: [50, 507]},
-  'Schwalbe Crazy Bob 24"': {ETRTOSize: [60, 507]},
-  'Kenda Booster Pro 26"x2.2"': {ETRTOSize: [56, 559]},
-  'Kenda Booster Pro 26"x2.4"': {ETRTOSize: [61, 559]},
-  'Schwalbe Big Apple 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Big Ben 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Billy Bonkers 26"x2.0"': {ETRTOSize: [50, 559]},
-  'Schwalbe Billy Bonkers 26"x2.10"': {ETRTOSize: [54, 559]},
-  'Schwalbe Billy Bonkers 26"x2.25"': {ETRTOSize: [57, 559]},
-  'Schwalbe Crazy Bob 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Dirty Dan 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Fat Frank 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Hans Dampf 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Ice Spiker/Ice Spiker Pro 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Magic Mary 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Nobby Nic 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Rock Razor 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Rocket Ron 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Space 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Super Moto 26"': {ETRTOSize: [60, 559]},
-  'Schwalbe Magic Mary 26" (64-559)': {ETRTOSize: [64, 559]},
-  'Surly ExtraTerrestrial 26"x46': {ETRTOSize: [46, 559]},
-  'Kenda Booster Pro 27.5"x2.2"': {ETRTOSize: [56, 584]},
-  'Kenda Booster Pro 27.5"x2.4"': {ETRTOSize: [61, 584]},
-  'Kenda Booster Pro 27.5"x2.6"': {ETRTOSize: [66, 584]},
-  'Kenda Booster Pro 27.5"x2.8"': {ETRTOSize: [71, 584]},
-  'Schwalbe Dirty Dan 27.5"': {ETRTOSize: [60, 584]},
-  'Schwalbe Hans Dampf 27.5"': {ETRTOSize: [60, 584]},
-  'Schwalbe Magic Mary 27.5"': {ETRTOSize: [60, 584]},
-  'Schwalbe Nobby Nic 27.5"': {ETRTOSize: [60, 584]},
-  'Schwalbe Rock Razor 27.5"': {ETRTOSize: [60, 584]},
-  'Vee GP Vee 27.5"x2.35"': {ETRTOSize: [60, 584]},
-  'Schwalbe Big Apple 28"x2.0"': {ETRTOSize: [50, 622]},
-  'Schwalbe Big Apple Plus 28"x2.15"': {ETRTOSize: [50, 622]},
-  'Schwalbe Big Apple 28"x2.15"': {ETRTOSize: [55, 622]},
-  'Schwalbe Big Ben 28"x2.15"': {ETRTOSize: [55, 622]},
-  'Schwalbe Marathon Almotion 28"': {ETRTOSize: [55, 622]},
-  'Kenda Booster Pro 29"x2.2"': {ETRTOSize: [56, 622]},
-  'Kenda Booster Pro 29"x2.4"': {ETRTOSize: [61, 622]},
-  'Kenda Booster Pro 29"x2.6"': {ETRTOSize: [66, 622]},
-  'Schwalbe Big Apple 29"': {ETRTOSize: [60, 622]},
-  'Schwalbe Hans Dampf 29"': {ETRTOSize: [60, 622]},
-  'Schwalbe Magic Mary 29"': {ETRTOSize: [60, 622]},
-  'Schwalbe Nobby Nic 29"': {ETRTOSize: [60, 622]},
-  'Schwalbe Racing Ralph 29"': {ETRTOSize: [60, 622]},
-  'Schwalbe Super Moto 29"': {ETRTOSize: [60, 622]},
-  'Specialized Ground Control Grid T7 29"x2.2"': {ETRTOSize: [54, 622]},
-};
-type TireID = keyof typeof TIRE_DB;
-
-interface ExternalCassette {
-  sprockets: number[];
-  isIGH?: false;
-}
-interface InternallyGearedHub {
-  isIGH: true;
-  ratios: number[];
-}
-type Cassette = ExternalCassette | InternallyGearedHub;
-
-// prettier-ignore
-const CASSETTE_DB: Record<string, Cassette> = {
-  'Microshift Advent X H-Series 10 Speed 11-48T': {
-    sprockets: [11, 13, 15, 18, 21, 24, 28, 34, 40, 48],
-  },
-  'Microshift G-Series 11 Speed 11-46T': {
-    sprockets: [11, 13, 15, 18, 21, 24, 28, 32, 36, 40, 46],
-  },
-  'Microshift H-Series 10 Speed 11-42T ': {
-    sprockets: [11, 13, 15, 18, 21, 24, 28, 32, 36, 42],
-  },
-  'Rohloff Speedhub 500/14': {
-    ratios: [
-      0.279, 0.316, 0.36, 0.409, 0.464, 0.528, 0.6, 0.682, 0.774, 0.881, 1.0,
-      1.135, 1.292, 1.467,
-    ],
-    isIGH: true,
-  },
-  'Shimano Alfine 8 Speed Hub': {
-    ratios: [0.527, 0.644, 0.748, 0.851, 1, 1.223, 1.419, 1.615],
-    isIGH: true,
-  },
-  'Shimano Alfine 11 Speed Hub': {
-    ratios: [
-      0.527, 0.681, 0.77, 0.878, 0.995, 1.134, 1.292, 1.462, 1.667, 1.888,
-      2.153,
-    ],
-    isIGH: true,
-  },
-  'Shimano Alivio CS-HG400 9 Speed 11-28T': {
-    sprockets: [11, 12, 13, 14, 16, 18, 21, 24, 28],
-  },
-  'Shimano Alivio CS-HG400 9 Speed 11-32T': {
-    sprockets: [11, 12, 14, 16, 18, 21, 24, 28, 32],
-  },
-  'Shimano Alivio CS-HG400 9 Speed 11-34T': {
-    sprockets: [11, 13, 15, 17, 20, 23, 26, 30, 34],
-  },
-  'Shimano Alivio CS-HG400 9 Speed 11-36T': {
-    sprockets: [11, 13, 15, 17, 20, 23, 26, 30, 36],
-  },
-  'Shimano Alivio CS-HG400 9 Speed 12-36T': {
-    sprockets: [12, 14, 16, 18, 21, 24, 28, 32, 36],
-  },
-  'SRAM PG-1130 11 Speed 11-26T': {
-    sprockets: [11, 12, 13, 14, 15, 16, 17, 19, 21, 23, 26],
-  },
-  'SRAM PG-1130 11 Speed 11-28T': {
-    sprockets: [11, 12, 13, 14, 15, 16, 17, 19, 22, 25, 28],
-  },
-  'SRAM PG-1130 11 Speed 11-32T': {
-    sprockets: [11, 12, 13, 14, 15, 17, 19, 22, 25, 28, 32],
-  },
-  'SRAM PG-1130 11 Speed 11-36T': {
-    sprockets: [11, 12, 13, 15, 17, 19, 22, 25, 28, 32, 36],
-  },
-  'SRAM PG-1130 11 Speed 11-42T': {
-    sprockets: [11, 13, 15, 17, 19, 22, 25, 28, 32, 36, 42],
-  },
-  'SRAM XPLR PG-1231 12 Speed 11-44T': {
-    sprockets: [11, 12, 13, 15, 17, 19, 21, 24, 28, 32, 38, 44],
-  },
-  'Sturmey Archer BSR': {
-    // THink this is the same hub as S-RF3
-    ratios: [0.75, 1, 1.3333333],
-    isIGH: true,
-  },
-  'Sturmey Archer BWR': {
-    ratios: [0.64, 1, 1.56],
-    isIGH: true,
-  },
-  'Sturmey Archer S-RF3': {
-    ratios: [0.75, 1, 1.3333333],
-    isIGH: true,
-    // TODO: would be nice for IGH to specify maximum sprockets
-  },
-  'Sturmey Archer S-RF5': {
-    ratios: [0.733, 0.885, 1, 1.212, 1.464],
-    isIGH: true,
-  },
-  'Sturmey Archer X-RF8': {
-    ratios: [1, 1.3, 1.48, 1.69, 1.92, 2.2, 2.5, 3.25],
-    isIGH: true,
-  },
-  'SunRace 10 Speed 11-51T': {
-    sprockets: [11, 13, 15, 18, 23, 28, 33, 39, 45, 51],
-  }
-};
-type CassetteID = keyof typeof CASSETTE_DB;
-// Type guard
-const isInternallyGearedHub = (
-  cassette: Cassette | InternallyGearedHub,
-): cassette is InternallyGearedHub => {
-  return 'isIGH' in cassette;
-};
-
-interface Bike {
-  tire: TireID;
-  chainringTeeth: number[];
-  cassette: CassetteID;
-  // Needs to be separately specified for IGH bikes
-  sprockets?: number[];
-}
-
-const BIKE_DB: Record<string, Bike> = {
-  // Cannot identify this cassette
-  // 'Bike Friday All-Packa 1x9': {
-  'Bike Friday All-Packa 1x11': {
-    tire: 'Kenda Booster Pro 20"x2.4"',
-    chainringTeeth: [42],
-    cassette: 'SRAM PG-1130 11 Speed 11-42T',
-  },
-  'Bike Friday All-Packa 1x12': {
-    tire: 'Kenda Booster Pro 20"x2.4"',
-    chainringTeeth: [42],
-    cassette: 'SRAM XPLR PG-1231 12 Speed 11-44T',
-  },
-  // Cannot identify this cassette, same one probably
-  // 'Bike Friday All-Packa 2x': {
-  // Not sure sprockets
-  // 'Bike Friday All-Packa Rohloff': {
-  'Brompton A Line': {
-    tire: 'Schwalbe Kojak 16"',
-    chainringTeeth: [44],
-    cassette: 'Sturmey Archer BSR',
-    sprockets: [13],
-  },
-  'Brompton C Line 3 speed': {
-    // Discontinued
-    tire: 'Schwalbe Marathon 16"',
-    chainringTeeth: [50],
-    cassette: 'Sturmey Archer BSR',
-    sprockets: [13],
-  },
-  'Brompton C Line 6 speed': {
-    tire: 'Schwalbe Marathon Racer 16"',
-    chainringTeeth: [50],
-    cassette: 'Sturmey Archer BWR',
-    sprockets: [13, 16],
-  },
-  'Brompton G Line': {
-    tire: 'Schwalbe G-One Allround 20"',
-    chainringTeeth: [54],
-    cassette: 'Shimano Alfine 8 Speed Hub',
-    sprockets: [20],
-  },
-  'Cranston R9 Max 9 speed': {
-    tire: 'Schwalbe Green Marathon 16"',
-    chainringTeeth: [53],
-    cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
-  },
-  'Cranston R20 Max 9 speed': {
-    tire: 'Schwalbe Green Marathon 20"',
-    chainringTeeth: [53],
-    cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
-  },
-  'Marin Larkspur 1': {
-    tire: 'Vee GP Vee 27.5"x2.35"',
-    chainringTeeth: [38],
-    cassette: 'SunRace 10 Speed 11-51T',
-  },
-  'Surly Disc Trucker': {
-    tire: 'Surly ExtraTerrestrial 26"x46',
-    chainringTeeth: [48, 36, 26],
-    cassette: 'Shimano Alivio CS-HG400 9 Speed 11-34T',
-  },
-};
-
-type BikeID = keyof typeof BIKE_DB;
-
 const configEqualToBike = (
   {
     ETRTOWidth,
@@ -398,19 +158,6 @@ const configEqualToBike = (
         )
       : true);
   return tiresEqual && chainringsEqual && cassettesEqual;
-};
-
-const InfoTooltip = ({content}: {content: ReactNode}) => {
-  return (
-    <Tooltip>
-      <TooltipTrigger className="inline-flex items-center">
-        <InfoIcon className="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors" />
-      </TooltipTrigger>
-      <TooltipContent className="max-w-xs">
-        <p className="text-sm">{content}</p>
-      </TooltipContent>
-    </Tooltip>
-  );
 };
 
 const CalculationsRow = ({

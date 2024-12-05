@@ -1,11 +1,12 @@
 import React, {useRef} from 'react';
+import * as THREE from 'three';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
 import {useState} from 'react';
 
 // Simple bike model made with basic shapes
 function Bicycle({onClick}: {onClick: () => void}) {
-  const frame = useRef();
+  const frame = useRef<THREE.Group>(null);
 
   return (
     <group ref={frame} position={[0, 0, 0]} onClick={onClick}>
