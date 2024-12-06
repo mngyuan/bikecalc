@@ -19,6 +19,7 @@ import {
   TIRE_DB,
   TireID,
 } from '@/lib/data';
+import {Card, CardContent} from '@/components/ui/card';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -599,45 +600,60 @@ export default function Home() {
   const [customized, setCustomized] = useState<boolean>(false);
 
   return (
-    <div className="p-3">
-      <div className="flex flex-row items-center space-between">
-        <Label className="mr-4">Bike</Label>
-        <div className="flex flex-row">
-          <select
-            onChange={(e) => setBikeID(e.target.value as BikeID)}
-            value={bikeID}
-            className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
-          >
-            <option value="custom">Custom</option>
-            {Object.entries(BIKE_DB).map(([name]) => (
-              <option value={name} key={name}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <Button
-            variant="outline"
-            size="icon"
-            className={`ml-2 ${customized ? '' : 'hidden'}`}
-          >
-            <SaveIcon />
-          </Button>
+    <div className="p-4 flex flex-row space-x-4 h-full w-full">
+      <div className="flex flex-col items-start">
+        <h1 className="text-3xl font-bold mb-2">Bike Calc</h1>
+        <p className="text-muted-foreground mb-2">
+          Calculate gear inches, meters development, and more for your bike.
+        </p>
+        <div className="flex flex-row items-center space-between">
+          <Label className="mr-4">Bike</Label>
+          <div className="flex flex-row">
+            <select
+              onChange={(e) => setBikeID(e.target.value as BikeID)}
+              value={bikeID}
+              className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+            >
+              <option value="custom">Custom</option>
+              {Object.entries(BIKE_DB).map(([name]) => (
+                <option value={name} key={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="outline"
+              size="icon"
+              className={`ml-2 ${customized ? '' : 'hidden'}`}
+            >
+              <SaveIcon />
+            </Button>
+          </div>
         </div>
-      </div>
-      <Separator className="my-6" />
-      {/* key prop supplied to force reset state when bike prop changes. see
+        <Card className="mt-4 flex w-full">
+          <CardContent className="flex p-4">
+            {/* key prop supplied to force reset state when bike prop changes. see
       https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes */}
-      <BikeCalculator
-        bike={BIKE_DB[bikeID]}
-        key={bikeID}
-        onCustomized={(customized) => {
-          setCustomized(customized);
-          if (customized) {
-            // setBikeID('custom');
-          }
-        }}
-        className="relative"
-      />
+            <BikeCalculator
+              bike={BIKE_DB[bikeID]}
+              key={bikeID}
+              onCustomized={(customized) => {
+                setCustomized(customized);
+                if (customized) {
+                  // setBikeID('custom');
+                }
+              }}
+              className="relative"
+            />
+          </CardContent>
+        </Card>
+      </div>
+      {/* TODO: something needs to be done here with sizing, the canvas in BikeViewer won't resize properly */}
+      <div className="flex flex-col grow">
+        <Card className="w-full grow">
+          <CardContent className="p-4"></CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
