@@ -200,7 +200,7 @@ const CalculationsRow = ({
       return (
         <div
           key={i}
-          className={`w-10 h-8 text-center p-1`}
+          className={`w-10 h-8 text-center p-1 min-w-0`}
           style={{backgroundColor: calculationColoration(gI)}}
         >
           {formatNumber(gI)}
@@ -297,7 +297,7 @@ const BikeCalculator = ({
   ]);
 
   const CompleteCalculationsTable = (
-    <div className="border border-grey-300 rounded">
+    <div className="border border-grey-300 rounded max-w-full">
       <div className="flex flex-row">
         <div className="w-10 text-center p-2 text-xs">Gear</div>
         {[...Array(sprocketCount)].fill(0).map((v, i) => (
@@ -345,7 +345,7 @@ const BikeCalculator = ({
                     formatNumber:
                       calculationToDisplay === 'gearInches'
                         ? (n) => Math.round(n)
-                        : (n) => n.toFixed(2),
+                        : (n) => n.toFixed(1),
                   }}
                 />
               </div>
@@ -456,23 +456,24 @@ const BikeCalculator = ({
               className="w-9 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             />
           </div>
-          <div className="flex flex-row items-center">
-            <Label className="mr-4">Chainring Teeth</Label>
-            <div className="flex flex-row items-center space-x-1">
+          <div className="flex flex-row items-start">
+            <Label className="mr-4 mt-3 shrink-0">Chainring Teeth</Label>
+            <div className="flex flex-row flex-wrap">
               {Array(chainringCount)
                 .fill(0)
                 .map((v, i) => (
-                  <Input
-                    key={i}
-                    type="number"
-                    onChange={(e) =>
-                      setChainringTeeth(
-                        chainringTeeth.with(i, e.target.valueAsNumber),
-                      )
-                    }
-                    value={chainringTeeth[i]}
-                    className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  />
+                  <div className="p-1" key={i}>
+                    <Input
+                      type="number"
+                      onChange={(e) =>
+                        setChainringTeeth(
+                          chainringTeeth.with(i, e.target.valueAsNumber),
+                        )
+                      }
+                      value={chainringTeeth[i]}
+                      className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    />
+                  </div>
                 ))}
             </div>
           </div>
@@ -544,26 +545,27 @@ const BikeCalculator = ({
               </div>
             </div>
           )}
-          <div className="flex flex-row items-center">
-            <Label className="mr-4">Sprocket Teeth</Label>
-            <div className="flex flex-row items-center space-x-1">
+          <div className="flex flex-row items-start">
+            <Label className="mr-4 mt-3 shrink-0">Sprocket Teeth</Label>
+            <div className="flex flex-row flex-wrap">
               {Array(sprocketCount)
                 .fill(0)
                 .map((v, i) => (
-                  <Input
-                    key={i}
-                    type="number"
-                    onChange={(e) => {
-                      setSprocketTeeth(
-                        sprocketTeeth.with(i, e.target.valueAsNumber),
-                      );
-                      if (!CASSETTE_DB[cassetteID]?.isIGH) {
-                        setCassetteID('custom');
-                      }
-                    }}
-                    value={sprocketTeeth[i]}
-                    className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  />
+                  <div className="p-1" key={i}>
+                    <Input
+                      type="number"
+                      onChange={(e) => {
+                        setSprocketTeeth(
+                          sprocketTeeth.with(i, e.target.valueAsNumber),
+                        );
+                        if (!CASSETTE_DB[cassetteID]?.isIGH) {
+                          setCassetteID('custom');
+                        }
+                      }}
+                      value={sprocketTeeth[i]}
+                      className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    />
+                  </div>
                 ))}
             </div>
           </div>
@@ -601,7 +603,7 @@ export default function Home() {
 
   return (
     <div className="p-4 flex flex-row space-x-4 h-full w-full">
-      <div className="flex flex-col items-start">
+      <div className="flex flex-col items-start w-[32rem]">
         <h1 className="text-3xl font-bold mb-2">Bike Calc</h1>
         <p className="text-muted-foreground mb-2">
           Calculate gear inches, meters development, and more for your bike.
@@ -631,7 +633,7 @@ export default function Home() {
           </div>
         </div>
         <Card className="mt-4 flex w-full">
-          <CardContent className="flex p-4">
+          <CardContent className="flex p-4 w-full">
             {/* key prop supplied to force reset state when bike prop changes. see
       https://react.dev/learn/you-might-not-need-an-effect#resetting-all-state-when-a-prop-changes */}
             <BikeCalculator
@@ -643,7 +645,7 @@ export default function Home() {
                   // setBikeID('custom');
                 }
               }}
-              className="relative"
+              className="w-full"
             />
           </CardContent>
         </Card>
