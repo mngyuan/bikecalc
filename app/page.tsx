@@ -216,13 +216,72 @@ const CalculationsRow = ({
     : []),
 ];
 
+const explanations = {
+  tire: (
+    <p>
+      {`The part of the wheel which sits on the wheel's rim. Its actual
+        diameter varies from its imperial naming, which affects gear inches and
+        meters development.`}
+    </p>
+  ),
+  ETRTOWidth: (
+    <p>
+      {`The width in millimeters of the inflated tire. ETRTO stands for European Tire & Rim Technical Organization.`}
+    </p>
+  ),
+  ETRTODiameter: (
+    <p>{`The inner diameter in millimeters of the tire. ETRTO stands for European Tire & Rim Technical Organization.`}</p>
+  ),
+  tireDiameter: (
+    <p>
+      The outer diameter in inches of the inflated tire, calculated from ETRTO
+      size. Used to calculate gear inches.
+    </p>
+  ),
+  tireCircumference: (
+    <p>
+      The distance in millimeters the tire travels in one revolution. Used to
+      calculate meters development.
+    </p>
+  ),
+  gearInches: (
+    <>
+      <p>
+        Both gear inches and meters development measure the difficulty of
+        pedaling.
+      </p>
+      <p>
+        <i>Gear Inches</i>: The theoretical diameter of an equivalent tire on a
+        1:1 gear bicycle. Lower gear inches are easier to pedal.
+      </p>
+    </>
+  ),
+  metersDevelopment: (
+    <>
+      <p>
+        Both gear inches and meters development measure the difficulty of
+        pedaling.
+      </p>
+      <p>
+        <i>Meters Development</i>: The distance the bike travels in meters for
+        one complete pedal revolution. Lower meters development are easier to
+        pedal.
+      </p>
+    </>
+  ),
+};
+
 const BikeCalculator = ({
   bike,
   onCustomized,
+  setExplanationToDisplay,
   className = '',
 }: {
   bike?: Bike;
   onCustomized: (customized: boolean) => void;
+  setExplanationToDisplay: (
+    explanation: keyof typeof explanations | undefined,
+  ) => void;
   className?: string;
 }) => {
   const [tireID, setTireID] = useState<TireID | 'custom'>(
@@ -360,7 +419,11 @@ const BikeCalculator = ({
     <TooltipProvider>
       <div className={`bike-calc ${className}`}>
         <div className="flex flex-col items-start space-y-2">
-          <div className="flex flex-row items-center space-between">
+          <div
+            className="flex flex-row items-center space-between"
+            onPointerEnter={() => setExplanationToDisplay('tire')}
+            onPointerLeave={() => setExplanationToDisplay(undefined)}
+          >
             <Label className="mr-4">Tire</Label>{' '}
             <select
               onChange={(e) => {
@@ -384,7 +447,11 @@ const BikeCalculator = ({
             </select>
           </div>
           <div className="flex flex-row items-center justify-between space-x-6">
-            <div className="flex flex-row items-center">
+            <div
+              className="flex flex-row items-center"
+              onPointerEnter={() => setExplanationToDisplay('ETRTOWidth')}
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
+            >
               <Label className="mr-4">ETRTO Width</Label>{' '}
               <Input
                 type="number"
@@ -397,7 +464,11 @@ const BikeCalculator = ({
               />
               <span className="text-sm">mm</span>
             </div>
-            <div className="flex flex-row items-center">
+            <div
+              className="flex flex-row items-center"
+              onPointerEnter={() => setExplanationToDisplay('ETRTODiameter')}
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
+            >
               <Label className="mr-4">ETRTO Diameter</Label>{' '}
               <Input
                 type="number"
@@ -412,7 +483,11 @@ const BikeCalculator = ({
             </div>
           </div>
           <div className="flex flex-row items-center justify-between space-x-6">
-            <div className="flex flex-row items-center">
+            <div
+              className="flex flex-row items-center"
+              onPointerEnter={() => setExplanationToDisplay('tireDiameter')}
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
+            >
               <Label className="mr-4">Tire Diameter</Label>{' '}
               <Input
                 type="number"
@@ -424,7 +499,13 @@ const BikeCalculator = ({
               />
               <span className="text-sm">in.</span>
             </div>
-            <div className="flex flex-row items-center">
+            <div
+              className="flex flex-row items-center"
+              onPointerEnter={() =>
+                setExplanationToDisplay('tireCircumference')
+              }
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
+            >
               <Label className="mr-4">Tire Circumference</Label>
               <Input
                 type="number"
@@ -582,8 +663,20 @@ const BikeCalculator = ({
               }
             >
               <TabsList className="flex flex-row">
-                <TabsTrigger value="gearInches">Gear Inches</TabsTrigger>
-                <TabsTrigger value="metersDevelopment">
+                <TabsTrigger
+                  value="gearInches"
+                  onPointerEnter={() => setExplanationToDisplay('gearInches')}
+                  onPointerLeave={() => setExplanationToDisplay(undefined)}
+                >
+                  Gear Inches
+                </TabsTrigger>
+                <TabsTrigger
+                  value="metersDevelopment"
+                  onPointerEnter={() =>
+                    setExplanationToDisplay('metersDevelopment')
+                  }
+                  onPointerLeave={() => setExplanationToDisplay(undefined)}
+                >
                   Meters Development
                 </TabsTrigger>
                 <TabsTrigger value="speed">Speed</TabsTrigger>
@@ -600,10 +693,12 @@ const BikeCalculator = ({
 export default function Home() {
   const [bikeID, setBikeID] = useState<BikeID | 'custom'>('custom');
   const [customized, setCustomized] = useState<boolean>(false);
+  const [explanationToDisplay, setExplanationToDisplay] =
+    useState<keyof typeof explanations>();
 
   return (
     <div className="p-4 flex flex-row space-x-4 h-full w-full">
-      <div className="flex flex-col items-start w-[32rem]">
+      <div className="flex flex-col items-start w-[32rem] shrink-0">
         <h1 className="text-3xl font-bold mb-2">Bike Calc</h1>
         <p className="text-muted-foreground mb-2">
           Calculate gear inches, meters development, and more for your bike.
@@ -645,6 +740,7 @@ export default function Home() {
                   // setBikeID('custom');
                 }
               }}
+              setExplanationToDisplay={setExplanationToDisplay}
               className="w-full"
             />
           </CardContent>
@@ -653,7 +749,11 @@ export default function Home() {
       {/* TODO: something needs to be done here with sizing, the canvas in BikeViewer won't resize properly */}
       <div className="flex flex-col grow">
         <Card className="w-full grow">
-          <CardContent className="p-4"></CardContent>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground">
+              {explanationToDisplay && explanations[explanationToDisplay]}
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
