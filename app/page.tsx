@@ -34,21 +34,21 @@ const gearInches = (
   ETRTOWidth: number,
   ETRTODiameter: number,
   chainringTooth: number,
-  sprocketTeeth: number,
+  sprocketTooth: number,
 ): number =>
   ((ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4) * chainringTooth) /
-  sprocketTeeth;
+  sprocketTooth;
 
 // How far the bike travels in meters for one complete revolution of the pedals
 const metersDevelopment = (
   ETRTOWidth: number,
   ETRTODiameter: number,
   chainringTooth: number,
-  sprocketTeeth: number,
+  sprocketTooth: number,
 ) =>
   (ETRTOtoCircumference(ETRTOWidth, ETRTODiameter) * chainringTooth) /
   1000 /
-  sprocketTeeth;
+  sprocketTooth;
 
 type ColorValueHex = `#${string}`;
 
@@ -181,7 +181,7 @@ const CalculationsRow = ({
     ETRTOWidth: number,
     ETRTODiameter: number,
     chainringTooth: number,
-    sprocketTeeth: number,
+    sprocketTooth: number,
   ) => number;
   calculationColoration: (calculationResult: number) => string;
   formatNumber?: (n: number) => number | string;
