@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {SaveIcon} from 'lucide-react';
+import {FilePlus2} from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {Button} from '@/components/ui/button';
@@ -217,6 +217,9 @@ const CalculationsRow = ({
 ];
 
 const explanations = {
+  newBike: <p>Submit this configuration as a new bike.</p>,
+  newTire: <p>Submit this configuration as a new tire.</p>,
+  newCassette: <p>Submit this configuration as a new cassette.</p>,
   tire: (
     <p>
       {`The part of the wheel which sits on the wheel's rim. Its actual
@@ -420,11 +423,11 @@ const BikeCalculator = ({
       <div className={`bike-calc ${className}`}>
         <div className="flex flex-col items-start space-y-2">
           <div
-            className="flex flex-row items-center space-between"
+            className="flex flex-row items-center w-full"
             onPointerEnter={() => setExplanationToDisplay('tire')}
             onPointerLeave={() => setExplanationToDisplay(undefined)}
           >
-            <Label className="mr-4">Tire</Label>{' '}
+            <Label className="mr-4">Tire</Label>
             <select
               onChange={(e) => {
                 const tireID = e.target.value as TireID | 'custom';
@@ -436,7 +439,7 @@ const BikeCalculator = ({
                 }
               }}
               value={tireID}
-              className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+              className="bg-white flex h-9 shrink min-w-0 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
             >
               <option value="custom">Custom</option>
               {Object.entries(TIRE_DB).map(([name]) => (
@@ -445,6 +448,15 @@ const BikeCalculator = ({
                 </option>
               ))}
             </select>
+            <Button
+              variant="outline"
+              size="icon"
+              className={`ml-2 ${tireID === 'custom' ? '' : 'hidden'}`}
+              onPointerEnter={() => setExplanationToDisplay('newTire')}
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
+            >
+              <FilePlus2 />
+            </Button>
           </div>
           <div className="flex flex-row items-center justify-between space-x-6">
             <div
@@ -558,8 +570,8 @@ const BikeCalculator = ({
                 ))}
             </div>
           </div>
-          <div className="flex flex-row items-center">
-            <Label className="mr-4">Cassette / Hub</Label>
+          <div className="flex flex-row items-center w-full">
+            <Label className="mr-4 shrink-0">Cassette / Hub</Label>
             <select
               onChange={(e) => {
                 const cassetteID = e.target.value as CassetteID;
@@ -574,7 +586,7 @@ const BikeCalculator = ({
                 }
               }}
               value={cassetteID}
-              className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
+              className="bg-white flex h-9 truncate grow shrink min-w-0 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
             >
               <option value="custom">Custom</option>
               {Object.entries(CASSETTE_DB).map(([name]) => (
@@ -583,6 +595,17 @@ const BikeCalculator = ({
                 </option>
               ))}
             </select>
+            <Button
+              variant="outline"
+              size="icon"
+              className={`shrink-0 ml-2 ${
+                cassetteID === 'custom' ? '' : 'hidden'
+              }`}
+              onPointerEnter={() => setExplanationToDisplay('newCassette')}
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
+            >
+              <FilePlus2 />
+            </Button>
           </div>
           <div className="flex flex-row items-center">
             <Label className="mr-4">Number of Sprockets</Label>
@@ -607,21 +630,22 @@ const BikeCalculator = ({
             />
           </div>
           {cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH && (
-            <div className="flex flex-row items-center">
-              <Label className="mr-4">Ratios</Label>
-              <div className="flex flex-row flex-wrap space-x-1">
+            <div className="flex flex-row items-start">
+              <Label className="mr-4 mt-3 shrink-0">Ratios</Label>
+              <div className="flex flex-row flex-wrap">
                 {Array(CASSETTE_DB[cassetteID].ratios.length)
                   .fill(0)
                   .map((v, i) => (
-                    <Input
-                      key={i}
-                      type="number"
-                      disabled
-                      value={(
-                        CASSETTE_DB[cassetteID] as InternallyGearedHub
-                      ).ratios[i].toFixed(2)}
-                      className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
-                    />
+                    <div className="p-1" key={i}>
+                      <Input
+                        type="number"
+                        disabled
+                        value={(
+                          CASSETTE_DB[cassetteID] as InternallyGearedHub
+                        ).ratios[i].toFixed(2)}
+                        className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                      />
+                    </div>
                   ))}
               </div>
             </div>
@@ -697,8 +721,8 @@ export default function Home() {
     useState<keyof typeof explanations>();
 
   return (
-    <div className="p-4 flex flex-row space-x-4 h-full w-full">
-      <div className="flex flex-col items-start w-[32rem] shrink-0">
+    <div className="flex flex-row space-x-4 h-full w-full">
+      <div className="p-4 pr-0 flex flex-col items-start w-[32rem] shrink-0 overflow-scroll no-scrollbar">
         <h1 className="text-3xl font-bold mb-2">Bike Calc</h1>
         <p className="text-muted-foreground mb-2">
           Calculate gear inches, meters development, and more for your bike.
@@ -722,8 +746,10 @@ export default function Home() {
               variant="outline"
               size="icon"
               className={`ml-2 ${customized ? '' : 'hidden'}`}
+              onPointerEnter={() => setExplanationToDisplay('newBike')}
+              onPointerLeave={() => setExplanationToDisplay(undefined)}
             >
-              <SaveIcon />
+              <FilePlus2 />
             </Button>
           </div>
         </div>
@@ -747,7 +773,7 @@ export default function Home() {
         </Card>
       </div>
       {/* TODO: something needs to be done here with sizing, the canvas in BikeViewer won't resize properly */}
-      <div className="flex flex-col grow">
+      <div className="p-4 pl-0 flex flex-col grow">
         <Card className="w-full grow">
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground">
