@@ -281,7 +281,10 @@ const BikeCalculator = ({
   className = '',
 }: {
   bike?: Bike;
-  onCustomized: (customized: boolean) => void;
+  onCustomized: (
+    customized: boolean,
+    customizedData: Record<string, string | number>,
+  ) => void;
   setExplanationToDisplay: (
     explanation: keyof typeof explanations | undefined,
   ) => void;
@@ -344,11 +347,16 @@ const BikeCalculator = ({
             bike,
           )
         ),
+        {
+          chainringCount,
+          chainringTeeth: chainringTeeth.join(','),
+        },
       );
     }
   }, [
     ETRTOWidth,
     ETRTODiameter,
+    chainringCount,
     chainringTeeth,
     sprocketCount,
     sprocketTeeth,
@@ -455,7 +463,12 @@ const BikeCalculator = ({
               onPointerEnter={() => setExplanationToDisplay('newTire')}
               onPointerLeave={() => setExplanationToDisplay(undefined)}
             >
-              <FilePlus2 />
+              <a
+                href={`https://docs.google.com/forms/d/e/1FAIpQLSdS4NBfBk0IQzMqWQmZAiXVB6gVFUQMV0RltprMolS2PQldzg/viewform?usp=pp_url&entry.596176511=${ETRTOWidth}&entry.233968638=${ETRTODiameter}`}
+                target="_blank"
+              >
+                <FilePlus2 />
+              </a>
             </Button>
           </div>
           <div className="flex flex-row items-center justify-between space-x-6">
@@ -604,7 +617,14 @@ const BikeCalculator = ({
               onPointerEnter={() => setExplanationToDisplay('newCassette')}
               onPointerLeave={() => setExplanationToDisplay(undefined)}
             >
-              <FilePlus2 />
+              <a
+                href={`https://docs.google.com/forms/d/e/1FAIpQLSdSh3Y0tpJTfAZOjLuBVre508ZaTbL2fC1HtGmr8pqh-v16hw/viewform?usp=pp_url&entry.818217627=Cassette&entry.1849128967=${sprocketCount}&entry.583801447=${sprocketTeeth.join(
+                  ',',
+                )}`}
+                target="_blank"
+              >
+                <FilePlus2 />
+              </a>
             </Button>
           </div>
           <div className="flex flex-row items-center">
@@ -715,10 +735,13 @@ const BikeCalculator = ({
 };
 
 export default function Home() {
-  const [bikeID, setBikeID] = useState<BikeID | 'custom'>('custom');
+  const [bikeID, setBikeID] = useState<BikeID | 'custom'>('Surly Disc Trucker');
   const [customized, setCustomized] = useState<boolean>(false);
   const [explanationToDisplay, setExplanationToDisplay] =
     useState<keyof typeof explanations>();
+  const [customizationsForPrefill, setCustomizationsForPrefill] = useState<
+    Record<string, string | number>
+  >({});
 
   return (
     <div className="flex flex-row space-x-4 h-full w-full">
@@ -749,7 +772,16 @@ export default function Home() {
               onPointerEnter={() => setExplanationToDisplay('newBike')}
               onPointerLeave={() => setExplanationToDisplay(undefined)}
             >
-              <FilePlus2 />
+              <a
+                href={
+                  customizationsForPrefill
+                    ? `https://docs.google.com/forms/d/e/1FAIpQLSeFA22GlMWRsEBvg0faIXLl07CCplp-EYlbZ2mHjTGFaWGuBg/viewform?usp=pp_url&entry.1276123081=${customizationsForPrefill.chainringCount}&entry.379143291=${customizationsForPrefill.chainringTeeth}`
+                    : 'https://forms.gle/K2tTfGGQtWvbD4Tz8'
+                }
+                target="_blank"
+              >
+                <FilePlus2 />
+              </a>
             </Button>
           </div>
         </div>
@@ -760,10 +792,10 @@ export default function Home() {
             <BikeCalculator
               bike={BIKE_DB[bikeID]}
               key={bikeID}
-              onCustomized={(customized) => {
+              onCustomized={(customized, customizedData) => {
                 setCustomized(customized);
                 if (customized) {
-                  // setBikeID('custom');
+                  setCustomizationsForPrefill(customizedData);
                 }
               }}
               setExplanationToDisplay={setExplanationToDisplay}
