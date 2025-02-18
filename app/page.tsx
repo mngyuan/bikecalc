@@ -20,6 +20,7 @@ import {
   TireID,
 } from '@/lib/data';
 import {Card, CardContent} from '@/components/ui/card';
+import {Slider} from '@/components/ui/slider';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
