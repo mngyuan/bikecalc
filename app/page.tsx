@@ -40,8 +40,12 @@ const gearInches = (
   ((ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4) * chainringTooth) /
   sprocketTooth;
 
-// How far the bike travels in meters for one complete revolution of the pedals
-const metersDevelopment = (
+/* How far the bike travels in meters for one complete revolution of the pedals
+ *
+ * circumference_mm = π * diameter_mm
+ * development_m = circumference_mm * gearRatio * m/1000mm
+ */
+const calcMetersDevelopment = (
   ETRTOWidth: number,
   ETRTODiameter: number,
   chainringTooth: number,
@@ -50,6 +54,28 @@ const metersDevelopment = (
   (ETRTOtoCircumference(ETRTOWidth, ETRTODiameter) * chainringTooth) /
   1000 /
   sprocketTooth;
+
+/* How fast the bike travels in km/h for a given cadence
+ *
+ * speed_kmhr = development_m * cadence_r/min * 60min/hr * 1km/1000m
+ */
+const genCalculateSpeedGivenCadence =
+  (cadence: number) =>
+  (
+    ETRTOWidth: number,
+    ETRTODiameter: number,
+    chainringTooth: number,
+    sprocketTooth: number,
+  ) =>
+    (calcMetersDevelopment(
+      ETRTOWidth,
+      ETRTODiameter,
+      chainringTooth,
+      sprocketTooth,
+    ) *
+      cadence *
+      60) /
+    1000;
 
 type ColorValueHex = `#${string}`;
 
