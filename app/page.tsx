@@ -20,7 +20,6 @@ import {
   TireID,
 } from '@/lib/data';
 import {Card, CardContent} from '@/components/ui/card';
-import {Slider} from '@/components/ui/slider';
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -31,7 +30,7 @@ const ETRTOtoCircumference = (
 ): number => Math.PI * ETRTOtoDiameter(ETRTOWidth, ETRTODiameter);
 
 // Theoretical size of the same tire in inches which would have the equivalent development with a 1:1 gear ratio
-const gearInches = (
+const calcGearInches = (
   ETRTOWidth: number,
   ETRTODiameter: number,
   chainringTooth: number,
@@ -147,6 +146,42 @@ const mapMetersDevelopmentToColor = (metersDevelopment: number) =>
   // map from very light blue to dark blue
   createMapRangeToColor('#d0e2f3', '#3d85c6')(metersDevelopment, 1, 10);
 
+const mapSpeedToColor = (speed: number) =>
+  // map from very light green to dark green
+  createMapRangeToColor('#d0e2f3', '#3d85c6')(speed, 1, 50);
+
+interface Calculation {
+  calc: (
+    ETRTOWidth: number,
+    ETRTODiameter: number,
+    chainringTooth: number,
+    sprocketTooth: number,
+  ) => number;
+  map: (n: number) => string;
+  format?: (n: number) => string | number;
+}
+
+const tableCalculations: {
+  gearInches: Calculation;
+  metersDevelopment: Calculation;
+  speed: Calculation;
+} = {
+  gearInches: {
+    calc: calcGearInches,
+    map: mapGearInchesToColor,
+    format: (n: number) => Math.round(n),
+  },
+  metersDevelopment: {
+    calc: calcMetersDevelopment,
+    map: mapMetersDevelopmentToColor,
+    format: (n: number) => n.toFixed(1),
+  },
+  speed: {
+    calc: genCalculateSpeedGivenCadence(80),
+    map: mapSpeedToColor,
+  },
+};
+
 const configEqualToBike = (
   {
     ETRTOWidth,
@@ -188,6 +223,113 @@ const configEqualToBike = (
   return tiresEqual && chainringsEqual && cassettesEqual;
 };
 
+const CalculationsTable = ({
+  sprocketCount,
+  sprocketTeeth,
+  chainringTeeth,
+  ETRTODiameter,
+  ETRTOWidth,
+  cassetteID,
+  calculationToDisplay,
+}: {
+  sprocketCount: number;
+  sprocketTeeth: number[];
+  chainringTeeth: number[];
+  ETRTODiameter: number;
+  ETRTOWidth: number;
+  cassetteID: CassetteID | 'custom';
+  calculationToDisplay: 'gearInches' | 'metersDevelopment' | 'speed';
+}) => {
+  const calculation = tableCalculations[calculationToDisplay];
+  const cassette = CASSETTE_DB[cassetteID];
+  if (cassette.isIGH) {
+    return (
+      <div className="border border-grey-300 rounded max-w-full">
+        <div className="flex flex-row">
+          <div className="w-10 text-center p-2 text-xs">Gear</div>
+          {[...Array(cassette.ratios.length)].fill(0).map((v, i) => (
+            <div key={i} className="w-10 text-center p-1">
+              {cassette.ratios.length - i}
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-row">
+          <div className="flex flex-col">
+            {sprocketTeeth.map((sprocketTooth, i) => (
+              <div key={i} className="w-10 text-center p-1">
+                {sprocketTeeth.length - i}
+              </div>
+            ))}
+          </div>
+          <div className="rounded overflow-hidden">
+            {sprocketTeeth.map((sprocketTooth) =>
+              chainringTeeth.map((chainringTooth, i) => (
+                <div className="flex flex-row" key={i}>
+                  <HubCalculationsRow
+                    {...{
+                      sprocketTooth,
+                      ratios: cassette.ratios,
+                      chainringTooth,
+                      ETRTODiameter,
+                      ETRTOWidth,
+                      calculation: calculation.calc,
+                      calculationColoration: calculation.map,
+                      formatNumber: calculation.format || ((n) => n.toFixed(1)),
+                    }}
+                  />
+                </div>
+              )),
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-grey-300 rounded max-w-full">
+      <div className="flex flex-row">
+        <div className="w-10 text-center p-2 text-xs">Gear</div>
+        {[...Array(sprocketCount)].fill(0).map((v, i) => (
+          <div key={i} className="w-10 text-center p-1">
+            {sprocketCount - i}
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-row">
+        <div className="flex flex-col">
+          {chainringTeeth.map((chainringTooth, i) => (
+            <div key={i} className="w-10 text-center p-1">
+              {chainringTeeth.length - i}
+            </div>
+          ))}
+        </div>
+        <div className="rounded overflow-hidden">
+          {chainringTeeth.map((chainringTooth, i) => (
+            <div className="flex flex-row" key={i}>
+              <CalculationsRow
+                {...{
+                  sprocketCount,
+                  sprocketTeeth,
+                  chainringTooth,
+                  ETRTODiameter,
+                  ETRTOWidth,
+                  calculation: calculation.calc,
+                  calculationColoration: calculation.map,
+                  formatNumber: calculation.format || ((n) => n.toFixed(1)),
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Generalizing the CalculationsRow component to work with both internally geared hubs
+// and cassettes was overkill and in the future specialized formatting for IGH calculations
+// might be desired
 const CalculationsRow = ({
   sprocketCount,
   sprocketTeeth,
@@ -197,24 +339,17 @@ const CalculationsRow = ({
   calculation,
   calculationColoration,
   formatNumber = (n: number) => Math.round(n),
-  ratio,
 }: {
   sprocketCount: number;
   sprocketTeeth: number[];
   chainringTooth: number;
   ETRTODiameter: number;
   ETRTOWidth: number;
-  calculation: (
-    ETRTOWidth: number,
-    ETRTODiameter: number,
-    chainringTooth: number,
-    sprocketTooth: number,
-  ) => number;
-  calculationColoration: (calculationResult: number) => string;
+  calculation: Calculation['calc'];
+  calculationColoration: Calculation['map'];
   formatNumber?: (n: number) => number | string;
-  ratio?: number;
-}) => [
-  ...Array(sprocketCount)
+}) =>
+  Array(sprocketCount)
     .fill(0)
     .map((v, i) => {
       const gI =
@@ -222,7 +357,7 @@ const CalculationsRow = ({
           ETRTOWidth,
           ETRTODiameter,
           chainringTooth,
-          sprocketTeeth[i] / (ratio || 1),
+          sprocketTeeth[i],
         ) || 0;
       return (
         <div
@@ -233,15 +368,47 @@ const CalculationsRow = ({
           {formatNumber(gI)}
         </div>
       );
-    }),
-  ...(ratio != undefined
-    ? [
-        <div key="ratio" className="pl-2">
-          {ratio.toFixed(3)}
-        </div>,
-      ]
-    : []),
-];
+    });
+
+const HubCalculationsRow = ({
+  ratios,
+  sprocketTooth,
+  chainringTooth,
+  ETRTODiameter,
+  ETRTOWidth,
+  calculation,
+  calculationColoration,
+  formatNumber = (n: number) => Math.round(n),
+}: {
+  ratios: number[];
+  sprocketTooth: number;
+  chainringTooth: number;
+  ETRTODiameter: number;
+  ETRTOWidth: number;
+  calculation: Calculation['calc'];
+  calculationColoration: Calculation['map'];
+  formatNumber?: (n: number) => number | string;
+}) =>
+  Array(ratios.length)
+    .fill(0)
+    .map((v, i) => {
+      const gI =
+        calculation(
+          ETRTOWidth,
+          ETRTODiameter,
+          chainringTooth,
+          sprocketTooth * ratios[i],
+        ) || 0;
+      return (
+        <div
+          key={i}
+          className={`w-10 h-8 text-center p-1 min-w-0`}
+          style={{backgroundColor: calculationColoration(gI)}}
+        >
+          {formatNumber(gI)}
+        </div>
+      );
+    });
 
 const explanations = {
   newBike: <p>Submit this configuration as a new bike.</p>,
@@ -392,66 +559,6 @@ const BikeCalculator = ({
     bike,
     onCustomized,
   ]);
-
-  const CompleteCalculationsTable = (
-    <div className="border border-grey-300 rounded max-w-full">
-      <div className="flex flex-row">
-        <div className="w-10 text-center p-2 text-xs">Gear</div>
-        {[...Array(sprocketCount)].fill(0).map((v, i) => (
-          <div key={i} className="w-10 text-center p-1">
-            {sprocketCount - i}
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-row">
-        <div className="flex flex-col">
-          {chainringTeeth.map((chainringTooth, i) =>
-            (cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH
-              ? CASSETTE_DB[cassetteID].ratios.toReversed()
-              : [undefined]
-            ).map((ratio, j) => (
-              <div key={j} className="w-10 text-center p-1">
-                {chainringTeeth.length - i}
-              </div>
-            )),
-          )}
-        </div>
-        <div className="rounded overflow-hidden">
-          {chainringTeeth.map((chainringTooth) =>
-            (cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH
-              ? CASSETTE_DB[cassetteID].ratios.toReversed()
-              : [undefined]
-            ).map((ratio, i) => (
-              <div className="flex flex-row" key={i}>
-                <CalculationsRow
-                  {...{
-                    sprocketCount,
-                    sprocketTeeth,
-                    chainringTooth,
-                    ETRTODiameter,
-                    ETRTOWidth,
-                    ratio,
-                    calculation:
-                      calculationToDisplay === 'gearInches'
-                        ? gearInches
-                        : metersDevelopment,
-                    calculationColoration:
-                      calculationToDisplay === 'gearInches'
-                        ? mapGearInchesToColor
-                        : mapMetersDevelopmentToColor,
-                    formatNumber:
-                      calculationToDisplay === 'gearInches'
-                        ? (n) => Math.round(n)
-                        : (n) => n.toFixed(1),
-                  }}
-                />
-              </div>
-            )),
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <TooltipProvider>
@@ -754,7 +861,17 @@ const BikeCalculator = ({
               </TabsList>
             </Tabs>
           </div>
-          {CompleteCalculationsTable}
+          <CalculationsTable
+            {...{
+              sprocketCount,
+              sprocketTeeth,
+              chainringTeeth,
+              ETRTODiameter,
+              ETRTOWidth,
+              cassetteID,
+              calculationToDisplay,
+            }}
+          />
         </div>
       </div>
     </TooltipProvider>
