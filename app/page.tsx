@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {FilePlus2} from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -14,8 +14,8 @@ import {
   BikeID,
   CASSETTE_DB,
   CassetteID,
-  InternallyGearedHub,
   isInternallyGearedHub,
+  isSprocketCassette,
   TIRE_DB,
   TireID,
 } from '@/lib/data';
@@ -213,7 +213,7 @@ const configEqualToBike = (
   const bikeCassette = CASSETTE_DB[bike.cassette];
   const cassettesEqual =
     bike.cassette === cassetteID &&
-    (bikeCassette.isIGH
+    (isInternallyGearedHub(bikeCassette)
       ? !!bike.sprockets &&
         sprocketTeeth.length === bike.sprockets.length &&
         sprocketTeeth.every(
@@ -241,13 +241,13 @@ const CalculationsTable = ({
   calculationToDisplay: 'gearInches' | 'metersDevelopment' | 'speed';
 }) => {
   const calculation = tableCalculations[calculationToDisplay];
-  const cassette = CASSETTE_DB[cassetteID];
-  if (cassette.isIGH) {
+  const cassette = cassetteID !== 'custom' && CASSETTE_DB[cassetteID];
+  if (cassette && isInternallyGearedHub(cassette)) {
     return (
       <div className="border border-grey-300 rounded max-w-full">
         <div className="flex flex-row">
           <div className="w-10 text-center p-2 text-xs">Gear</div>
-          {[...Array(cassette.ratios.length)].fill(0).map((v, i) => (
+          {[...Array(cassette.ratios.length)].fill(0).map((_, i) => (
             <div key={i} className="w-10 text-center p-1">
               {cassette.ratios.length - i}
             </div>
@@ -255,7 +255,7 @@ const CalculationsTable = ({
         </div>
         <div className="flex flex-row">
           <div className="flex flex-col">
-            {sprocketTeeth.map((sprocketTooth, i) => (
+            {sprocketTeeth.map((_, i) => (
               <div key={i} className="w-10 text-center p-1">
                 {sprocketTeeth.length - i}
               </div>
@@ -290,7 +290,7 @@ const CalculationsTable = ({
     <div className="border border-grey-300 rounded max-w-full">
       <div className="flex flex-row">
         <div className="w-10 text-center p-2 text-xs">Gear</div>
-        {[...Array(sprocketCount)].fill(0).map((v, i) => (
+        {[...Array(sprocketCount)].fill(0).map((_, i) => (
           <div key={i} className="w-10 text-center p-1">
             {sprocketCount - i}
           </div>
@@ -298,7 +298,7 @@ const CalculationsTable = ({
       </div>
       <div className="flex flex-row">
         <div className="flex flex-col">
-          {chainringTeeth.map((chainringTooth, i) => (
+          {chainringTeeth.map((_, i) => (
             <div key={i} className="w-10 text-center p-1">
               {chainringTeeth.length - i}
             </div>
@@ -351,7 +351,7 @@ const CalculationsRow = ({
 }) =>
   Array(sprocketCount)
     .fill(0)
-    .map((v, i) => {
+    .map((_, i) => {
       const gI =
         calculation(
           ETRTOWidth,
@@ -391,7 +391,7 @@ const HubCalculationsRow = ({
 }) =>
   Array(ratios.length)
     .fill(0)
-    .map((v, i) => {
+    .map((_, i) => {
       const gI =
         calculation(
           ETRTOWidth,
@@ -507,14 +507,14 @@ const BikeCalculator = ({
   const cassette = bike ? CASSETTE_DB[bike.cassette] : undefined;
   const [sprocketCount, setSprocketCount] = useState<number>(
     cassette
-      ? !isInternallyGearedHub(cassette)
+      ? isSprocketCassette(cassette)
         ? cassette.sprockets.length
         : bike?.sprockets?.length || 0
       : 0,
   );
   const [sprocketTeeth, setSprocketTeeth] = useState<number[]>(
     cassette
-      ? !isInternallyGearedHub(cassette)
+      ? isSprocketCassette(cassette)
         ? cassette.sprockets
         : bike?.sprockets || []
       : [],
@@ -701,7 +701,7 @@ const BikeCalculator = ({
             <div className="flex flex-row flex-wrap">
               {Array(chainringCount)
                 .fill(0)
-                .map((v, i) => (
+                .map((_, i) => (
                   <div className="p-1" key={i}>
                     <Input
                       type="number"
@@ -710,7 +710,7 @@ const BikeCalculator = ({
                           chainringTeeth.with(i, e.target.valueAsNumber),
                         )
                       }
-                      value={chainringTeeth[i]}
+                      value={chainringTeeth[i] || 0}
                       className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     />
                   </div>
@@ -721,12 +721,11 @@ const BikeCalculator = ({
             <Label className="mr-4 shrink-0">Cassette / Hub</Label>
             <select
               onChange={(e) => {
-                const cassetteID = e.target.value as CassetteID;
+                const cassetteID = e.target.value as CassetteID | 'custom';
                 setCassetteID(cassetteID);
                 if (cassetteID !== 'custom') {
                   const cassette = CASSETTE_DB[cassetteID];
-                  if (cassette.isIGH) {
-                  } else {
+                  if (isSprocketCassette(cassette)) {
                     setSprocketCount(cassette.sprockets.length);
                     setSprocketTeeth(cassette.sprockets);
                   }
@@ -770,7 +769,7 @@ const BikeCalculator = ({
                 setSprocketCount(sprocketCount);
                 if (
                   cassetteID !== 'custom' &&
-                  !CASSETTE_DB[cassetteID]?.isIGH
+                  !isInternallyGearedHub(CASSETTE_DB[cassetteID])
                 ) {
                   setCassetteID('custom');
                 }
@@ -783,33 +782,37 @@ const BikeCalculator = ({
               className="w-9 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             />
           </div>
-          {cassetteID !== 'custom' && CASSETTE_DB[cassetteID].isIGH && (
-            <div className="flex flex-row items-start">
-              <Label className="mr-4 mt-3 shrink-0">Ratios</Label>
-              <div className="flex flex-row flex-wrap">
-                {Array(CASSETTE_DB[cassetteID].ratios.length)
-                  .fill(0)
-                  .map((v, i) => (
-                    <div className="p-1" key={i}>
-                      <Input
-                        type="number"
-                        disabled
-                        value={(
-                          CASSETTE_DB[cassetteID] as InternallyGearedHub
-                        ).ratios[i].toFixed(2)}
-                        className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
-                      />
-                    </div>
-                  ))}
+          {cassetteID !== 'custom' &&
+            isInternallyGearedHub(CASSETTE_DB[cassetteID]) && (
+              <div className="flex flex-row items-start">
+                <Label className="mr-4 mt-3 shrink-0">Ratios</Label>
+                <div className="flex flex-row flex-wrap">
+                  {Array(CASSETTE_DB[cassetteID].ratios.length)
+                    .fill(0)
+                    .map(
+                      (_, i) =>
+                        isInternallyGearedHub(CASSETTE_DB[cassetteID]) && (
+                          <div className="p-1" key={i}>
+                            <Input
+                              type="number"
+                              disabled
+                              value={CASSETTE_DB[cassetteID].ratios[i].toFixed(
+                                2,
+                              )}
+                              className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                            />
+                          </div>
+                        ),
+                    )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
           <div className="flex flex-row items-start">
             <Label className="mr-4 mt-3 shrink-0">Sprocket Teeth</Label>
             <div className="flex flex-row flex-wrap">
               {Array(sprocketCount)
                 .fill(0)
-                .map((v, i) => (
+                .map((_, i) => (
                   <div className="p-1" key={i}>
                     <Input
                       type="number"
@@ -817,11 +820,14 @@ const BikeCalculator = ({
                         setSprocketTeeth(
                           sprocketTeeth.with(i, e.target.valueAsNumber),
                         );
-                        if (!CASSETTE_DB[cassetteID]?.isIGH) {
+                        if (
+                          cassetteID !== 'custom' &&
+                          !isInternallyGearedHub(CASSETTE_DB[cassetteID])
+                        ) {
                           setCassetteID('custom');
                         }
                       }}
-                      value={sprocketTeeth[i]}
+                      value={sprocketTeeth[i] || 0}
                       className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     />
                   </div>
@@ -936,12 +942,12 @@ export default function Home() {
             <BikeCalculator
               bike={BIKE_DB[bikeID]}
               key={bikeID}
-              onCustomized={(customized, customizedData) => {
+              onCustomized={useCallback((customized, customizedData) => {
                 setCustomized(customized);
                 if (customized) {
                   setCustomizationsForPrefill(customizedData);
                 }
-              }}
+              }, [])}
               setExplanationToDisplay={setExplanationToDisplay}
               className="w-full"
             />

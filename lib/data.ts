@@ -80,21 +80,11 @@ export const TIRE_DB = {
   'Schwalbe Racing Ralph 29"': {ETRTOSize: [60, 622]},
   'Schwalbe Super Moto 29"': {ETRTOSize: [60, 622]},
   'Specialized Ground Control Grid T7 29"x2.2"': {ETRTOSize: [54, 622]},
-};
+} as const;
 export type TireID = keyof typeof TIRE_DB;
 
-export interface ExternalCassette {
-  sprockets: number[];
-  isIGH?: false;
-}
-export interface InternallyGearedHub {
-  isIGH: true;
-  ratios: number[];
-}
-export type Cassette = ExternalCassette | InternallyGearedHub;
-
 // prettier-ignore
-export const CASSETTE_DB: Record<string, Cassette> = {
+export const CASSETTE_DB = {
   'Microshift Advent X H-Series 10 Speed 11-48T': {
     sprockets: [11, 13, 15, 18, 21, 24, 28, 34, 40, 48],
   },
@@ -180,13 +170,20 @@ export const CASSETTE_DB: Record<string, Cassette> = {
   'SunRace 10 Speed 11-51T': {
     sprockets: [11, 13, 15, 18, 23, 28, 33, 39, 45, 51],
   }
-};
+} as const;
 export type CassetteID = keyof typeof CASSETTE_DB;
+export type Cassette = (typeof CASSETTE_DB)[CassetteID];
+
 // Type guard
 export const isInternallyGearedHub = (
-  cassette: Cassette | InternallyGearedHub,
-): cassette is InternallyGearedHub => {
+  cassette: Cassette,
+): cassette is Cassette & {isIGH: true; ratios: [number]} => {
   return 'isIGH' in cassette;
+};
+export const isSprocketCassette = (
+  cassette: Cassette,
+): cassette is Cassette & {sprockets: number[]} => {
+  return 'sprockets' in cassette;
 };
 
 export interface Bike {
@@ -265,6 +262,6 @@ export const BIKE_DB: Record<string, Bike> = {
     chainringTeeth: [48, 36, 26],
     cassette: 'Shimano Alivio CS-HG400 9 Speed 11-34T',
   },
-};
+} as const;
 
 export type BikeID = keyof typeof BIKE_DB;
