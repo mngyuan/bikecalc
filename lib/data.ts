@@ -1,3 +1,5 @@
+// Ordered by ETRTO size: diameter then width then name
+
 export const TIRE_DB = {
   'Schwalbe Billy Bonkers 16"': {ETRTOSize: [50, 305]},
   'Continental Contact Urban 16"': {ETRTOSize: [35, 349]},
@@ -6,7 +8,13 @@ export const TIRE_DB = {
   'Schwalbe Marathon Racer 16"': {ETRTOSize: [35, 349]},
   'Schwalbe One 16"': {ETRTOSize: [35, 349]},
   'Schwalbe Green Marathon 16"': {ETRTOSize: [35, 349]},
+  'Schwalbe Kojak 18"': {ETRTOSize: [32, 355]},
+  'Schwalbe Marathon Racer 18"': {ETRTOSize: [40, 355]},
+  'Schwalbe Smart Sam 18"': {ETRTOSize: [40, 355]},
+  'Schwalbe Green Marathon 18"': {ETRTOSize: [44, 355]},
+  'Schwalbe Big Apple 18"': {ETRTOSize: [50, 355]},
   'Schwalbe Billy Bonkers 18"': {ETRTOSize: [50, 355]},
+  'Schwalbe Pick-Up 18"': {ETRTOSize: [55, 355]},
   'Continental Contact Urban 20"x1.25': {ETRTOSize: [32, 406]},
   'Continental Contact Urban 20"x1.6': {ETRTOSize: [42, 406]},
   'Continental Contact Urban 20"x2.20': {ETRTOSize: [50, 406]},
