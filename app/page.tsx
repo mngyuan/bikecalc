@@ -685,6 +685,11 @@ const BikeCalculator = ({
             <Input
               type="number"
               onChange={(e) => {
+                if (e.target.value === '') {
+                  setChainringCount(0);
+                  setChainringTeeth([]);
+                  return;
+                }
                 const chainringCount = e.target.valueAsNumber;
                 setChainringCount(chainringCount);
                 setChainringTeeth([
@@ -765,6 +770,11 @@ const BikeCalculator = ({
             <Input
               type="number"
               onChange={(e) => {
+                if (e.target.value === '') {
+                  setSprocketCount(0);
+                  setSprocketTeeth([]);
+                  return;
+                }
                 const sprocketCount = e.target.valueAsNumber;
                 setSprocketCount(sprocketCount);
                 if (
