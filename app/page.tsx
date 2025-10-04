@@ -23,6 +23,14 @@ import {
 import {Card, CardContent} from '@/components/ui/card';
 import {cn} from '@/lib/utils';
 
+const DEFAULT_CADENCE_RPM = 80;
+const GEAR_INCHES_MIN = 20;
+const GEAR_INCHES_MAX = 120;
+const METERS_DEVELOPMENT_MIN = 1;
+const METERS_DEVELOPMENT_MAX = 10;
+const SPEED_MIN = 1;
+const SPEED_MAX = 50;
+
 const inputNumberClass = cn(
   'text-center',
   '[appearance:textfield]',
@@ -163,17 +171,19 @@ function createMapRangeToColor(
 const mapGearInchesToColor = (gearInches: number) =>
   createMapRangeWithMidToColor('#56bb8a', '#fed666', '#e67c73')(
     gearInches,
-    20,
-    120,
+    GEAR_INCHES_MIN,
+    GEAR_INCHES_MAX,
   );
 
 const mapMetersDevelopmentToColor = (metersDevelopment: number) =>
-  // map from very light blue to dark blue
-  createMapRangeToColor('#d0e2f3', '#3d85c6')(metersDevelopment, 1, 10);
+  createMapRangeToColor('#d0e2f3', '#3d85c6')(
+    metersDevelopment,
+    METERS_DEVELOPMENT_MIN,
+    METERS_DEVELOPMENT_MAX,
+  );
 
 const mapSpeedToColor = (speed: number) =>
-  // map from very light green to dark green
-  createMapRangeToColor('#d0e2f3', '#3d85c6')(speed, 1, 50);
+  createMapRangeToColor('#d0e2f3', '#3d85c6')(speed, SPEED_MIN, SPEED_MAX);
 
 interface Calculation {
   calc: (
@@ -202,7 +212,7 @@ const tableCalculations: {
     format: (n: number) => n.toFixed(1),
   },
   speed: {
-    calc: genCalculateSpeedGivenCadence(80),
+    calc: genCalculateSpeedGivenCadence(DEFAULT_CADENCE_RPM),
     map: mapSpeedToColor,
   },
 };
@@ -267,6 +277,12 @@ const CalculationsTable = ({
 }) => {
   const calculation = tableCalculations[calculationToDisplay];
   const cassette = cassetteID !== 'custom' && CASSETTE_DB[cassetteID];
+  const explanationKey =
+    calculationToDisplay === 'gearInches'
+      ? 'gearInchesCell'
+      : calculationToDisplay === 'metersDevelopment'
+        ? 'metersDevelopmentCell'
+        : 'speedCell';
   if (cassette && isInternallyGearedHub(cassette)) {
     return (
       <div className="border border-grey-300 rounded max-w-full">
@@ -287,20 +303,21 @@ const CalculationsTable = ({
             ))}
           </div>
           <div className="rounded overflow-hidden">
-            {sprocketTeeth.map((sprocketTooth) =>
-              chainringTeeth.map((chainringTooth, i) => (
-                <div className="flex flex-row" key={i}>
+            {sprocketTeeth.map((sprocketTooth, sprocketIndex) =>
+              chainringTeeth.map((chainringTooth, chainringIndex) => (
+                <div className="flex flex-row" key={chainringIndex}>
                   <HubCalculationsRow
-                    {...{
-                      sprocketTooth,
-                      ratios: cassette.ratios,
-                      chainringTooth,
-                      ETRTODiameter,
-                      ETRTOWidth,
-                      calculation: calculation.calc,
-                      calculationColoration: calculation.map,
-                      formatNumber: calculation.format || ((n) => n.toFixed(1)),
-                    }}
+                    sprocketTooth={sprocketTooth}
+                    sprocketNumber={sprocketTeeth.length - sprocketIndex}
+                    ratios={cassette.ratios}
+                    chainringTooth={chainringTooth}
+                    chainringNumber={chainringTeeth.length - chainringIndex}
+                    ETRTODiameter={ETRTODiameter}
+                    ETRTOWidth={ETRTOWidth}
+                    calculation={calculation.calc}
+                    calculationColoration={calculation.map}
+                    formatNumber={calculation.format || ((n) => n.toFixed(1))}
+                    explanationKey={explanationKey}
                   />
                 </div>
               )),
@@ -330,19 +347,19 @@ const CalculationsTable = ({
           ))}
         </div>
         <div className="rounded overflow-hidden">
-          {chainringTeeth.map((chainringTooth, i) => (
-            <div className="flex flex-row" key={i}>
+          {chainringTeeth.map((chainringTooth, chainringIndex) => (
+            <div className="flex flex-row" key={chainringIndex}>
               <CalculationsRow
-                {...{
-                  sprocketCount,
-                  sprocketTeeth,
-                  chainringTooth,
-                  ETRTODiameter,
-                  ETRTOWidth,
-                  calculation: calculation.calc,
-                  calculationColoration: calculation.map,
-                  formatNumber: calculation.format || ((n) => n.toFixed(1)),
-                }}
+                sprocketCount={sprocketCount}
+                sprocketTeeth={sprocketTeeth}
+                chainringTooth={chainringTooth}
+                chainringNumber={chainringTeeth.length - chainringIndex}
+                ETRTODiameter={ETRTODiameter}
+                ETRTOWidth={ETRTOWidth}
+                calculation={calculation.calc}
+                calculationColoration={calculation.map}
+                formatNumber={calculation.format || ((n) => n.toFixed(1))}
+                explanationKey={explanationKey}
               />
             </div>
           ))}
@@ -360,21 +377,26 @@ const CalculationsRow = React.memo(
     sprocketCount,
     sprocketTeeth,
     chainringTooth,
+    chainringNumber,
     ETRTODiameter,
     ETRTOWidth,
     calculation,
     calculationColoration,
     formatNumber = (n: number) => Math.round(n),
+    explanationKey,
   }: {
     sprocketCount: number;
     sprocketTeeth: number[];
     chainringTooth: number;
+    chainringNumber: number;
     ETRTODiameter: number;
     ETRTOWidth: number;
     calculation: Calculation['calc'];
     calculationColoration: Calculation['map'];
     formatNumber?: (n: number) => number | string;
+    explanationKey: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
   }) => {
+    const setExplanationToDisplay = React.useContext(ExplanationContext);
     const cells = useMemo(
       () =>
         Array(sprocketCount)
@@ -390,8 +412,19 @@ const CalculationsRow = React.memo(
             return (
               <div
                 key={i}
-                className={`w-10 h-8 text-center p-1 min-w-0`}
+                className={`w-10 h-8 text-center p-1 min-w-0 cursor-pointer`}
                 style={{backgroundColor: calculationColoration(gearInches)}}
+                onPointerEnter={() =>
+                  setExplanationToDisplay?.({
+                    key: explanationKey,
+                    params: {
+                      chainring: chainringNumber,
+                      sprocket: sprocketCount - i,
+                      value: gearInches,
+                    },
+                  })
+                }
+                onPointerLeave={() => setExplanationToDisplay?.(undefined)}
               >
                 {formatNumber(gearInches)}
               </div>
@@ -406,6 +439,7 @@ const CalculationsRow = React.memo(
         calculation,
         calculationColoration,
         formatNumber,
+        explanationKey,
       ],
     );
 
@@ -417,22 +451,29 @@ const HubCalculationsRow = React.memo(
   ({
     ratios,
     sprocketTooth,
+    sprocketNumber,
     chainringTooth,
+    chainringNumber,
     ETRTODiameter,
     ETRTOWidth,
     calculation,
     calculationColoration,
     formatNumber = (n: number) => Math.round(n),
+    explanationKey,
   }: {
     ratios: number[];
     sprocketTooth: number;
+    sprocketNumber: number;
     chainringTooth: number;
+    chainringNumber: number;
     ETRTODiameter: number;
     ETRTOWidth: number;
     calculation: Calculation['calc'];
     calculationColoration: Calculation['map'];
     formatNumber?: (n: number) => number | string;
+    explanationKey: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
   }) => {
+    const setExplanationToDisplay = React.useContext(ExplanationContext);
     const cells = useMemo(
       () =>
         Array(ratios.length)
@@ -448,8 +489,19 @@ const HubCalculationsRow = React.memo(
             return (
               <div
                 key={i}
-                className={`w-10 h-8 text-center p-1 min-w-0`}
+                className={`w-10 h-8 text-center p-1 min-w-0 cursor-pointer`}
                 style={{backgroundColor: calculationColoration(gearInches)}}
+                onPointerEnter={() =>
+                  setExplanationToDisplay?.({
+                    key: explanationKey,
+                    params: {
+                      chainring: chainringNumber,
+                      sprocket: ratios.length - i,
+                      value: gearInches,
+                    },
+                  })
+                }
+                onPointerLeave={() => setExplanationToDisplay?.(undefined)}
               >
                 {formatNumber(gearInches)}
               </div>
@@ -458,12 +510,15 @@ const HubCalculationsRow = React.memo(
       [
         ratios,
         sprocketTooth,
+        sprocketNumber,
         chainringTooth,
+        chainringNumber,
         ETRTODiameter,
         ETRTOWidth,
         calculation,
         calculationColoration,
         formatNumber,
+        explanationKey,
       ],
     );
 
@@ -471,38 +526,44 @@ const HubCalculationsRow = React.memo(
   },
 );
 
+type GearParams = {
+  chainring: number;
+  sprocket: number;
+  value: number;
+};
+
 const explanations = {
-  newBike: <p>Submit this configuration as a new bike.</p>,
-  newTire: <p>Submit this configuration as a new tire.</p>,
-  newCassette: <p>Submit this configuration as a new cassette.</p>,
-  tire: (
+  newBike: () => <p>Submit this configuration as a new bike.</p>,
+  newTire: () => <p>Submit this configuration as a new tire.</p>,
+  newCassette: () => <p>Submit this configuration as a new cassette.</p>,
+  tire: () => (
     <p>
       {`The part of the wheel which sits on the wheel's rim. Its actual
         diameter varies from its imperial naming, which affects gear inches and
         meters development.`}
     </p>
   ),
-  ETRTOWidth: (
+  ETRTOWidth: () => (
     <p>
       {`The width in millimeters of the inflated tire. ETRTO stands for European Tire & Rim Technical Organization.`}
     </p>
   ),
-  ETRTODiameter: (
+  ETRTODiameter: () => (
     <p>{`The inner diameter in millimeters of the tire. ETRTO stands for European Tire & Rim Technical Organization.`}</p>
   ),
-  tireDiameter: (
+  tireDiameter: () => (
     <p>
       The outer diameter in inches of the inflated tire, calculated from ETRTO
       size. Used to calculate gear inches.
     </p>
   ),
-  tireCircumference: (
+  tireCircumference: () => (
     <p>
       The distance in millimeters the tire travels in one revolution. Used to
       calculate meters development.
     </p>
   ),
-  gearInches: (
+  gearInches: () => (
     <>
       <p>
         Both gear inches and meters development measure the difficulty of
@@ -514,7 +575,7 @@ const explanations = {
       </p>
     </>
   ),
-  metersDevelopment: (
+  metersDevelopment: () => (
     <>
       <p>
         Both gear inches and meters development measure the difficulty of
@@ -527,7 +588,69 @@ const explanations = {
       </p>
     </>
   ),
+  speed: () => (
+    <p>
+      The speed in km/h at which you would travel if you pedaled at{' '}
+      {DEFAULT_CADENCE_RPM} RPM on flat ground.
+    </p>
+  ),
+  gearInchesCell: ({chainring, sprocket, value}: GearParams) => (
+    <>
+      <p>
+        Both gear inches and meters development measure the difficulty of
+        pedaling.
+      </p>
+      <p>
+        <i>Gear Inches</i>: The theoretical diameter of an equivalent tire on a
+        1:1 gear bicycle. Lower gear inches are easier to pedal.
+      </p>
+      <p>
+        In chainring {chainring} / sprocket {sprocket}, you would be riding a{' '}
+        {Math.round(value)}" tire on a 1:1 gear bike.
+      </p>
+    </>
+  ),
+  metersDevelopmentCell: ({chainring, sprocket, value}: GearParams) => (
+    <>
+      <p>
+        Both gear inches and meters development measure the difficulty of
+        pedaling.
+      </p>
+      <p>
+        <i>Meters Development</i>: The distance the bike travels in meters for
+        one complete pedal revolution. Lower meters development are easier to
+        pedal.
+      </p>
+      <p>
+        In chainring {chainring} / sprocket {sprocket}, the bike travels{' '}
+        {value.toFixed(1)}m per full pedal revolution.
+      </p>
+    </>
+  ),
+  speedCell: ({chainring, sprocket, value}: GearParams) => (
+    <>
+      <p>
+        The speed in km/h at which you would travel if you pedaled at{' '}
+        {DEFAULT_CADENCE_RPM} RPM on flat ground.
+      </p>
+      <p>
+        In chainring {chainring} / sprocket {sprocket}, you would travel at{' '}
+        {value.toFixed(1)} km/h at {DEFAULT_CADENCE_RPM} RPM cadence.
+      </p>
+    </>
+  ),
+} as const;
+
+type ExplanationKey = keyof typeof explanations;
+type ExplanationWithParams = {
+  key: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
+  params: GearParams;
 };
+type ExplanationState = ExplanationKey | ExplanationWithParams;
+
+const ExplanationContext = React.createContext<
+  ((explanation: ExplanationState | undefined) => void) | undefined
+>(undefined);
 
 const BikeCalculator = ({
   bike,
@@ -540,9 +663,7 @@ const BikeCalculator = ({
     customized: boolean,
     customizedData: Record<string, string | number>,
   ) => void;
-  setExplanationToDisplay: (
-    explanation: keyof typeof explanations | undefined,
-  ) => void;
+  setExplanationToDisplay: (explanation: ExplanationState | undefined) => void;
   className?: string;
 }) => {
   const [tireID, setTireID] = useState<TireID | 'custom'>(
@@ -622,328 +743,341 @@ const BikeCalculator = ({
   ]);
 
   return (
-    <TooltipProvider>
-      <div className={`bike-calc ${className}`}>
-        <div className="flex flex-col items-start space-y-2">
-          <div
-            className="flex flex-row items-center w-full"
-            onPointerEnter={() => setExplanationToDisplay('tire')}
-            onPointerLeave={() => setExplanationToDisplay(undefined)}
-          >
-            <Label className="mr-4">Tire</Label>
-            <SelectDropdown
-              value={tireID}
-              onValueChange={(value) => {
-                const newTireID = value as TireID | 'custom';
-                setTireID(newTireID);
-                if (newTireID !== 'custom') {
-                  const tire = TIRE_DB[newTireID];
-                  setETRTOWidth(tire.ETRTOSize[0]);
-                  setETRTODiameter(tire.ETRTOSize[1]);
-                }
-              }}
-              options={TIRE_DB}
-              placeholder="Search tires..."
-              emptyMessage="No tire found."
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              className={`ml-2 ${tireID === 'custom' ? '' : 'hidden'}`}
-              onPointerEnter={() => setExplanationToDisplay('newTire')}
-              onPointerLeave={() => setExplanationToDisplay(undefined)}
-            >
-              <a
-                href={`https://docs.google.com/forms/d/e/1FAIpQLSdS4NBfBk0IQzMqWQmZAiXVB6gVFUQMV0RltprMolS2PQldzg/viewform?usp=pp_url&entry.596176511=${ETRTOWidth}&entry.233968638=${ETRTODiameter}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FilePlus2 />
-              </a>
-            </Button>
-          </div>
-          <div className="flex flex-row items-center justify-between space-x-6">
+    <ExplanationContext.Provider value={setExplanationToDisplay}>
+      <TooltipProvider>
+        <div className={`bike-calc ${className}`}>
+          <div className="flex flex-col items-start space-y-2">
             <div
-              className="flex flex-row items-center"
-              onPointerEnter={() => setExplanationToDisplay('ETRTOWidth')}
+              className="flex flex-row items-center w-full"
+              onPointerEnter={() => setExplanationToDisplay('tire')}
               onPointerLeave={() => setExplanationToDisplay(undefined)}
             >
-              <Label className="mr-4">ETRTO Width</Label>{' '}
-              <Input
-                type="number"
-                onChange={(e) => {
-                  setETRTOWidth(e.target.valueAsNumber);
-                  setTireID('custom');
-                }}
-                value={ETRTOWidth}
-                className={cn(inputNumberClass, 'w-10 mr-2')}
-              />
-              <span className="text-sm">mm</span>
-            </div>
-            <div
-              className="flex flex-row items-center"
-              onPointerEnter={() => setExplanationToDisplay('ETRTODiameter')}
-              onPointerLeave={() => setExplanationToDisplay(undefined)}
-            >
-              <Label className="mr-4">ETRTO Diameter</Label>{' '}
-              <Input
-                type="number"
-                onChange={(e) => {
-                  setETRTODiameter(e.target.valueAsNumber);
-                  setTireID('custom');
-                }}
-                value={ETRTODiameter}
-                className={cn(inputNumberClass, 'w-12 mr-2')}
-              />
-              <span className="text-sm">mm</span>
-            </div>
-          </div>
-          <div className="flex flex-row items-center justify-between space-x-6">
-            <div
-              className="flex flex-row items-center"
-              onPointerEnter={() => setExplanationToDisplay('tireDiameter')}
-              onPointerLeave={() => setExplanationToDisplay(undefined)}
-            >
-              <Label className="mr-4">Tire Diameter</Label>{' '}
-              <Input
-                type="number"
-                disabled
-                value={(
-                  ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4
-                ).toFixed(2)}
-                className={cn(inputNumberDisabledClass, 'w-14 mr-2')}
-              />
-              <span className="text-sm">in.</span>
-            </div>
-            <div
-              className="flex flex-row items-center"
-              onPointerEnter={() =>
-                setExplanationToDisplay('tireCircumference')
-              }
-              onPointerLeave={() => setExplanationToDisplay(undefined)}
-            >
-              <Label className="mr-4">Tire Circumference</Label>
-              <Input
-                type="number"
-                disabled
-                value={Math.round(
-                  ETRTOtoCircumference(ETRTOWidth, ETRTODiameter),
-                )}
-                className={cn(inputNumberDisabledClass, 'w-14 mr-2')}
-              />
-              <span className="text-sm">mm</span>
-            </div>
-          </div>
-        </div>
-        <Separator className="my-6" />
-        <div className="flex flex-col items-start space-y-2">
-          <div className="flex flex-row items-center">
-            <Label className="mr-4">Number of Chainrings</Label>
-            <Input
-              type="number"
-              onChange={(e) => {
-                if (e.target.value === '') {
-                  setChainringCount(0);
-                  setChainringTeeth([]);
-                  return;
-                }
-                const chainringCount = e.target.valueAsNumber;
-                setChainringCount(chainringCount);
-                setChainringTeeth([
-                  ...chainringTeeth.slice(0, chainringCount),
-                  ...Array(Math.max(chainringCount - chainringTeeth.length, 0)),
-                ]);
-              }}
-              value={chainringCount}
-              className={cn(inputNumberClass, 'w-9')}
-            />
-          </div>
-          <div className="flex flex-row items-start">
-            <Label className="mr-4 mt-3 shrink-0">Chainring Teeth</Label>
-            <div className="flex flex-row flex-wrap">
-              {Array(chainringCount)
-                .fill(0)
-                .map((_, i) => (
-                  <div className="p-1" key={i}>
-                    <Input
-                      type="number"
-                      onChange={(e) =>
-                        setChainringTeeth(
-                          chainringTeeth.with(i, e.target.valueAsNumber),
-                        )
-                      }
-                      value={chainringTeeth[i] || 0}
-                      className={cn(inputNumberClass, 'w-10')}
-                    />
-                  </div>
-                ))}
-            </div>
-          </div>
-          <div className="flex flex-row items-center w-full">
-            <Label className="mr-4 shrink-0">Cassette / Hub</Label>
-            <SelectDropdown
-              value={cassetteID}
-              onValueChange={(value) => {
-                const newCassetteID = value as CassetteID | 'custom';
-                setCassetteID(newCassetteID);
-                if (newCassetteID !== 'custom') {
-                  const cassette = CASSETTE_DB[newCassetteID];
-                  if (isSprocketCassette(cassette)) {
-                    setSprocketCount(cassette.sprockets.length);
-                    setSprocketTeeth(cassette.sprockets);
+              <Label className="mr-4">Tire</Label>
+              <SelectDropdown
+                value={tireID}
+                onValueChange={(value) => {
+                  const newTireID = value as TireID | 'custom';
+                  setTireID(newTireID);
+                  if (newTireID !== 'custom') {
+                    const tire = TIRE_DB[newTireID];
+                    setETRTOWidth(tire.ETRTOSize[0]);
+                    setETRTODiameter(tire.ETRTOSize[1]);
                   }
-                }
-              }}
-              options={CASSETTE_DB}
-              placeholder="Search cassettes..."
-              emptyMessage="No cassette found."
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              className={`shrink-0 ml-2 ${
-                cassetteID === 'custom' ? '' : 'hidden'
-              }`}
-              onPointerEnter={() => setExplanationToDisplay('newCassette')}
-              onPointerLeave={() => setExplanationToDisplay(undefined)}
-            >
-              <a
-                href={`https://docs.google.com/forms/d/e/1FAIpQLSdSh3Y0tpJTfAZOjLuBVre508ZaTbL2fC1HtGmr8pqh-v16hw/viewform?usp=pp_url&entry.818217627=Cassette&entry.1849128967=${sprocketCount}&entry.583801447=${sprocketTeeth.join(
-                  ',',
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
+                }}
+                options={TIRE_DB}
+                placeholder="Search tires..."
+                emptyMessage="No tire found."
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                className={`ml-2 ${tireID === 'custom' ? '' : 'hidden'}`}
+                onPointerEnter={() => setExplanationToDisplay('newTire')}
+                onPointerLeave={() => setExplanationToDisplay(undefined)}
               >
-                <FilePlus2 />
-              </a>
-            </Button>
-          </div>
-          <div className="flex flex-row items-center">
-            <Label className="mr-4">Number of Sprockets</Label>
-            <Input
-              type="number"
-              onChange={(e) => {
-                if (e.target.value === '') {
-                  setSprocketCount(0);
-                  setSprocketTeeth([]);
-                  return;
-                }
-                const sprocketCount = e.target.valueAsNumber;
-                setSprocketCount(sprocketCount);
-                if (
-                  cassetteID !== 'custom' &&
-                  !isInternallyGearedHub(CASSETTE_DB[cassetteID])
-                ) {
-                  setCassetteID('custom');
-                }
-                setSprocketTeeth([
-                  ...sprocketTeeth.slice(0, sprocketCount),
-                  ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
-                ]);
-              }}
-              value={sprocketCount}
-              className={cn(inputNumberClass, 'w-9')}
-            />
-          </div>
-          {cassetteID !== 'custom' &&
-            isInternallyGearedHub(CASSETTE_DB[cassetteID]) && (
-              <div className="flex flex-row items-start">
-                <Label className="mr-4 mt-3 shrink-0">Ratios</Label>
-                <div className="flex flex-row flex-wrap">
-                  {Array(CASSETTE_DB[cassetteID].ratios.length)
-                    .fill(0)
-                    .map(
-                      (_, i) =>
-                        isInternallyGearedHub(CASSETTE_DB[cassetteID]) && (
-                          <div className="p-1" key={i}>
-                            <Input
-                              type="number"
-                              disabled
-                              value={CASSETTE_DB[cassetteID].ratios[i].toFixed(
-                                2,
-                              )}
-                              className={cn(inputNumberDisabledClass, 'w-12 text-right')}
-                            />
-                          </div>
-                        ),
-                    )}
-                </div>
+                <a
+                  href={`https://docs.google.com/forms/d/e/1FAIpQLSdS4NBfBk0IQzMqWQmZAiXVB6gVFUQMV0RltprMolS2PQldzg/viewform?usp=pp_url&entry.596176511=${ETRTOWidth}&entry.233968638=${ETRTODiameter}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FilePlus2 />
+                </a>
+              </Button>
+            </div>
+            <div className="flex flex-row items-center justify-between space-x-6">
+              <div
+                className="flex flex-row items-center"
+                onPointerEnter={() => setExplanationToDisplay('ETRTOWidth')}
+                onPointerLeave={() => setExplanationToDisplay(undefined)}
+              >
+                <Label className="mr-4">ETRTO Width</Label>{' '}
+                <Input
+                  type="number"
+                  onChange={(e) => {
+                    setETRTOWidth(e.target.valueAsNumber);
+                    setTireID('custom');
+                  }}
+                  value={ETRTOWidth}
+                  className={cn(inputNumberClass, 'w-10 mr-2')}
+                />
+                <span className="text-sm">mm</span>
               </div>
-            )}
-          <div className="flex flex-row items-start">
-            <Label className="mr-4 mt-3 shrink-0">Sprocket Teeth</Label>
-            <div className="flex flex-row flex-wrap">
-              {Array(sprocketCount)
-                .fill(0)
-                .map((_, i) => (
-                  <div className="p-1" key={i}>
-                    <Input
-                      type="number"
-                      onChange={(e) => {
-                        setSprocketTeeth(
-                          sprocketTeeth.with(i, e.target.valueAsNumber),
-                        );
-                        if (
-                          cassetteID !== 'custom' &&
-                          !isInternallyGearedHub(CASSETTE_DB[cassetteID])
-                        ) {
-                          setCassetteID('custom');
-                        }
-                      }}
-                      value={sprocketTeeth[i] || 0}
-                      className={cn(inputNumberClass, 'w-10')}
-                    />
-                  </div>
-                ))}
+              <div
+                className="flex flex-row items-center"
+                onPointerEnter={() => setExplanationToDisplay('ETRTODiameter')}
+                onPointerLeave={() => setExplanationToDisplay(undefined)}
+              >
+                <Label className="mr-4">ETRTO Diameter</Label>{' '}
+                <Input
+                  type="number"
+                  onChange={(e) => {
+                    setETRTODiameter(e.target.valueAsNumber);
+                    setTireID('custom');
+                  }}
+                  value={ETRTODiameter}
+                  className={cn(inputNumberClass, 'w-12 mr-2')}
+                />
+                <span className="text-sm">mm</span>
+              </div>
+            </div>
+            <div className="flex flex-row items-center justify-between space-x-6">
+              <div
+                className="flex flex-row items-center"
+                onPointerEnter={() => setExplanationToDisplay('tireDiameter')}
+                onPointerLeave={() => setExplanationToDisplay(undefined)}
+              >
+                <Label className="mr-4">Tire Diameter</Label>{' '}
+                <Input
+                  type="number"
+                  disabled
+                  value={(
+                    ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4
+                  ).toFixed(2)}
+                  className={cn(inputNumberDisabledClass, 'w-14 mr-2')}
+                />
+                <span className="text-sm">in.</span>
+              </div>
+              <div
+                className="flex flex-row items-center"
+                onPointerEnter={() =>
+                  setExplanationToDisplay('tireCircumference')
+                }
+                onPointerLeave={() => setExplanationToDisplay(undefined)}
+              >
+                <Label className="mr-4">Tire Circumference</Label>
+                <Input
+                  type="number"
+                  disabled
+                  value={Math.round(
+                    ETRTOtoCircumference(ETRTOWidth, ETRTODiameter),
+                  )}
+                  className={cn(inputNumberDisabledClass, 'w-14 mr-2')}
+                />
+                <span className="text-sm">mm</span>
+              </div>
             </div>
           </div>
-        </div>
-        <Separator className="my-6" />
-        <div className="flex flex-col items-start space-y-2">
-          <div className="flex flex-row items-center">
-            <Tabs
-              defaultValue="gearInches"
-              onValueChange={(value) =>
-                setCalculationToDisplay(
-                  value as 'gearInches' | 'metersDevelopment',
-                )
-              }
-            >
-              <TabsList className="flex flex-row">
-                <TabsTrigger
-                  value="gearInches"
-                  onPointerEnter={() => setExplanationToDisplay('gearInches')}
-                  onPointerLeave={() => setExplanationToDisplay(undefined)}
-                >
-                  Gear Inches
-                </TabsTrigger>
-                <TabsTrigger
-                  value="metersDevelopment"
-                  onPointerEnter={() =>
-                    setExplanationToDisplay('metersDevelopment')
+          <Separator className="my-6" />
+          <div className="flex flex-col items-start space-y-2">
+            <div className="flex flex-row items-center">
+              <Label className="mr-4">Number of Chainrings</Label>
+              <Input
+                type="number"
+                onChange={(e) => {
+                  if (e.target.value === '') {
+                    setChainringCount(0);
+                    setChainringTeeth([]);
+                    return;
                   }
-                  onPointerLeave={() => setExplanationToDisplay(undefined)}
+                  const chainringCount = e.target.valueAsNumber;
+                  setChainringCount(chainringCount);
+                  setChainringTeeth([
+                    ...chainringTeeth.slice(0, chainringCount),
+                    ...Array(
+                      Math.max(chainringCount - chainringTeeth.length, 0),
+                    ),
+                  ]);
+                }}
+                value={chainringCount}
+                className={cn(inputNumberClass, 'w-9')}
+              />
+            </div>
+            <div className="flex flex-row items-start">
+              <Label className="mr-4 mt-3 shrink-0">Chainring Teeth</Label>
+              <div className="flex flex-row flex-wrap">
+                {Array(chainringCount)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div className="p-1" key={i}>
+                      <Input
+                        type="number"
+                        onChange={(e) =>
+                          setChainringTeeth(
+                            chainringTeeth.with(i, e.target.valueAsNumber),
+                          )
+                        }
+                        value={chainringTeeth[i] || 0}
+                        className={cn(inputNumberClass, 'w-10')}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div className="flex flex-row items-center w-full">
+              <Label className="mr-4 shrink-0">Cassette / Hub</Label>
+              <SelectDropdown
+                value={cassetteID}
+                onValueChange={(value) => {
+                  const newCassetteID = value as CassetteID | 'custom';
+                  setCassetteID(newCassetteID);
+                  if (newCassetteID !== 'custom') {
+                    const cassette = CASSETTE_DB[newCassetteID];
+                    if (isSprocketCassette(cassette)) {
+                      setSprocketCount(cassette.sprockets.length);
+                      setSprocketTeeth(cassette.sprockets);
+                    }
+                  }
+                }}
+                options={CASSETTE_DB}
+                placeholder="Search cassettes..."
+                emptyMessage="No cassette found."
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                className={`shrink-0 ml-2 ${
+                  cassetteID === 'custom' ? '' : 'hidden'
+                }`}
+                onPointerEnter={() => setExplanationToDisplay('newCassette')}
+                onPointerLeave={() => setExplanationToDisplay(undefined)}
+              >
+                <a
+                  href={`https://docs.google.com/forms/d/e/1FAIpQLSdSh3Y0tpJTfAZOjLuBVre508ZaTbL2fC1HtGmr8pqh-v16hw/viewform?usp=pp_url&entry.818217627=Cassette&entry.1849128967=${sprocketCount}&entry.583801447=${sprocketTeeth.join(
+                    ',',
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  Meters Development
-                </TabsTrigger>
-                <TabsTrigger value="speed">Speed</TabsTrigger>
-              </TabsList>
-            </Tabs>
+                  <FilePlus2 />
+                </a>
+              </Button>
+            </div>
+            <div className="flex flex-row items-center">
+              <Label className="mr-4">Number of Sprockets</Label>
+              <Input
+                type="number"
+                onChange={(e) => {
+                  if (e.target.value === '') {
+                    setSprocketCount(0);
+                    setSprocketTeeth([]);
+                    return;
+                  }
+                  const sprocketCount = e.target.valueAsNumber;
+                  setSprocketCount(sprocketCount);
+                  if (
+                    cassetteID !== 'custom' &&
+                    !isInternallyGearedHub(CASSETTE_DB[cassetteID])
+                  ) {
+                    setCassetteID('custom');
+                  }
+                  setSprocketTeeth([
+                    ...sprocketTeeth.slice(0, sprocketCount),
+                    ...Array(Math.max(sprocketCount - sprocketTeeth.length, 0)),
+                  ]);
+                }}
+                value={sprocketCount}
+                className={cn(inputNumberClass, 'w-9')}
+              />
+            </div>
+            {cassetteID !== 'custom' &&
+              isInternallyGearedHub(CASSETTE_DB[cassetteID]) && (
+                <div className="flex flex-row items-start">
+                  <Label className="mr-4 mt-3 shrink-0">Ratios</Label>
+                  <div className="flex flex-row flex-wrap">
+                    {Array(CASSETTE_DB[cassetteID].ratios.length)
+                      .fill(0)
+                      .map(
+                        (_, i) =>
+                          isInternallyGearedHub(CASSETTE_DB[cassetteID]) && (
+                            <div className="p-1" key={i}>
+                              <Input
+                                type="number"
+                                disabled
+                                value={CASSETTE_DB[cassetteID].ratios[
+                                  i
+                                ].toFixed(2)}
+                                className={cn(
+                                  inputNumberDisabledClass,
+                                  'w-12 text-right',
+                                )}
+                              />
+                            </div>
+                          ),
+                      )}
+                  </div>
+                </div>
+              )}
+            <div className="flex flex-row items-start">
+              <Label className="mr-4 mt-3 shrink-0">Sprocket Teeth</Label>
+              <div className="flex flex-row flex-wrap">
+                {Array(sprocketCount)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div className="p-1" key={i}>
+                      <Input
+                        type="number"
+                        onChange={(e) => {
+                          setSprocketTeeth(
+                            sprocketTeeth.with(i, e.target.valueAsNumber),
+                          );
+                          if (
+                            cassetteID !== 'custom' &&
+                            !isInternallyGearedHub(CASSETTE_DB[cassetteID])
+                          ) {
+                            setCassetteID('custom');
+                          }
+                        }}
+                        value={sprocketTeeth[i] || 0}
+                        className={cn(inputNumberClass, 'w-10')}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
-          <CalculationsTable
-            {...{
-              sprocketCount,
-              sprocketTeeth,
-              chainringTeeth,
-              ETRTODiameter,
-              ETRTOWidth,
-              cassetteID,
-              calculationToDisplay,
-            }}
-          />
+          <Separator className="my-6" />
+          <div className="flex flex-col items-start space-y-2">
+            <div className="flex flex-row items-center">
+              <Tabs
+                defaultValue="gearInches"
+                onValueChange={(value) =>
+                  setCalculationToDisplay(
+                    value as 'gearInches' | 'metersDevelopment',
+                  )
+                }
+              >
+                <TabsList className="flex flex-row">
+                  <TabsTrigger
+                    value="gearInches"
+                    onPointerEnter={() => setExplanationToDisplay('gearInches')}
+                    onPointerLeave={() => setExplanationToDisplay(undefined)}
+                  >
+                    Gear Inches
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="metersDevelopment"
+                    onPointerEnter={() =>
+                      setExplanationToDisplay('metersDevelopment')
+                    }
+                    onPointerLeave={() => setExplanationToDisplay(undefined)}
+                  >
+                    Meters Development
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="speed"
+                    onPointerEnter={() => setExplanationToDisplay('speed')}
+                    onPointerLeave={() => setExplanationToDisplay(undefined)}
+                  >
+                    Speed
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            <CalculationsTable
+              {...{
+                sprocketCount,
+                sprocketTeeth,
+                chainringTeeth,
+                ETRTODiameter,
+                ETRTOWidth,
+                cassetteID,
+                calculationToDisplay,
+              }}
+            />
+          </div>
         </div>
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+    </ExplanationContext.Provider>
   );
 };
 
@@ -951,7 +1085,7 @@ export default function Home() {
   const [bikeID, setBikeID] = useState<BikeID | 'custom'>('Surly Disc Trucker');
   const [customized, setCustomized] = useState<boolean>(false);
   const [explanationToDisplay, setExplanationToDisplay] =
-    useState<keyof typeof explanations>();
+    useState<ExplanationState>();
   const [customizationsForPrefill, setCustomizationsForPrefill] = useState<
     Record<string, string | number>
   >({});
@@ -1018,7 +1152,12 @@ export default function Home() {
         <Card className="w-full grow">
           <CardContent className="p-4">
             <div className="text-xs text-muted-foreground">
-              {explanationToDisplay && explanations[explanationToDisplay]}
+              {explanationToDisplay &&
+                (typeof explanationToDisplay === 'string'
+                  ? explanations[explanationToDisplay]()
+                  : explanations[explanationToDisplay.key](
+                      explanationToDisplay.params,
+                    ))}
             </div>
           </CardContent>
         </Card>
