@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {FilePlus2} from 'lucide-react';
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
@@ -8,6 +8,7 @@ import {Button} from '@/components/ui/button';
 import {Separator} from '@/components/ui/separator';
 import {TooltipProvider} from '@/components/ui/tooltip';
 import {Tabs, TabsList, TabsTrigger} from '@/components/ui/tabs';
+import {SelectDropdown} from '@/components/SelectDropdown';
 import {
   Bike,
   BIKE_DB,
@@ -20,6 +21,30 @@ import {
   TireID,
 } from '@/lib/data';
 import {Card, CardContent} from '@/components/ui/card';
+import {cn} from '@/lib/utils';
+
+const inputNumberClass = cn(
+  'text-center',
+  '[appearance:textfield]',
+  '[&::-webkit-outer-spin-button]:appearance-none',
+  '[&::-webkit-inner-spin-button]:appearance-none',
+  'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg',
+  'focus:ring-blue-500 focus:border-blue-500 p-2',
+  'dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400',
+  'dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500',
+);
+
+const inputNumberDisabledClass = cn(
+  'text-center',
+  '[appearance:textfield]',
+  '[&::-webkit-outer-spin-button]:appearance-none',
+  '[&::-webkit-inner-spin-button]:appearance-none',
+  'bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg',
+  'focus:ring-blue-500 focus:border-blue-500 p-2',
+  'dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400',
+  'dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500',
+  'cursor-not-allowed',
+);
 
 const ETRTOtoDiameter = (ETRTOWidth: number, ETRTODiameter: number): number =>
   ETRTOWidth * 2 + ETRTODiameter;
@@ -330,85 +355,121 @@ const CalculationsTable = ({
 // Generalizing the CalculationsRow component to work with both internally geared hubs
 // and cassettes was overkill and in the future specialized formatting for IGH calculations
 // might be desired
-const CalculationsRow = ({
-  sprocketCount,
-  sprocketTeeth,
-  chainringTooth,
-  ETRTODiameter,
-  ETRTOWidth,
-  calculation,
-  calculationColoration,
-  formatNumber = (n: number) => Math.round(n),
-}: {
-  sprocketCount: number;
-  sprocketTeeth: number[];
-  chainringTooth: number;
-  ETRTODiameter: number;
-  ETRTOWidth: number;
-  calculation: Calculation['calc'];
-  calculationColoration: Calculation['map'];
-  formatNumber?: (n: number) => number | string;
-}) =>
-  Array(sprocketCount)
-    .fill(0)
-    .map((_, i) => {
-      const gI =
-        calculation(
-          ETRTOWidth,
-          ETRTODiameter,
-          chainringTooth,
-          sprocketTeeth[i],
-        ) || 0;
-      return (
-        <div
-          key={i}
-          className={`w-10 h-8 text-center p-1 min-w-0`}
-          style={{backgroundColor: calculationColoration(gI)}}
-        >
-          {formatNumber(gI)}
-        </div>
-      );
-    });
+const CalculationsRow = React.memo(
+  ({
+    sprocketCount,
+    sprocketTeeth,
+    chainringTooth,
+    ETRTODiameter,
+    ETRTOWidth,
+    calculation,
+    calculationColoration,
+    formatNumber = (n: number) => Math.round(n),
+  }: {
+    sprocketCount: number;
+    sprocketTeeth: number[];
+    chainringTooth: number;
+    ETRTODiameter: number;
+    ETRTOWidth: number;
+    calculation: Calculation['calc'];
+    calculationColoration: Calculation['map'];
+    formatNumber?: (n: number) => number | string;
+  }) => {
+    const cells = useMemo(
+      () =>
+        Array(sprocketCount)
+          .fill(0)
+          .map((_, i) => {
+            const gearInches =
+              calculation(
+                ETRTOWidth,
+                ETRTODiameter,
+                chainringTooth,
+                sprocketTeeth[i],
+              ) || 0;
+            return (
+              <div
+                key={i}
+                className={`w-10 h-8 text-center p-1 min-w-0`}
+                style={{backgroundColor: calculationColoration(gearInches)}}
+              >
+                {formatNumber(gearInches)}
+              </div>
+            );
+          }),
+      [
+        sprocketCount,
+        sprocketTeeth,
+        chainringTooth,
+        ETRTODiameter,
+        ETRTOWidth,
+        calculation,
+        calculationColoration,
+        formatNumber,
+      ],
+    );
 
-const HubCalculationsRow = ({
-  ratios,
-  sprocketTooth,
-  chainringTooth,
-  ETRTODiameter,
-  ETRTOWidth,
-  calculation,
-  calculationColoration,
-  formatNumber = (n: number) => Math.round(n),
-}: {
-  ratios: number[];
-  sprocketTooth: number;
-  chainringTooth: number;
-  ETRTODiameter: number;
-  ETRTOWidth: number;
-  calculation: Calculation['calc'];
-  calculationColoration: Calculation['map'];
-  formatNumber?: (n: number) => number | string;
-}) =>
-  Array(ratios.length)
-    .fill(0)
-    .map((_, i) => {
-      const gI =
-        calculation(
-          ETRTOWidth,
-          ETRTODiameter,
-          chainringTooth,
-          sprocketTooth * ratios[i],
-        ) || 0;
-      return (
-        <div
-          key={i}
-          className={`w-10 h-8 text-center p-1 min-w-0`}
-          style={{backgroundColor: calculationColoration(gI)}}
-        >
-          {formatNumber(gI)}
-        </div>
-      );
-    });
+    return <>{cells}</>;
+  },
+);
+
+const HubCalculationsRow = React.memo(
+  ({
+    ratios,
+    sprocketTooth,
+    chainringTooth,
+    ETRTODiameter,
+    ETRTOWidth,
+    calculation,
+    calculationColoration,
+    formatNumber = (n: number) => Math.round(n),
+  }: {
+    ratios: number[];
+    sprocketTooth: number;
+    chainringTooth: number;
+    ETRTODiameter: number;
+    ETRTOWidth: number;
+    calculation: Calculation['calc'];
+    calculationColoration: Calculation['map'];
+    formatNumber?: (n: number) => number | string;
+  }) => {
+    const cells = useMemo(
+      () =>
+        Array(ratios.length)
+          .fill(0)
+          .map((_, i) => {
+            const gearInches =
+              calculation(
+                ETRTOWidth,
+                ETRTODiameter,
+                chainringTooth,
+                sprocketTooth * ratios[i],
+              ) || 0;
+            return (
+              <div
+                key={i}
+                className={`w-10 h-8 text-center p-1 min-w-0`}
+                style={{backgroundColor: calculationColoration(gearInches)}}
+              >
+                {formatNumber(gearInches)}
+              </div>
+            );
+          }),
+      [
+        ratios,
+        sprocketTooth,
+        chainringTooth,
+        ETRTODiameter,
+        ETRTOWidth,
+        calculation,
+        calculationColoration,
+        formatNumber,
+      ],
+    );
+
+    return <>{cells}</>;
+  },
+);
 
 const explanations = {
   newBike: <p>Submit this configuration as a new bike.</p>,
@@ -570,26 +631,21 @@ const BikeCalculator = ({
             onPointerLeave={() => setExplanationToDisplay(undefined)}
           >
             <Label className="mr-4">Tire</Label>
-            <select
-              onChange={(e) => {
-                const tireID = e.target.value as TireID | 'custom';
-                setTireID(tireID);
-                if (tireID !== 'custom') {
-                  const tire = TIRE_DB[tireID];
+            <SelectDropdown
+              value={tireID}
+              onValueChange={(value) => {
+                const newTireID = value as TireID | 'custom';
+                setTireID(newTireID);
+                if (newTireID !== 'custom') {
+                  const tire = TIRE_DB[newTireID];
                   setETRTOWidth(tire.ETRTOSize[0]);
                   setETRTODiameter(tire.ETRTOSize[1]);
                 }
               }}
-              value={tireID}
-              className="bg-white flex h-9 shrink min-w-0 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
-            >
-              <option value="custom">Custom</option>
-              {Object.entries(TIRE_DB).map(([name]) => (
-                <option value={name} key={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+              options={TIRE_DB}
+              placeholder="Search tires..."
+              emptyMessage="No tire found."
+            />
             <Button
               variant="outline"
               size="icon"
@@ -600,6 +656,7 @@ const BikeCalculator = ({
               <a
                 href={`https://docs.google.com/forms/d/e/1FAIpQLSdS4NBfBk0IQzMqWQmZAiXVB6gVFUQMV0RltprMolS2PQldzg/viewform?usp=pp_url&entry.596176511=${ETRTOWidth}&entry.233968638=${ETRTODiameter}`}
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <FilePlus2 />
               </a>
@@ -619,7 +676,7 @@ const BikeCalculator = ({
                   setTireID('custom');
                 }}
                 value={ETRTOWidth}
-                className="w-10 mr-2 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className={cn(inputNumberClass, 'w-10 mr-2')}
               />
               <span className="text-sm">mm</span>
             </div>
@@ -636,7 +693,7 @@ const BikeCalculator = ({
                   setTireID('custom');
                 }}
                 value={ETRTODiameter}
-                className="w-12 mr-2 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className={cn(inputNumberClass, 'w-12 mr-2')}
               />
               <span className="text-sm">mm</span>
             </div>
@@ -654,7 +711,7 @@ const BikeCalculator = ({
                 value={(
                   ETRTOtoDiameter(ETRTOWidth, ETRTODiameter) / 25.4
                 ).toFixed(2)}
-                className="w-14 mr-2 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                className={cn(inputNumberDisabledClass, 'w-14 mr-2')}
               />
               <span className="text-sm">in.</span>
             </div>
@@ -672,7 +729,7 @@ const BikeCalculator = ({
                 value={Math.round(
                   ETRTOtoCircumference(ETRTOWidth, ETRTODiameter),
                 )}
-                className="w-14 mr-2 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                className={cn(inputNumberDisabledClass, 'w-14 mr-2')}
               />
               <span className="text-sm">mm</span>
             </div>
@@ -698,7 +755,7 @@ const BikeCalculator = ({
                 ]);
               }}
               value={chainringCount}
-              className="w-9 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              className={cn(inputNumberClass, 'w-9')}
             />
           </div>
           <div className="flex flex-row items-start">
@@ -716,7 +773,7 @@ const BikeCalculator = ({
                         )
                       }
                       value={chainringTeeth[i] || 0}
-                      className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className={cn(inputNumberClass, 'w-10')}
                     />
                   </div>
                 ))}
@@ -724,28 +781,23 @@ const BikeCalculator = ({
           </div>
           <div className="flex flex-row items-center w-full">
             <Label className="mr-4 shrink-0">Cassette / Hub</Label>
-            <select
-              onChange={(e) => {
-                const cassetteID = e.target.value as CassetteID | 'custom';
-                setCassetteID(cassetteID);
-                if (cassetteID !== 'custom') {
-                  const cassette = CASSETTE_DB[cassetteID];
+            <SelectDropdown
+              value={cassetteID}
+              onValueChange={(value) => {
+                const newCassetteID = value as CassetteID | 'custom';
+                setCassetteID(newCassetteID);
+                if (newCassetteID !== 'custom') {
+                  const cassette = CASSETTE_DB[newCassetteID];
                   if (isSprocketCassette(cassette)) {
                     setSprocketCount(cassette.sprockets.length);
                     setSprocketTeeth(cassette.sprockets);
                   }
                 }
               }}
-              value={cassetteID}
-              className="bg-white flex h-9 truncate grow shrink min-w-0 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
-            >
-              <option value="custom">Custom</option>
-              {Object.entries(CASSETTE_DB).map(([name]) => (
-                <option value={name} key={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+              options={CASSETTE_DB}
+              placeholder="Search cassettes..."
+              emptyMessage="No cassette found."
+            />
             <Button
               variant="outline"
               size="icon"
@@ -760,6 +812,7 @@ const BikeCalculator = ({
                   ',',
                 )}`}
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <FilePlus2 />
               </a>
@@ -789,7 +842,7 @@ const BikeCalculator = ({
                 ]);
               }}
               value={sprocketCount}
-              className="w-9 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              className={cn(inputNumberClass, 'w-9')}
             />
           </div>
           {cassetteID !== 'custom' &&
@@ -809,7 +862,7 @@ const BikeCalculator = ({
                               value={CASSETTE_DB[cassetteID].ratios[i].toFixed(
                                 2,
                               )}
-                              className="w-12 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500 cursor-not-allowed "
+                              className={cn(inputNumberDisabledClass, 'w-12 text-right')}
                             />
                           </div>
                         ),
@@ -838,7 +891,7 @@ const BikeCalculator = ({
                         }
                       }}
                       value={sprocketTeeth[i] || 0}
-                      className="w-10 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                      className={cn(inputNumberClass, 'w-10')}
                     />
                   </div>
                 ))}
@@ -913,18 +966,13 @@ export default function Home() {
         <div className="flex flex-row items-center space-between">
           <Label className="mr-4">Bike</Label>
           <div className="flex flex-row">
-            <select
-              onChange={(e) => setBikeID(e.target.value as BikeID)}
+            <SelectDropdown
               value={bikeID}
-              className="bg-white flex h-9 items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1"
-            >
-              <option value="custom">Custom</option>
-              {Object.entries(BIKE_DB).map(([name]) => (
-                <option value={name} key={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => setBikeID(value as BikeID | 'custom')}
+              options={BIKE_DB}
+              placeholder="Search bikes..."
+              emptyMessage="No bike found."
+            />
             <Button
               variant="outline"
               size="icon"
@@ -939,6 +987,7 @@ export default function Home() {
                     : 'https://forms.gle/K2tTfGGQtWvbD4Tz8'
                 }
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <FilePlus2 />
               </a>
