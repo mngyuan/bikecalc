@@ -1,11 +1,7 @@
 import {useState} from 'react';
 import {ChevronDown} from 'lucide-react';
 import {Button} from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover';
 import {
   Command,
   CommandEmpty,
@@ -17,7 +13,7 @@ import {
 interface SelectDropdownProps<T extends string = string> {
   value: T | 'custom';
   onValueChange: (value: T | 'custom') => void;
-  options: Record<T, any>;
+  options: Record<T, unknown>;
   placeholder: string;
   emptyMessage?: string;
   includeCustomOption?: boolean;

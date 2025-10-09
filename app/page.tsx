@@ -372,159 +372,155 @@ const CalculationsTable = ({
 // Generalizing the CalculationsRow component to work with both internally geared hubs
 // and cassettes was overkill and in the future specialized formatting for IGH calculations
 // might be desired
-const CalculationsRow = React.memo(
-  ({
-    sprocketCount,
-    sprocketTeeth,
-    chainringTooth,
-    chainringNumber,
-    ETRTODiameter,
-    ETRTOWidth,
-    calculation,
-    calculationColoration,
-    formatNumber = (n: number) => Math.round(n),
-    explanationKey,
-  }: {
-    sprocketCount: number;
-    sprocketTeeth: number[];
-    chainringTooth: number;
-    chainringNumber: number;
-    ETRTODiameter: number;
-    ETRTOWidth: number;
-    calculation: Calculation['calc'];
-    calculationColoration: Calculation['map'];
-    formatNumber?: (n: number) => number | string;
-    explanationKey: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
-  }) => {
-    const setExplanationToDisplay = React.useContext(ExplanationContext);
-    const cells = useMemo(
-      () =>
-        Array(sprocketCount)
-          .fill(0)
-          .map((_, i) => {
-            const gearInches =
-              calculation(
-                ETRTOWidth,
-                ETRTODiameter,
-                chainringTooth,
-                sprocketTeeth[i],
-              ) || 0;
-            return (
-              <div
-                key={i}
-                className={`w-10 h-8 text-center p-1 min-w-0 cursor-pointer`}
-                style={{backgroundColor: calculationColoration(gearInches)}}
-                onPointerEnter={() =>
-                  setExplanationToDisplay?.({
-                    key: explanationKey,
-                    params: {
-                      chainring: chainringNumber,
-                      sprocket: sprocketCount - i,
-                      value: gearInches,
-                    },
-                  })
-                }
-                onPointerLeave={() => setExplanationToDisplay?.(undefined)}
-              >
-                {formatNumber(gearInches)}
-              </div>
-            );
-          }),
-      [
-        sprocketCount,
-        sprocketTeeth,
-        chainringTooth,
-        ETRTODiameter,
-        ETRTOWidth,
-        calculation,
-        calculationColoration,
-        formatNumber,
-        explanationKey,
-      ],
-    );
+const CalculationsRow = React.memo(function CalculationsRow({
+  sprocketCount,
+  sprocketTeeth,
+  chainringTooth,
+  chainringNumber,
+  ETRTODiameter,
+  ETRTOWidth,
+  calculation,
+  calculationColoration,
+  formatNumber = (n: number) => Math.round(n),
+  explanationKey,
+}: {
+  sprocketCount: number;
+  sprocketTeeth: number[];
+  chainringTooth: number;
+  chainringNumber: number;
+  ETRTODiameter: number;
+  ETRTOWidth: number;
+  calculation: Calculation['calc'];
+  calculationColoration: Calculation['map'];
+  formatNumber?: (n: number) => number | string;
+  explanationKey: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
+}) {
+  const setExplanationToDisplay = React.useContext(ExplanationContext);
+  const cells = useMemo(
+    () =>
+      Array(sprocketCount)
+        .fill(0)
+        .map((_, i) => {
+          const gearInches =
+            calculation(
+              ETRTOWidth,
+              ETRTODiameter,
+              chainringTooth,
+              sprocketTeeth[i],
+            ) || 0;
+          return (
+            <div
+              key={i}
+              className={`w-10 h-8 text-center p-1 min-w-0 cursor-pointer`}
+              style={{backgroundColor: calculationColoration(gearInches)}}
+              onPointerEnter={() =>
+                setExplanationToDisplay?.({
+                  key: explanationKey,
+                  params: {
+                    chainring: chainringNumber,
+                    sprocket: sprocketCount - i,
+                    value: gearInches,
+                  },
+                })
+              }
+              onPointerLeave={() => setExplanationToDisplay?.(undefined)}
+            >
+              {formatNumber(gearInches)}
+            </div>
+          );
+        }),
+    [
+      sprocketCount,
+      sprocketTeeth,
+      chainringTooth,
+      ETRTODiameter,
+      ETRTOWidth,
+      calculation,
+      calculationColoration,
+      formatNumber,
+      explanationKey,
+    ],
+  );
 
-    return <>{cells}</>;
-  },
-);
+  return <>{cells}</>;
+});
 
-const HubCalculationsRow = React.memo(
-  ({
-    ratios,
-    sprocketTooth,
-    sprocketNumber,
-    chainringTooth,
-    chainringNumber,
-    ETRTODiameter,
-    ETRTOWidth,
-    calculation,
-    calculationColoration,
-    formatNumber = (n: number) => Math.round(n),
-    explanationKey,
-  }: {
-    ratios: number[];
-    sprocketTooth: number;
-    sprocketNumber: number;
-    chainringTooth: number;
-    chainringNumber: number;
-    ETRTODiameter: number;
-    ETRTOWidth: number;
-    calculation: Calculation['calc'];
-    calculationColoration: Calculation['map'];
-    formatNumber?: (n: number) => number | string;
-    explanationKey: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
-  }) => {
-    const setExplanationToDisplay = React.useContext(ExplanationContext);
-    const cells = useMemo(
-      () =>
-        Array(ratios.length)
-          .fill(0)
-          .map((_, i) => {
-            const gearInches =
-              calculation(
-                ETRTOWidth,
-                ETRTODiameter,
-                chainringTooth,
-                sprocketTooth * ratios[i],
-              ) || 0;
-            return (
-              <div
-                key={i}
-                className={`w-10 h-8 text-center p-1 min-w-0 cursor-pointer`}
-                style={{backgroundColor: calculationColoration(gearInches)}}
-                onPointerEnter={() =>
-                  setExplanationToDisplay?.({
-                    key: explanationKey,
-                    params: {
-                      chainring: chainringNumber,
-                      sprocket: ratios.length - i,
-                      value: gearInches,
-                    },
-                  })
-                }
-                onPointerLeave={() => setExplanationToDisplay?.(undefined)}
-              >
-                {formatNumber(gearInches)}
-              </div>
-            );
-          }),
-      [
-        ratios,
-        sprocketTooth,
-        sprocketNumber,
-        chainringTooth,
-        chainringNumber,
-        ETRTODiameter,
-        ETRTOWidth,
-        calculation,
-        calculationColoration,
-        formatNumber,
-        explanationKey,
-      ],
-    );
+const HubCalculationsRow = React.memo(function HubCalculationsRow({
+  ratios,
+  sprocketTooth,
+  sprocketNumber,
+  chainringTooth,
+  chainringNumber,
+  ETRTODiameter,
+  ETRTOWidth,
+  calculation,
+  calculationColoration,
+  formatNumber = (n: number) => Math.round(n),
+  explanationKey,
+}: {
+  ratios: number[];
+  sprocketTooth: number;
+  sprocketNumber: number;
+  chainringTooth: number;
+  chainringNumber: number;
+  ETRTODiameter: number;
+  ETRTOWidth: number;
+  calculation: Calculation['calc'];
+  calculationColoration: Calculation['map'];
+  formatNumber?: (n: number) => number | string;
+  explanationKey: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
+}) {
+  const setExplanationToDisplay = React.useContext(ExplanationContext);
+  const cells = useMemo(
+    () =>
+      Array(ratios.length)
+        .fill(0)
+        .map((_, i) => {
+          const gearInches =
+            calculation(
+              ETRTOWidth,
+              ETRTODiameter,
+              chainringTooth,
+              sprocketTooth * ratios[i],
+            ) || 0;
+          return (
+            <div
+              key={i}
+              className={`w-10 h-8 text-center p-1 min-w-0 cursor-pointer`}
+              style={{backgroundColor: calculationColoration(gearInches)}}
+              onPointerEnter={() =>
+                setExplanationToDisplay?.({
+                  key: explanationKey,
+                  params: {
+                    chainring: chainringNumber,
+                    sprocket: ratios.length - i,
+                    value: gearInches,
+                  },
+                })
+              }
+              onPointerLeave={() => setExplanationToDisplay?.(undefined)}
+            >
+              {formatNumber(gearInches)}
+            </div>
+          );
+        }),
+    [
+      ratios,
+      sprocketTooth,
+      sprocketNumber,
+      chainringTooth,
+      chainringNumber,
+      ETRTODiameter,
+      ETRTOWidth,
+      calculation,
+      calculationColoration,
+      formatNumber,
+      explanationKey,
+    ],
+  );
 
-    return <>{cells}</>;
-  },
-);
+  return <>{cells}</>;
+});
 
 type GearParams = {
   chainring: number;
@@ -606,7 +602,8 @@ const explanations = {
       </p>
       <p>
         In chainring {chainring} / sprocket {sprocket}, you would be riding a{' '}
-        {Math.round(value)}" tire on a 1:1 gear bike.
+        {value.toFixed(2)}
+        {'"'} tire on a 1:1 gear bike.
       </p>
     </>
   ),
@@ -623,7 +620,7 @@ const explanations = {
       </p>
       <p>
         In chainring {chainring} / sprocket {sprocket}, the bike travels{' '}
-        {value.toFixed(1)}m per full pedal revolution.
+        {value.toFixed(2)}m per full pedal revolution.
       </p>
     </>
   ),
@@ -635,13 +632,18 @@ const explanations = {
       </p>
       <p>
         In chainring {chainring} / sprocket {sprocket}, you would travel at{' '}
-        {value.toFixed(1)} km/h at {DEFAULT_CADENCE_RPM} RPM cadence.
+        {value.toFixed(2)} km/h at {DEFAULT_CADENCE_RPM} RPM cadence.
       </p>
     </>
   ),
 } as const;
 
-type ExplanationKey = keyof typeof explanations;
+// For the functional explanations we'll access them with type ExplanationWithParams etc. as
+// an obj not the string key
+type ExplanationKey = Exclude<
+  keyof typeof explanations,
+  'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell'
+>;
 type ExplanationWithParams = {
   key: 'gearInchesCell' | 'metersDevelopmentCell' | 'speedCell';
   params: GearParams;
