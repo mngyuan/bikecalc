@@ -22,6 +22,7 @@ import {
 } from '@/lib/data';
 import {Card, CardContent} from '@/components/ui/card';
 import {cn} from '@/lib/utils';
+import BikeViewer from '@/components/BikeViewer';
 
 const DEFAULT_CADENCE_RPM = 80;
 const GEAR_INCHES_MIN = 20;
@@ -1094,6 +1095,24 @@ export default function Home() {
 
   return (
     <div className="flex flex-row space-x-4 h-full w-full">
+      <div className="p-4 pl-0 flex flex-col grow">
+        <Card className="w-full h-full flex flex-col">
+          <CardContent className="p-4 flex-1 flex flex-col">
+            <BikeViewer
+              className="flex-1 min-h-0"
+              cadenceRPM={DEFAULT_CADENCE_RPM}
+            />
+            <div className="text-xs text-muted-foreground mt-4">
+              {explanationToDisplay &&
+                (typeof explanationToDisplay === 'string'
+                  ? explanations[explanationToDisplay]()
+                  : explanations[explanationToDisplay.key](
+                      explanationToDisplay.params,
+                    ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       <div className="p-4 pr-0 flex flex-col items-start w-[32rem] shrink-0 overflow-scroll no-scrollbar">
         <h1 className="text-3xl font-bold mb-2">Bike Calc</h1>
         <p className="text-muted-foreground mb-2">
@@ -1146,21 +1165,6 @@ export default function Home() {
               setExplanationToDisplay={setExplanationToDisplay}
               className="w-full"
             />
-          </CardContent>
-        </Card>
-      </div>
-      {/* TODO: something needs to be done here with sizing, the canvas in BikeViewer won't resize properly */}
-      <div className="p-4 pl-0 flex flex-col grow">
-        <Card className="w-full grow">
-          <CardContent className="p-4">
-            <div className="text-xs text-muted-foreground">
-              {explanationToDisplay &&
-                (typeof explanationToDisplay === 'string'
-                  ? explanations[explanationToDisplay]()
-                  : explanations[explanationToDisplay.key](
-                      explanationToDisplay.params,
-                    ))}
-            </div>
           </CardContent>
         </Card>
       </div>
