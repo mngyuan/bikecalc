@@ -2,9 +2,8 @@ import React, {useRef} from 'react';
 import * as THREE from 'three';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
-import {useState} from 'react';
 
-const radToDeg = (rad: number) => (rad * 180) / Math.PI;
+// const radToDeg = (rad: number) => (rad * 180) / Math.PI;
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
 
 const FRAME_COLOR = '#92b983';
@@ -451,6 +450,7 @@ function Bicycle({cadenceRPM = 80}: {cadenceRPM?: number}) {
 
 function CameraLogger() {
   const {camera} = useThree();
+  console.log(camera.toJSON());
 
   useFrame(() => {
     // Logs on every frame - comment out when not needed
