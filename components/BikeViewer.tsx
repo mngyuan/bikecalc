@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useRef, useMemo} from 'react';
 import * as THREE from 'three';
 import {Canvas, useFrame, useThree} from '@react-three/fiber';
 import {OrbitControls} from '@react-three/drei';
@@ -113,11 +113,11 @@ function Bicycle({cadenceRPM = 80}: {cadenceRPM?: number}) {
     }
     // TODO: Rotate wheels based on gear ratio and cadence
     if (frontWheelRef.current) {
-      frontWheelRef.current.rotation.z -=
+      frontWheelRef.current.rotation.z +=
         (cadenceRPM * 2 * Math.PI * delta) / 60;
     }
     if (rearWheelRef.current) {
-      rearWheelRef.current.rotation.z -=
+      rearWheelRef.current.rotation.z +=
         (cadenceRPM * 2 * Math.PI * delta) / 60;
     }
   });
@@ -461,13 +461,31 @@ function CameraLogger() {
 }
 
 function Scene({cadenceRPM = 80}: {cadenceRPM?: number}) {
+  // Calculate orbit center: horizontal midpoint of wheelbase, vertical midpoint between ground and top tube
+  const orbitTarget = useMemo(() => {
+    const x = GEOMETRY.wheelbase / 2;
+    const topTubeHeight =
+      WHEEL_RADIUS -
+      GEOMETRY.bbDrop +
+      Math.sin(degToRad(GEOMETRY.seatAngle)) * GEOMETRY.seatTube;
+    const y = topTubeHeight / 2;
+    const z = 0;
+
+    return [x, y, z] as [number, number, number];
+  }, []);
+
   return (
     <>
       <ambientLight intensity={0.6} />
       <directionalLight position={[2, 2, 2]} intensity={0.8} />
       <directionalLight position={[-2, 1, -2]} intensity={0.3} />
       <Bicycle cadenceRPM={cadenceRPM} />
-      <OrbitControls enableZoom={true} enablePan={true} />
+      <OrbitControls enableZoom={true} enablePan={true} target={orbitTarget} />
+      {/* Debug: Orbit center point - uncomment to visualize */}
+      {/* <mesh position={orbitTarget}>
+        <sphereGeometry args={[0.02, 16, 16]} />
+        <meshStandardMaterial color="#ff0000" />
+      </mesh> */}
       <CameraLogger />
     </>
   );
