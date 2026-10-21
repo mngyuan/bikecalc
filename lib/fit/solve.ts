@@ -3,7 +3,7 @@
 import {solveFrame, type FramePoints} from '../frame';
 import {add, mul, rad, rot, type Vec} from '../vec';
 import {type FitBikeID, frameSize, geometryOf} from './bikes';
-import type {BikeSettings, FitSettings} from './state';
+import type {BikeSettings, FitBikes, FitSettings} from './state';
 
 export interface Solved extends FramePoints {
   id: FitBikeID;
@@ -35,7 +35,7 @@ export interface Solved extends FramePoints {
 }
 
 export const isMatched = (
-  saved: FitSettings,
+  saved: FitBikes,
   id: FitBikeID,
   st: BikeSettings = saved.bike[id],
 ) => {
@@ -44,7 +44,7 @@ export const isMatched = (
 };
 
 // Saddle nose of a saved bike, following saddle matches up to four deep.
-export function noseOf(saved: FitSettings, id: FitBikeID, depth = 0): Vec {
+export function noseOf(saved: FitBikes, id: FitBikeID, depth = 0): Vec {
   const s = saved.bike[id];
   if (isMatched(saved, id) && depth < 4 && s.matchTo) {
     return noseOf(saved, s.matchTo, depth + 1);
@@ -56,7 +56,7 @@ export function noseOf(saved: FitSettings, id: FitBikeID, depth = 0): Vec {
 }
 
 export function solve(
-  saved: FitSettings,
+  saved: FitBikes,
   id: FitBikeID,
   st: BikeSettings = saved.bike[id],
   staged = false,

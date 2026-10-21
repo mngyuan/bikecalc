@@ -28,6 +28,9 @@ export interface GearConfig {
   chainrings: number[];
   cassetteID: CassetteID | 'custom';
   sprockets: number[];
+  // Internally geared hub ratios, gear 1 first; null for a derailleur cassette.
+  // Kept here rather than looked up by cassetteID, so a custom hub keeps them.
+  ratios: number[] | null;
 }
 
 export function configFromBike(id: BikeID): GearConfig | null {
@@ -44,6 +47,7 @@ export function configFromBike(id: BikeID): GearConfig | null {
     sprockets: isSprocketCassette(cassette)
       ? [...cassette.sprockets]
       : [...(d.sprockets ?? [])],
+    ratios: isInternallyGearedHub(cassette) ? [...cassette.ratios] : null,
   };
 }
 
@@ -61,16 +65,13 @@ export function isStock(cfg: GearConfig, id: BikeID | 'custom'): boolean {
     cfg.bsd === stock.bsd &&
     cfg.cassetteID === stock.cassetteID &&
     sameList(cfg.chainrings, stock.chainrings) &&
-    sameList(cfg.sprockets, stock.sprockets)
+    sameList(cfg.sprockets, stock.sprockets) &&
+    sameList(cfg.ratios ?? [], stock.ratios ?? [])
   );
 }
 
 // Hub ratios for an internally geared hub, gear 1 first; null for a cassette
-export function hubRatios(cfg: GearConfig): readonly number[] | null {
-  if (cfg.cassetteID === 'custom') return null;
-  const c = CASSETTE_DB[cfg.cassetteID];
-  return isInternallyGearedHub(c) ? c.ratios : null;
-}
+export const hubRatios = (cfg: GearConfig): readonly number[] | null => cfg.ratios;
 
 // A gear is a chainring, a sprocket and (with a hub) a hub gear, by index
 export interface GearSel {
@@ -104,9 +105,10 @@ export const sameSel = (a: GearSel | null, b: GearSel | null) =>
 export function gearRatio(cfg: GearConfig, sel: GearSel): number {
   const ring = cfg.chainrings[sel.ring],
     sprocket = cfg.sprockets[sel.sprocket];
-  if (!(ring > 0) || !(sprocket > 0)) return NaN;
   const hub = hubRatios(cfg);
-  return (ring / sprocket) * (hub ? hub[sel.hub] : 1);
+  const hubRatio = hub ? hub[sel.hub] : 1;
+  if (!(ring > 0) || !(sprocket > 0) || !(hubRatio > 0)) return NaN;
+  return (ring / sprocket) * hubRatio;
 }
 
 export type MetricKey = 'gearInches' | 'development' | 'speed';

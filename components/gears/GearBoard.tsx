@@ -3,7 +3,7 @@
 // cadence and wheels at cadence × gear ratio (both clockwise: the bike faces right).
 import {type Ref, useEffect, useRef, useState, useSyncExternalStore} from 'react';
 import {Board, Grid} from '@/components/board/Board';
-import {Frame, Ground} from '@/components/board/BikeParts';
+import {Frame, Ground, Wheel} from '@/components/board/BikeParts';
 import {NS, SP} from '@/components/board/svg';
 import type {FrameSize} from '@/lib/data';
 import {solveFrame} from '@/lib/frame';
@@ -178,19 +178,13 @@ export function GearBoard({
   );
 }
 
-// Wheel drawn about its own centre so the inner group only needs rotate().
+// A wheel with a valve and one spoke, so its turning is visible
 function SpinWheel({center, R, rim, spin}: {center: Vec; R: number; rim: number; spin: Ref<SVGGElement>}) {
   return (
-    <g transform={`translate(${f(center[0])} ${f(-center[1])})`}>
-      <circle r={f(R)} fill={FRAME_SOFT} stroke={FRAME} strokeWidth={2.4} vectorEffect={NS} />
-      <circle r={f(rim)} fill="none" stroke={FRAME} strokeWidth={1} vectorEffect={NS} opacity={0.6} />
-      <g ref={spin}>
-        {/* valve and one spoke so the turning is visible */}
-        <line x1={0} y1={0} x2={0} y2={f(-rim)} stroke={FRAME} strokeWidth={1} vectorEffect={NS} opacity={0.5} />
-        <line x1={0} y1={f(-rim + 4)} x2={0} y2={f(-rim + 26)} stroke={FRAME} strokeWidth={4} strokeLinecap="round" vectorEffect={NS} />
-      </g>
-      <circle r={12} fill={FRAME} />
-    </g>
+    <Wheel center={center} R={R} rim={rim} c={FRAME} soft={FRAME_SOFT} fillOpacity={1} spinRef={spin}>
+      <line x1={0} y1={0} x2={0} y2={f(-rim)} stroke={FRAME} strokeWidth={1} vectorEffect={NS} opacity={0.5} />
+      <line x1={0} y1={f(-rim + 4)} x2={0} y2={f(-rim + 26)} stroke={FRAME} strokeWidth={4} strokeLinecap="round" vectorEffect={NS} />
+    </Wheel>
   );
 }
 

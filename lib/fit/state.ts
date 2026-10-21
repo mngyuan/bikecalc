@@ -56,6 +56,10 @@ export interface FitSettings {
   bike: Record<FitBikeID, BikeSettings>;
 }
 
+// The parts of the settings the solver reads. Rider and steer settings are
+// left out so changing them doesn't re-solve every bike.
+export type FitBikes = Pick<FitSettings, 'bike' | 'bikes'>;
+
 // With one bike shown, edits go to a temporary copy drawn dashed until saved.
 export interface Stage {
   id: FitBikeID;
@@ -305,18 +309,17 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
     case 'toggle':
       return syncStage(patchSaved(st, a.id, (s) => ({...s, show: !s.show})));
     case 'remove': {
-      // bikes copying this saddle keep its position: write out their numbers first
-      let next = st;
-      for (const k of st.saved.bikes) {
-        if (k !== a.id && st.saved.bike[k].matchTo === a.id && isMatched(st.saved, k)) {
-          const G = solve(st.saved, k);
-          next = patchSaved(next, k, (s) => ({...s, matchTo: '', sH: Math.round(G.sH), sO: Math.round(G.sO)}));
-        }
-      }
-      return syncStage({
-        stage: next.stage?.id === a.id ? null : next.stage,
-        saved: {...next.saved, bikes: next.saved.bikes.filter((k) => k !== a.id)},
-      });
+      // Bikes copying this saddle keep its position: write out their numbers
+      // first, in both the saved settings and any staged copy.
+      const unmatch = (k: FitBikeID, s: BikeSettings): BikeSettings => {
+        if (s.matchTo !== a.id || !isMatched(st.saved, k, s)) return s;
+        const G = solve(st.saved, k, s);
+        return {...s, matchTo: '', sH: Math.round(G.sH), sO: Math.round(G.sO)};
+      };
+      const bike = {...st.saved.bike};
+      for (const k of st.saved.bikes) if (k !== a.id) bike[k] = unmatch(k, bike[k]);
+      const stage = st.stage && st.stage.id !== a.id ? {...st.stage, data: unmatch(st.stage.id, st.stage.data)} : null;
+      return syncStage({stage, saved: {...st.saved, bike, bikes: st.saved.bikes.filter((k) => k !== a.id)}});
     }
     case 'add': {
       if (st.saved.bikes.includes(a.id)) return st;

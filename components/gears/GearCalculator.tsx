@@ -9,13 +9,12 @@ import {
   CASSETTE_DB,
   type CassetteID,
   DEFAULT_GEAR_BIKE,
-  isInternallyGearedHub,
   isSprocketCassette,
   REFERENCE_FRAME,
   TIRE_DB,
   type TireID,
 } from '@/lib/data';
-import {bikeFormURL, cassetteFormURL, tireFormURL} from '@/lib/forms';
+import {bikeFormURL, cassetteFormURL, hubFormURL, tireFormURL} from '@/lib/forms';
 import {
   clampSel,
   configFromBike,
@@ -52,6 +51,8 @@ const TIPS = {
   bsd: 'The inner diameter in millimeters of the tire (bead seat diameter). ETRTO stands for European Tire & Rim Technical Organization.',
   diameter: 'The outer diameter in inches of the inflated tire, calculated from ETRTO size. Used to calculate gear inches.',
   circumference: 'The distance in millimeters the tire travels in one revolution. Used to calculate meters development.',
+  ratios:
+    "How fast the hub's output turns for each turn of the sprocket: 1 is direct drive, below 1 is easier, above 1 is harder.",
 };
 
 const resize = (list: number[], n: number) =>
@@ -105,25 +106,29 @@ export function GearCalculator() {
   };
 
   const pickCassette = (id: CassetteID | 'custom') => {
+    // "Custom" keeps the current sprockets, and a hub keeps its ratios to edit
     if (id === 'custom') return update({cassetteID: 'custom'});
     const c = CASSETTE_DB[id];
     if (isSprocketCassette(c)) {
-      update({cassetteID: id, sprockets: [...c.sprockets]});
+      update({cassetteID: id, sprockets: [...c.sprockets], ratios: null});
       if (hub) setPinned((p) => ({...p, sprocket: Math.floor(c.sprockets.length / 2), hub: 0}));
     } else {
       // moving to a hub from a cassette: start from one sprocket, not the whole cassette
       const wasHub = !!hub;
       update({
         cassetteID: id,
+        ratios: [...c.ratios],
         sprockets: wasHub ? cfg.sprockets : [cfg.sprockets[Math.floor(cfg.sprockets.length / 2)] ?? 18],
       });
       setPinned((p) => ({...p, sprocket: 0, hub: Math.floor(c.ratios.length / 2)}));
     }
   };
 
-  // editing sprockets of a catalog cassette makes it custom; a hub keeps its ratios
-  const cassetteAfterSprocketEdit = (): GearConfig['cassetteID'] =>
-    cfg.cassetteID !== 'custom' && !isInternallyGearedHub(CASSETTE_DB[cfg.cassetteID]) ? 'custom' : cfg.cassetteID;
+  // Editing sprockets of a catalog cassette makes it custom. A hub keeps its
+  // catalog entry, since bikes fit their own sprockets to a hub.
+  const cassetteAfterSprocketEdit = (): GearConfig['cassetteID'] => (cfg.ratios ? cfg.cassetteID : 'custom');
+  // Editing hub ratios always makes it a custom hub
+  const setRatios = (ratios: number[]) => update({ratios, cassetteID: 'custom'});
 
   return (
     <div className="app">
@@ -263,16 +268,32 @@ export function GearCalculator() {
                   />
                 ))}
               </div>
-              {hub && (
+              {cfg.ratios && (
                 <>
-                  <span className="label" style={{fontSize: 13}}>
+                  <div className="row">
+                    <label htmlFor="hub-n">Number of hub gears</label>
+                    <NumberField
+                      id="hub-n"
+                      min={1}
+                      max={14}
+                      value={cfg.ratios.length}
+                      onChange={(v) => cfg.ratios && setRatios(resize(cfg.ratios, count(v, 14)))}
+                    />
+                  </div>
+                  <span className="label" style={{fontSize: 13}} data-tip={TIPS.ratios}>
                     Hub ratios, gear 1 first
                   </span>
                   <div className="teeth">
-                    {hub.map((r, i) => (
-                      <div key={i} className="derived">
-                        {r.toFixed(2)}
-                      </div>
+                    {cfg.ratios.map((r, i) => (
+                      <NumberField
+                        key={i}
+                        label={`Hub gear ${i + 1} ratio`}
+                        min={0.1}
+                        max={5}
+                        step={0.01}
+                        value={r}
+                        onChange={(v) => cfg.ratios && setRatios(cfg.ratios.with(i, v))}
+                      />
                     ))}
                   </div>
                 </>
@@ -280,12 +301,12 @@ export function GearCalculator() {
               {cfg.cassetteID === 'custom' && (
                 <a
                   className="submit"
-                  href={cassetteFormURL(cfg.sprockets)}
+                  href={cfg.ratios ? hubFormURL(cfg.ratios, cfg.sprockets) : cassetteFormURL(cfg.sprockets)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  data-tip="Submit this configuration as a new cassette."
+                  data-tip={`Submit this configuration as a new ${cfg.ratios ? 'hub' : 'cassette'}.`}
                 >
-                  Submit this cassette <ExternalIcon />
+                  Submit this {cfg.ratios ? 'hub' : 'cassette'} <ExternalIcon />
                 </a>
               )}
             </Section>

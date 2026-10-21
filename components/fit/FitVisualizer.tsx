@@ -36,11 +36,21 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
   useEffect(() => saveSettings(saved), [saved]);
 
   const dirty = isDirty(st);
-  const Gs = useMemo(() => new Map(saved.bikes.map((id) => [id, solve(saved, id)])), [saved]);
-  const GS = useMemo(() => (stage ? solve(saved, stage.id, stage.data, true) : null), [saved, stage]);
+  // Solve from the bike settings only, so the steer slider and rider fields
+  // don't re-solve every bike. Toe strike is the costly part, so it's worked
+  // out here once per solve rather than on every render.
+  const {bike, bikes} = saved;
+  const Gs = useMemo(() => {
+    const fit = {bike, bikes};
+    return new Map(bikes.map((id) => [id, solve(fit, id)]));
+  }, [bike, bikes]);
+  const GS = useMemo(() => (stage ? solve({bike, bikes}, stage.id, stage.data, true) : null), [bike, bikes, stage]);
+  const strikes = useMemo(() => new Map([...Gs].map(([id, G]) => [id, strikeAngle(G)])), [Gs]);
+  const stagedStrike = useMemo(() => (GS ? strikeAngle(GS) : null), [GS]);
   const solved = (id: FitBikeID) => Gs.get(id) as Solved;
 
   const visible = saved.bikes.filter((k) => saved.bike[k].show);
+  const readout: ReadoutProps = {st, solved, GS: dirty ? GS : null, visible, strikes, stagedStrike};
   const drawn: Drawn[] = visible.map((id) => ({G: solved(id), color: colorOf(id)}));
   const stagedDrawn: Drawn | null =
     dirty && stage && GS && saved.bike[stage.id].show ? {G: GS, color: STAGED_COLOR} : null;
@@ -109,18 +119,18 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
             <Toolbar saved={saved} dispatch={dispatch} />
             <div className="hero">
               <div className="hero-body">
-                <Hero st={st} solved={solved} GS={dirty ? GS : null} visible={visible} />
+                <Hero {...readout} />
               </div>
               <p className="note hero-foot">
                 The hand point is where your palm rests: on the hoods for drops, on the GP3 wing for the riser. Toe
                 clearance is measured 25mm above the pedal spindle with the crank level and forward. All values
                 in mm.
               </p>
-              <Readout st={st} solved={solved} GS={dirty ? GS : null} visible={visible} part="warnings" />
+              <Readout {...readout} part="warnings" />
             </div>
           </div>
           <div className="tablewrap">
-            <Readout st={st} solved={solved} GS={dirty ? GS : null} visible={visible} part="table" />
+            <Readout {...readout} part="table" />
           </div>
         </section>
 
@@ -141,7 +151,7 @@ function geometrySources() {
   const by = new Map<string, string[]>();
   for (const id of FIT_BIKES) {
     const src = geometryOf(id).source;
-    by.set(src, [...(by.get(src) ?? []), `${bikeShort(id) ?? bikeName(id)} ${bikeYear(id) ?? ''}`.trim()]);
+    by.set(src, [...(by.get(src) ?? []), `${bikeShort(id)} ${bikeYear(id) ?? ''}`.trim()]);
   }
   return [...by].map(([src, names]) => `${src} (${names.join(', ')})`).join(' and ');
 }
@@ -335,7 +345,7 @@ function Item({
             <option value="">Set manually</option>
             {others.map((k) => (
               <option key={k} value={k}>
-                Same as {bikeShort(k) ?? bikeName(k)}
+                Same as {bikeShort(k)}
               </option>
             ))}
           </select>
@@ -408,7 +418,7 @@ function Toolbar({saved, dispatch}: {saved: FitSettings; dispatch: Dispatch<FitA
           onClick={() => dispatch({type: 'toggle', id})}
         >
           <span className="dot" style={{background: colorOf(id).c}} />
-          {bikeShort(id) ?? bikeName(id)}
+          {bikeShort(id)}
         </button>
       ))}
       <details className="addmenu" ref={menu}>
@@ -444,6 +454,8 @@ interface ReadoutProps {
   solved: (id: FitBikeID) => Solved;
   GS: Solved | null; // staged solve, only when it differs from saved
   visible: FitBikeID[];
+  strikes: Map<FitBikeID, number | null>; // toe strike angle of each saved solve
+  stagedStrike: number | null;
 }
 
 function Hero({st, solved, GS, visible}: ReadoutProps) {
@@ -574,14 +586,14 @@ const ROWS: [string, (G: Solved, strike: number | null) => ReactNode][] = [
   ['BB height', (G) => r(G.bbH)],
 ];
 
-function columns({st, solved, GS, visible}: ReadoutProps): Col[] {
+function columns({st, solved, GS, visible, strikes, stagedStrike}: ReadoutProps): Col[] {
   const cols: Col[] = [];
   for (const id of visible) {
     const G = solved(id);
     const size = geometryOf(id).sizes[st.saved.bike[id].size]?.label ?? '';
-    cols.push({id, G, label: `${bikeShort(id)} ${size}`, dot: colorOf(id).c, strike: strikeAngle(G)});
+    cols.push({id, G, label: `${bikeShort(id)} ${size}`, dot: colorOf(id).c, strike: strikes.get(id) ?? null});
     if (GS && st.stage?.id === id) {
-      cols.push({id, G: GS, label: `${bikeShort(id)} · staged`, dot: STAGED_COLOR.c, strike: strikeAngle(GS)});
+      cols.push({id, G: GS, label: `${bikeShort(id)} · staged`, dot: STAGED_COLOR.c, strike: stagedStrike});
     }
   }
   return cols;

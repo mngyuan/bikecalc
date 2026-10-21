@@ -21,15 +21,17 @@ export function Ground({
   );
 }
 
-// Tyre, rim and hub. Children are drawn in the wheel's frame so they turn
-// with it when the group is rotated.
+// Tyre, rim and hub, drawn about the wheel's own centre. Children are drawn in
+// a group around that centre, under the hub, so rotating `spinRef` with a
+// plain rotate() turns them with the wheel.
 export function Wheel({
   center,
   R,
   rim,
   c,
   soft,
-  groupRef,
+  fillOpacity = 0.35,
+  spinRef,
   children,
 }: {
   center: Vec;
@@ -37,17 +39,16 @@ export function Wheel({
   rim: number;
   c: string;
   soft: string;
-  groupRef?: Ref<SVGGElement>;
+  fillOpacity?: number;
+  spinRef?: Ref<SVGGElement>;
   children?: ReactNode;
 }) {
-  const cx = f(center[0]),
-    cy = f(-center[1]);
   return (
-    <g ref={groupRef}>
-      <circle cx={cx} cy={cy} r={f(R)} fill={soft} fillOpacity={0.35} stroke={c} strokeWidth={2.4} vectorEffect={NS} />
-      <circle cx={cx} cy={cy} r={f(rim)} fill="none" stroke={c} strokeWidth={1} vectorEffect={NS} opacity={0.6} />
-      <circle cx={cx} cy={cy} r={12} fill={c} />
-      {children}
+    <g transform={`translate(${f(center[0])} ${f(-center[1])})`}>
+      <circle r={f(R)} fill={soft} fillOpacity={fillOpacity} stroke={c} strokeWidth={2.4} vectorEffect={NS} />
+      <circle r={f(rim)} fill="none" stroke={c} strokeWidth={1} vectorEffect={NS} opacity={0.6} />
+      {children && <g ref={spinRef}>{children}</g>}
+      <circle r={12} fill={c} />
     </g>
   );
 }
