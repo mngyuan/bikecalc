@@ -7,7 +7,6 @@
 
 ## Medium Priority
 
-- [ ] Check Sturmey Archer X-RF8 ratios: they run 1.0–3.25, which looks like ratios relative to gear 1 rather than hub output ratios
 - [ ] Add frame geometry for drivetrain bikes (e.g. Surly Disc Trucker) so the gear calculator draws the real frame
 - [ ] Add a form for suggesting frame geometry, stems and bars
 - [ ] Improve the `Drivetrain` type to a discriminated union (hub vs cassette)

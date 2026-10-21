@@ -109,6 +109,7 @@ export function GearCalculator() {
     const c = CASSETTE_DB[id];
     if (isSprocketCassette(c)) {
       update({cassetteID: id, sprockets: [...c.sprockets]});
+      if (hub) setPinned((p) => ({...p, sprocket: Math.floor(c.sprockets.length / 2), hub: 0}));
     } else {
       // moving to a hub from a cassette: start from one sprocket, not the whole cassette
       const wasHub = !!hub;

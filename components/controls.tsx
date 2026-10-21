@@ -46,7 +46,7 @@ export function NumberField({
         if (Number.isFinite(v)) onChange(v);
       }}
       onBlur={() => {
-        if (!Number.isFinite(parseFloat(text))) setText(fmt(value));
+        if (parseFloat(text) !== value) setText(fmt(value));
       }}
     />
   );

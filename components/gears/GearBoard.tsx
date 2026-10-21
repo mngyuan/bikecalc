@@ -19,16 +19,15 @@ const FRAME = 'var(--frame)',
   DRIVE = 'var(--drive)';
 const HUB_SHELL_R = 46;
 
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+const subscribeReducedMotion = (cb: () => void) => {
+  const m = matchMedia(REDUCED_MOTION);
+  m.addEventListener('change', cb);
+  return () => m.removeEventListener('change', cb);
+};
+
 function usePrefersReducedMotion() {
-  return useSyncExternalStore(
-    (cb) => {
-      const m = matchMedia('(prefers-reduced-motion: reduce)');
-      m.addEventListener('change', cb);
-      return () => m.removeEventListener('change', cb);
-    },
-    () => matchMedia('(prefers-reduced-motion: reduce)').matches,
-    () => false,
-  );
+  return useSyncExternalStore(subscribeReducedMotion, () => matchMedia(REDUCED_MOTION).matches, () => false);
 }
 
 export function GearBoard({

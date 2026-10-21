@@ -304,11 +304,20 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
       );
     case 'toggle':
       return syncStage(patchSaved(st, a.id, (s) => ({...s, show: !s.show})));
-    case 'remove':
+    case 'remove': {
+      // bikes copying this saddle keep its position: write out their numbers first
+      let next = st;
+      for (const k of st.saved.bikes) {
+        if (k !== a.id && st.saved.bike[k].matchTo === a.id && isMatched(st.saved, k)) {
+          const G = solve(st.saved, k);
+          next = patchSaved(next, k, (s) => ({...s, matchTo: '', sH: Math.round(G.sH), sO: Math.round(G.sO)}));
+        }
+      }
       return syncStage({
-        stage: st.stage?.id === a.id ? null : st.stage,
-        saved: {...st.saved, bikes: st.saved.bikes.filter((k) => k !== a.id)},
+        stage: next.stage?.id === a.id ? null : next.stage,
+        saved: {...next.saved, bikes: next.saved.bikes.filter((k) => k !== a.id)},
       });
+    }
     case 'add': {
       if (st.saved.bikes.includes(a.id)) return st;
       const next = patchSaved(st, a.id, (s) => ({...s, show: true}));

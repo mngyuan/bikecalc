@@ -20,7 +20,10 @@ export function frameSize(id: FitBikeID, size: string): FrameSize {
 }
 
 export const bikeName = (id: FitBikeID) => BIKE_DB[id].name;
-export const bikeShort = (id: FitBikeID) => BIKE_DB[id].short;
+export const bikeShort = (id: FitBikeID) => {
+  const b: {name: string; short?: string} = BIKE_DB[id];
+  return b.short ?? b.name;
+};
 export const bikeYear = (id: FitBikeID) => BIKE_DB[id].year;
 
 // Colour slots in app.css, given out in catalog order so a bike keeps its

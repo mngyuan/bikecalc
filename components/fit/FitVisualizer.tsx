@@ -311,7 +311,15 @@ function Item({
         </div>
       );
     case 'match': {
-      const others = st.saved.bikes.filter((k) => k !== id);
+      // skip bikes whose saddle already follows this one, which would make a loop
+      const followsThis = (k: FitBikeID): boolean => {
+        for (let m = k, n = 0; n < 4 && isMatched(st.saved, m); n++) {
+          m = st.saved.bike[m].matchTo as FitBikeID;
+          if (m === id) return true;
+        }
+        return false;
+      };
+      const others = st.saved.bikes.filter((k) => k !== id && !followsThis(k));
       return (
         <div className="row">
           <label htmlFor={uid} data-tip={TIPS.matchTo}>
