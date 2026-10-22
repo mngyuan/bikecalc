@@ -16,6 +16,7 @@ import {SECTIONS, type SectionItem, TIPS} from '@/lib/fit/sections';
 import {dropEnds, isMatched, solve, type Solved, strikeAngle, widthGain} from '@/lib/fit/solve';
 import {
   editTarget,
+  type BikeSettings,
   type FitAction,
   type FitSettings,
   type FitState,
@@ -352,6 +353,25 @@ function Item({
         </div>
       );
     }
+    case 'dWAt':
+      if (!item.when(s, id, st.saved)) return null;
+      return (
+        <div className="row">
+          <label htmlFor={uid} data-tip={TIPS.dWAt}>
+            Width measured at
+          </label>
+          <span />
+          <select
+            id={uid}
+            className="wide"
+            value={s.dWAt}
+            onChange={(e) => dispatch({type: 'dWAt', id, value: e.target.value as BikeSettings['dWAt']})}
+          >
+            <option value="hoods">Hoods</option>
+            <option value="bend">Start of the bend</option>
+          </select>
+        </div>
+      );
     case 'saddle':
       if (!item.when(s, id, st.saved)) return null;
       return (
@@ -558,7 +578,7 @@ const ROWS: [string, (G: Solved, strike: number | null) => ReactNode][] = [
     (G) => {
       if (G.s.barType !== 'drop') return r(G.s.rW);
       const D = dropEnds(G.s);
-      return `${r(G.s.dW)} / ${r(2 * D.bendW)} / ${r(2 * D.endW)}`;
+      return `${r(2 * D.hoodW)} / ${r(2 * D.bendW)} / ${r(2 * D.endW)}`;
     },
   ],
   ['Bar clamp from BB', (G) => `${r(G.K[0])}, ${r(G.K[1])}`],

@@ -197,14 +197,15 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
         <rect x={f(Math.min(sx, kx))} y={-17} width={f(Math.abs(kx - sx))} height={34} rx={8} fill="var(--board)" stroke={c} strokeWidth={2} vectorEffect={NS} />
         {s.barType === 'drop'
           ? ([1, -1] as const).map((sd) => {
-              const W = s.dW / 2,
+              const D = dropEnds(s),
+                W = D.topW,
+                H = D.hoodW,
                 r = s.dReach,
-                D = dropEnds(s),
                 sb = (W - 75) * Math.tan(rad(s.dSweep || 0));
               return (
                 <g key={sd}>
                   <path
-                    d={`M${f(kx)},0 L${f(kx)},${f(sd * 60)} L${f(kx - sb)},${f(sd * (W - 75))} C${f(kx - sb)},${f(sd * (W - 25))} ${f(kx + r - 35)},${f(sd * W)} ${f(kx + r)},${f(sd * W)} Q${f(kx + r + 6)},${f((sd * (W + D.bendW)) / 2)} ${f(kx + D.bendX)},${f(sd * D.bendW)} L${f(kx + D.endX)},${f(sd * D.endW)}`}
+                    d={`M${f(kx)},0 L${f(kx)},${f(sd * 60)} L${f(kx - sb)},${f(sd * (W - 75))} C${f(kx - sb)},${f(sd * (W - 25))} ${f(kx + r - 35)},${f(sd * H)} ${f(kx + r)},${f(sd * H)} Q${f(kx + r + 6)},${f((sd * (H + D.bendW)) / 2)} ${f(kx + D.bendX)},${f(sd * D.bendW)} L${f(kx + D.endX)},${f(sd * D.endW)}`}
                     fill="none"
                     stroke={c}
                     strokeWidth={3}
@@ -212,8 +213,8 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
                     strokeLinejoin="round"
                     vectorEffect={NS}
                   />
-                  <rect x={f(kx + r - 24)} y={f(sd * W - 14)} width={f(s.hoodExt + 28)} height={28} rx={12} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
-                  <circle cx={f(G.hand[0])} cy={f(sd * W)} r={10} fill={c} />
+                  <rect x={f(kx + r - 24)} y={f(sd * H - 14)} width={f(s.hoodExt + 28)} height={28} rx={12} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
+                  <circle cx={f(G.hand[0])} cy={f(sd * H)} r={10} fill={c} />
                 </g>
               );
             })
