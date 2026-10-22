@@ -24,7 +24,8 @@ export type Stem = StandardStem | Gooseneck;
 export interface DropBar {
   label: string;
   barType: 'drop';
-  dW: number; // width at the hoods, centre to centre
+  dW: number; // stated width, centre to centre, taken where dWAt says
+  dWAt: 'hoods' | 'bend'; // brands measure at the hoods (Salsa) or where the tops start to bend (Ritchey)
   dReach: number; // clamp centre to the furthest-forward point of the bend
   dDrop: number; // tops down to the drops
   dFlare: number; // drops lean outward, seen from the front
@@ -61,8 +62,8 @@ export const STEM_DB = {
 } as const satisfies Record<string, Stem>;
 
 export const BAR_DB = {
-  cowbell44: {label: 'Salsa Cowbell 44', barType: 'drop', dW: 440, dReach: 68, dDrop: 115, dFlare: 12, dOut: 12, dSweep: 0, hoodExt: 35, hoodUp: 30},
-  venturemax44: {label: 'Ritchey VentureMax 44', barType: 'drop', dW: 440, dReach: 76, dDrop: 102, dFlare: 24, dOut: 6, dSweep: 6, hoodExt: 35, hoodUp: 30},
+  cowbell44: {label: 'Salsa Cowbell 44', barType: 'drop', dW: 440, dWAt: 'hoods', dReach: 68, dDrop: 115, dFlare: 12, dOut: 12, dSweep: 0, hoodExt: 35, hoodUp: 30},
+  venturemax44: {label: 'Ritchey VentureMax 44', barType: 'drop', dW: 440, dWAt: 'bend', dReach: 76, dDrop: 102, dFlare: 24, dOut: 6, dSweep: 6, hoodExt: 35, hoodUp: 30},
   riser650: {label: 'Alterr stock riser 640 / 80 + GP3', barType: 'riser', rW: 640, rRise: 80, rSweep: 9, rInboard: 25},
 } as const satisfies Record<string, Bar>;
 

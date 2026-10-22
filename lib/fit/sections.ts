@@ -15,14 +15,15 @@ export const TIPS: Record<string, string> = {
   below: 'Spacer stack between headset and stem',
   _above: 'Leftover steerer above the stem, filled with spacers',
   hs: 'Headset top cap height above the head tube',
-  dW: 'Bar width, centre to centre at the hoods',
+  dW: 'Stated bar width, centre to centre',
+  dWAt: 'Where the brand measures width: at the hoods, or where the tops start to bend forward. On a flared bar the hoods sit wider than the bend.',
   dReach: 'Clamp centre to the furthest-forward point of the bend',
   dDrop: 'Vertical distance from the tops down to the drops',
   dFlare: 'How much the drops lean outward, seen from the front',
   dOut: 'How much the drop ends kick outward, seen from above',
   dSweep: 'How far the tops sweep back towards you',
   hoodExt: 'Where your palm sits, ahead of the bar reach',
-  hoodUp: 'Height of your palm above the bar centre',
+  hoodUp: 'Height of your palm above the bar centre. On a flared bar the hoods lean inward, so this also brings your hands in',
   rW: 'Riser bar width, end to end',
   rRise: 'Height of the grips above the stem clamp',
   rSweep: 'Angle the grips bend back towards you',
@@ -48,6 +49,7 @@ export type SectionItem =
   | {type: 'barPreset'}
   | {type: 'stemType'}
   | {type: 'barType'}
+  | {type: 'dWAt'; when: When}
   | {type: 'match'}
   | {type: 'above'}
   | {type: 'saddle'; when: When};
@@ -105,7 +107,8 @@ export const SECTIONS: Section[] = [
     items: [
       {type: 'barPreset'},
       {type: 'barType'},
-      num('dW', 'Width at hoods (c-c)', 360, 560, 10, {slider: true, when: drop}),
+      num('dW', 'Width (c-c)', 360, 560, 10, {slider: true, when: drop}),
+      {type: 'dWAt', when: drop},
       num('dReach', 'Bar reach', 40, 100, 1, {when: drop}),
       num('dDrop', 'Bar drop', 80, 160, 1, {when: drop}),
       num('dFlare', 'Drop flare (°)', 0, 35, 1, {when: drop}),

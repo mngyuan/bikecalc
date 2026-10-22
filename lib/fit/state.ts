@@ -22,6 +22,7 @@ export interface BikeSettings {
   barPreset: BarID | '';
   barType: 'drop' | 'riser';
   dW: number;
+  dWAt: 'hoods' | 'bend';
   dReach: number;
   dDrop: number;
   dFlare: number;
@@ -92,6 +93,7 @@ const GENERIC: BikeSettings = {
   barPreset: 'cowbell44',
   barType: 'drop',
   dW: 440,
+  dWAt: 'hoods',
   dReach: 68,
   dDrop: 115,
   dFlare: 12,
@@ -168,6 +170,7 @@ function normalizeBike(id: FitBikeID, raw: unknown): BikeSettings {
   if (s.barPreset && !(s.barPreset in BAR_DB)) s.barPreset = '';
   if (s.stemType !== 'std' && s.stemType !== 'goose') s.stemType = 'std';
   if (s.barType !== 'drop' && s.barType !== 'riser') s.barType = 'drop';
+  if (s.dWAt !== 'hoods' && s.dWAt !== 'bend') s.dWAt = 'hoods';
   if (!isFitBike(s.matchTo)) s.matchTo = '';
   return applyPresets(s);
 }
@@ -215,6 +218,7 @@ export type FitAction =
   | {type: 'barPreset'; id: FitBikeID; value: BarID | ''}
   | {type: 'stemType'; id: FitBikeID; value: BikeSettings['stemType']}
   | {type: 'barType'; id: FitBikeID; value: BikeSettings['barType']}
+  | {type: 'dWAt'; id: FitBikeID; value: BikeSettings['dWAt']}
   | {type: 'match'; id: FitBikeID; value: FitBikeID | ''}
   | {type: 'toggle'; id: FitBikeID}
   | {type: 'remove'; id: FitBikeID}
@@ -295,6 +299,8 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
       return syncStage(patch(st, a.id, (s) => ({...s, stemType: a.value, stemPreset: ''})));
     case 'barType':
       return syncStage(patch(st, a.id, (s) => ({...s, barType: a.value, barPreset: ''})));
+    case 'dWAt':
+      return patch(st, a.id, (s) => ({...s, dWAt: a.value, barPreset: ''}));
     case 'match':
       return syncStage(
         patch(st, a.id, (s) => {
