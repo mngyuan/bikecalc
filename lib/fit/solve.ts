@@ -98,7 +98,7 @@ export function solve(
     back = 0;
   if (s.barType === 'drop') {
     hand = add(K, [s.dReach + s.hoodExt, s.hoodUp]);
-    handW = 2 * dropEnds(s).hoodW;
+    handW = 2 * dropEnds(s).palmW;
   } else {
     back = Math.max(0, s.rW / 2 - s.rInboard - 110) * Math.tan(rad(s.rSweep));
     hand = add(K, [-back, s.rRise]);
@@ -228,17 +228,20 @@ export function strikeAngle(G: Solved): number | null {
 export const HOOD_DEPTH = 40;
 
 /* drop section, half-widths: flare widens the bar from where the tops start
-   to bend (topW), past the hoods (hoodW), down to the lower bend (front view);
-   outsweep / flare-out kicks the drop extensions outward (top view) */
+   to bend (topW), past the hood clamps (hoodW), down to the lower bend (front
+   view). The hoods lean inward by the flare angle, so palms resting hoodUp
+   above the bar sit inside the clamps (palmW). Outsweep / flare-out kicks the
+   drop extensions outward (top view) */
 export function dropEnds(s: BikeSettings) {
   const fl = Math.tan(rad(s.dFlare)),
     topW = s.dW / 2 - (s.dWAt === 'hoods' ? HOOD_DEPTH * fl : 0),
     hoodW = topW + HOOD_DEPTH * fl,
+    palmW = hoodW - s.hoodUp * fl,
     ext = 110,
     bendW = topW + s.dDrop * fl,
     o = rad(s.dOut || 0);
   const bendX = s.dReach - 50;
-  return {topW, hoodW, bendW, bendX, endW: bendW + ext * Math.sin(o), endX: bendX - ext * Math.cos(o)};
+  return {topW, hoodW, palmW, bendW, bendX, endW: bendW + ext * Math.sin(o), endX: bendX - ext * Math.cos(o)};
 }
 
 // extra forward reach from hands at width wB vs wA, for a straight arm

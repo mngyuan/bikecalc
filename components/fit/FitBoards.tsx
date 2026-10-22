@@ -213,8 +213,8 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
                     strokeLinejoin="round"
                     vectorEffect={NS}
                   />
-                  <rect x={f(kx + r - 24)} y={f(sd * H - 14)} width={f(s.hoodExt + 28)} height={28} rx={12} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
-                  <circle cx={f(G.hand[0])} cy={f(sd * H)} r={10} fill={c} />
+                  <rect x={f(kx + r - 24)} y={f(sd * D.palmW - 14)} width={f(s.hoodExt + 28)} height={28} rx={12} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
+                  <circle cx={f(G.hand[0])} cy={f(sd * D.palmW)} r={10} fill={c} />
                 </g>
               );
             })

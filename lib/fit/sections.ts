@@ -23,7 +23,7 @@ export const TIPS: Record<string, string> = {
   dOut: 'How much the drop ends kick outward, seen from above',
   dSweep: 'How far the tops sweep back towards you',
   hoodExt: 'Where your palm sits, ahead of the bar reach',
-  hoodUp: 'Height of your palm above the bar centre',
+  hoodUp: 'Height of your palm above the bar centre. On a flared bar the hoods lean inward, so this also brings your hands in',
   rW: 'Riser bar width, end to end',
   rRise: 'Height of the grips above the stem clamp',
   rSweep: 'Angle the grips bend back towards you',
