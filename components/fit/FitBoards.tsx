@@ -205,7 +205,7 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
               return (
                 <g key={sd}>
                   <path
-                    d={`M${f(kx)},0 L${f(kx)},${f(sd * 60)} L${f(kx - sb)},${f(sd * (W - 75))} C${f(kx - sb)},${f(sd * (W - 25))} ${f(kx + r - 35)},${f(sd * H)} ${f(kx + r)},${f(sd * H)} Q${f(kx + r + 6)},${f((sd * (H + D.bendW)) / 2)} ${f(kx + D.bendX)},${f(sd * D.bendW)} L${f(kx + D.endX)},${f(sd * D.endW)}`}
+                    d={`M${f(kx)},0 L${f(kx)},${f(sd * 60)} L${f(kx - sb)},${f(sd * (W - 75))} C${f(kx - sb)},${f(sd * (W - 25))} ${f(kx + r - 35)},${f(sd * H)} ${f(kx + r)},${f(sd * H)} Q${f(kx + r + 6)},${f((sd * (H + D.bendW)) / 2)} ${f(kx + D.bendX)},${f(sd * D.bendW)} L${f(kx + D.kickX)},${f(sd * D.bendW)} L${f(kx + D.endX)},${f(sd * D.endW)}`}
                     fill="none"
                     stroke={c}
                     strokeWidth={3}

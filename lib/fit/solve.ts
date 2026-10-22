@@ -230,8 +230,12 @@ export const HOOD_DEPTH = 40;
 /* drop section, half-widths: flare widens the bar from where the tops start
    to bend (topW), past the hood clamps (hoodW), down to the lower bend (front
    view). The hoods lean inward by the flare angle, so palms resting hoodUp
-   above the bar sit inside the clamps (palmW). Outsweep / flare-out kicks the
-   drop extensions outward (top view) */
+   above the bar sit inside the clamps (palmW). Outsweep / flare-out kicks
+   only the straight last KICK_LEN of the drop extension outward (top view):
+   on Ritchey's drawing that's the tube after the last joint, and 24° flare
+   plus 6° over 60 mm gives their 543 mm drop width for a 44. */
+export const KICK_LEN = 60;
+
 export function dropEnds(s: BikeSettings) {
   const fl = Math.tan(rad(s.dFlare)),
     topW = s.dW / 2 - (s.dWAt === 'hoods' ? HOOD_DEPTH * fl : 0),
@@ -240,8 +244,9 @@ export function dropEnds(s: BikeSettings) {
     ext = 110,
     bendW = topW + s.dDrop * fl,
     o = rad(s.dOut || 0);
-  const bendX = s.dReach - 50;
-  return {topW, hoodW, palmW, bendW, bendX, endW: bendW + ext * Math.sin(o), endX: bendX - ext * Math.cos(o)};
+  const bendX = s.dReach - 50,
+    kickX = bendX - (ext - KICK_LEN);
+  return {topW, hoodW, palmW, bendW, bendX, kickX, endW: bendW + KICK_LEN * Math.sin(o), endX: kickX - KICK_LEN * Math.cos(o)};
 }
 
 // extra forward reach from hands at width wB vs wA, for a straight arm
