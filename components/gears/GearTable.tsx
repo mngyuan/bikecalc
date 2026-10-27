@@ -114,12 +114,12 @@ export function GearTable({
   );
 }
 
-const EXPLAIN: Record<MetricKey, string> = {
+const explain = (cadence: number): Record<MetricKey, string> => ({
   gearInches:
     'Gear inches: the diameter of the wheel a bike with no gearing (1:1) would need to feel the same. Lower is easier to pedal.',
   development: 'Development: how far the bike travels for one full turn of the pedals. Lower is easier to pedal.',
-  speed: 'Speed: how fast you would go on flat ground pedalling at the cadence set on the drawing.',
-};
+  speed: `Speed: how fast you would be traveling on flat ground pedaling at ${cadence} rotations per minute.`,
+});
 
 export function GearHero({
   cfg,
@@ -142,10 +142,14 @@ export function GearHero({
   const range = gearRange(cfg);
   const m = METRICS[metric];
 
+  // Rings and sprockets are numbered from the last one, as in the table header
+  const gear =
+    `In chainring ${cfg.chainrings.length - sel.ring} / sprocket ${cfg.sprockets.length - sel.sprocket}` +
+    (hub ? ` / hub gear ${sel.hub + 1}` : '');
   const detail: Record<MetricKey, string> = {
-    gearInches: `Like riding a ${fmtOr(gi, (n) => n.toFixed(1))}" wheel on a bike with no gears.`,
-    development: `The bike travels ${fmtOr(dev, (n) => n.toFixed(2))} m for every full turn of the pedals.`,
-    speed: `At ${cadence} rpm on flat ground you would ride ${fmtOr(spd, (n) => n.toFixed(1))} km/h.`,
+    gearInches: `${gear}, you would be riding a ${fmtOr(gi, (n) => n.toFixed(2))}" tire on a 1:1 gear bike.`,
+    development: `${gear}, the bike travels ${fmtOr(dev, (n) => n.toFixed(2))}m per full pedal revolution.`,
+    speed: `${gear}, you would travel at ${fmtOr(spd, (n) => n.toFixed(2))} km/h at ${cadence} RPM cadence.`,
   };
 
   return (
@@ -172,7 +176,7 @@ export function GearHero({
           <span className="chip plain">{cadence} rpm</span>
         </div>
         <p className="note">
-          {detail[metric]} {EXPLAIN[metric]}
+          {detail[metric]} {explain(cadence)[metric]}
         </p>
       </div>
       {range && (

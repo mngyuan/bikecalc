@@ -48,7 +48,7 @@ const CASSETTE_OPTIONS: Option<CassetteID>[] = (Object.keys(CASSETTE_DB) as Cass
 const TIPS = {
   tire: "The part of the wheel which sits on the wheel's rim. Its actual diameter varies from its imperial naming, which affects gear inches and meters development.",
   width: 'The width in millimeters of the inflated tire. ETRTO stands for European Tire & Rim Technical Organization.',
-  bsd: 'The inner diameter in millimeters of the tire (bead seat diameter). ETRTO stands for European Tire & Rim Technical Organization.',
+  bsd: 'The inner diameter in millimeters of the tire. ETRTO stands for European Tire & Rim Technical Organization.',
   diameter: 'The outer diameter in inches of the inflated tire, calculated from ETRTO size. Used to calculate gear inches.',
   circumference: 'The distance in millimeters the tire travels in one revolution. Used to calculate meters development.',
   ratios:
