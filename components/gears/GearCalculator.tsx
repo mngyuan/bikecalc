@@ -218,7 +218,7 @@ export function GearCalculator() {
                 {cfg.chainrings.map((t, i) => (
                   <NumberField
                     key={i}
-                    label={`Chainring ${i + 1} teeth`}
+                    label={`Chainring ${cfg.chainrings.length - i} teeth`}
                     min={10}
                     max={80}
                     value={t}
@@ -253,7 +253,7 @@ export function GearCalculator() {
                 {cfg.sprockets.map((t, i) => (
                   <NumberField
                     key={i}
-                    label={`Sprocket ${i + 1} teeth`}
+                    label={`Sprocket ${cfg.sprockets.length - i} teeth`}
                     min={8}
                     max={60}
                     value={t}
