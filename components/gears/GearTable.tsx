@@ -175,7 +175,6 @@ export function GearHero({
           {detail[metric]} {EXPLAIN[metric]}
         </p>
       </div>
-      <p className="note hero-foot">Point at a cell to preview that gear on the drawing; click or tap to keep it selected.</p>
       {range && (
         <div className="stats">
           <div>

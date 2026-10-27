@@ -62,15 +62,8 @@ const count = (v: number, max: number) => Math.max(1, Math.min(max, Math.round(v
 // Frame drawn for a bike: its own geometry if the catalog has it, else the reference.
 function frameFor(id: BikeID | 'custom') {
   const geo = id !== 'custom' ? getBike(id).geometry : undefined;
-  if (id !== 'custom' && geo) {
-    const size = geo.sizes[geo.defaultSize];
-    return {size, note: `${getBike(id).name} ${size.label} frame from ${geo.source}.`};
-  }
-  const ref = BIKE_DB[REFERENCE_FRAME.bike];
-  return {
-    size: ref.geometry.sizes[REFERENCE_FRAME.size],
-    note: `No geometry on file for this bike, so the frame is a reference ${ref.name} ${REFERENCE_FRAME.size}cm.`,
-  };
+  if (geo) return geo.sizes[geo.defaultSize];
+  return BIKE_DB[REFERENCE_FRAME.bike].geometry.sizes[REFERENCE_FRAME.size];
 }
 
 export function GearCalculator() {
@@ -350,9 +343,9 @@ export function GearCalculator() {
             />
           </div>
         </section>
-        <GearBoard cfg={cfg} sel={sel} frame={frame.size} cadence={cadence} onCadence={setCadence} />
+        <GearBoard cfg={cfg} sel={sel} frame={frame} cadence={cadence} onCadence={setCadence} />
         <p className="foot-note">
-          {frame.note} Wheels, tire, chainrings and sprockets are drawn to scale; the chain is on the selected gear.
+          Wheels, tires, chainrings and sprockets are drawn to scale on a {frame.label} frame.
         </p>
       </main>
     </div>

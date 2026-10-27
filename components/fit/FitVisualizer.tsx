@@ -101,14 +101,13 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
                 />
               </div>
               <p className="note">
-                Used to estimate how much reach a narrower bar gives back, since your arms angle in less.
+                Used to estimate changes in reach with bar width changes.
               </p>
             </Section>
           </div>
         </div>
         <p className="note">
-          Geometry from {geometrySources()}. Saddle and foot figures are example values: set them to yours.
-          Settings are saved in this browser.
+          Saddle and foot measurements are saved in this browser.
         </p>
       </aside>
 
@@ -145,15 +144,6 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
       </main>
     </div>
   );
-}
-
-function geometrySources() {
-  const by = new Map<string, string[]>();
-  for (const id of FIT_BIKES) {
-    const src = geometryOf(id).source;
-    by.set(src, [...(by.get(src) ?? []), `${bikeShort(id)} ${bikeYear(id) ?? ''}`.trim()]);
-  }
-  return [...by].map(([src, names]) => `${src} (${names.join(', ')})`).join(' and ');
 }
 
 /* ---------- sidebar ---------- */
@@ -498,7 +488,7 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
     return (
       <>
         <span className="eyebrow">
-          {bikeShort(a)} hands vs {bikeShort(c)}
+          {bikeShort(a)} hand position vs {bikeShort(c)}
           {sameSaddle ? '' : ' · relative to saddle nose'}
         </span>
         <Big dx={dx} dy={dy} />
