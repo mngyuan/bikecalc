@@ -325,7 +325,7 @@ export const CASSETTE_DB = {
   },
   'SunRace 10 Speed 11-51T': {
     sprockets: [11, 13, 15, 18, 23, 28, 33, 39, 45, 51],
-  }
+  },
 } as const;
 export type CassetteID = keyof typeof CASSETTE_DB;
 export type Cassette = (typeof CASSETTE_DB)[CassetteID];

@@ -17,7 +17,17 @@ export function Ground({
 }) {
   const y = f(-(F.g.drop - F.R));
   return (
-    <line x1={x0} x2={x1} y1={y} y2={y} stroke={c} strokeWidth={1.2} strokeDasharray="6 5" vectorEffect={NS} opacity={0.7} />
+    <line
+      x1={x0}
+      x2={x1}
+      y1={y}
+      y2={y}
+      stroke={c}
+      strokeWidth={1.2}
+      strokeDasharray="6 5"
+      vectorEffect={NS}
+      opacity={0.7}
+    />
   );
 }
 
@@ -45,8 +55,22 @@ export function Wheel({
 }) {
   return (
     <g transform={`translate(${f(center[0])} ${f(-center[1])})`}>
-      <circle r={f(R)} fill={soft} fillOpacity={fillOpacity} stroke={c} strokeWidth={2.4} vectorEffect={NS} />
-      <circle r={f(rim)} fill="none" stroke={c} strokeWidth={1} vectorEffect={NS} opacity={0.6} />
+      <circle
+        r={f(R)}
+        fill={soft}
+        fillOpacity={fillOpacity}
+        stroke={c}
+        strokeWidth={2.4}
+        vectorEffect={NS}
+      />
+      <circle
+        r={f(rim)}
+        fill="none"
+        stroke={c}
+        strokeWidth={1}
+        vectorEffect={NS}
+        opacity={0.6}
+      />
       {children && <g ref={spinRef}>{children}</g>}
       <circle r={12} fill={c} />
     </g>
@@ -76,7 +100,8 @@ export function Frame({F, c}: {F: FramePoints; c: string}) {
   const {g, T, B, ST, RA, FA, dn, seatDir} = F;
   const ts = Math.tan((g.tt * Math.PI) / 180);
   // where a top tube sloping at tt from the seat tube top meets the head tube
-  const tj = (T[1] - ST[1] - (T[0] - ST[0]) * ts) / (Math.sin(F.h) + Math.cos(F.h) * ts);
+  const tj =
+    (T[1] - ST[1] - (T[0] - ST[0]) * ts) / (Math.sin(F.h) + Math.cos(F.h) * ts);
   const TTf = add(T, mul(dn, Math.max(0, tj)));
   const DTf = add(T, mul(dn, g.ht - 22));
   const SSs = add(ST, mul(seatDir, -35));
@@ -90,7 +115,14 @@ export function Frame({F, c}: {F: FramePoints; c: string}) {
       <SideLine a={ST} b={TTf} c={c} w={3.2} />
       <SideLine a={[0, 0]} b={DTf} c={c} w={3.6} />
       <SideLine a={T} b={B} c={c} w={7} />
-      <path d={`M${SP(crown)} Q${SP(ctl)} ${SP(FA)}`} fill="none" stroke={c} strokeWidth={3} strokeLinecap="round" vectorEffect={NS} />
+      <path
+        d={`M${SP(crown)} Q${SP(ctl)} ${SP(FA)}`}
+        fill="none"
+        stroke={c}
+        strokeWidth={3}
+        strokeLinecap="round"
+        vectorEffect={NS}
+      />
     </g>
   );
 }

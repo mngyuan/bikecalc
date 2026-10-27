@@ -43,7 +43,16 @@ export const TIPS: Record<string, string> = {
 type When = (s: BikeSettings, id: FitBikeID, saved: FitSettings) => boolean;
 
 export type SectionItem =
-  | {type: 'num'; k: NumKey; label: string; min: number; max: number; step: number; slider?: boolean; when?: When}
+  | {
+      type: 'num';
+      k: NumKey;
+      label: string;
+      min: number;
+      max: number;
+      step: number;
+      slider?: boolean;
+      when?: When;
+    }
   | {type: 'stemPreset'}
   | {type: 'barPreset'}
   | {type: 'stemType'}
@@ -83,7 +92,10 @@ export const SECTIONS: Section[] = [
       num('len', 'Length', 30, 150, 5, {slider: true, when: std}),
       num('ang', 'Rise angle (°)', -20, 70, 1, {slider: true, when: std}),
       num('stack', 'Clamp height', 30, 60, 1, {when: std}),
-      num('gH', 'Height, base → bar centre', 60, 220, 5, {slider: true, when: goose}),
+      num('gH', 'Height, base → bar centre', 60, 220, 5, {
+        slider: true,
+        when: goose,
+      }),
       num('gE', 'Extension', 0, 140, 5, {slider: true, when: goose}),
       num('gMin', 'Min steerer insertion', 20, 120, 1, {when: goose}),
       num('gMax', 'Max steerer insertion', 20, 160, 1, {when: goose}),
@@ -105,7 +117,10 @@ export const SECTIONS: Section[] = [
     items: [
       {type: 'barPreset'},
       {type: 'barType'},
-      num('dW', 'Width at hoods (c-c)', 360, 560, 10, {slider: true, when: drop}),
+      num('dW', 'Width at hoods (c-c)', 360, 560, 10, {
+        slider: true,
+        when: drop,
+      }),
       num('dReach', 'Bar reach', 40, 100, 1, {when: drop}),
       num('dDrop', 'Bar drop', 80, 160, 1, {when: drop}),
       num('dFlare', 'Drop flare (°)', 0, 35, 1, {when: drop}),
@@ -124,7 +139,9 @@ export const SECTIONS: Section[] = [
     open: false,
     items: [
       {type: 'match'},
-      num('sH', 'Height, BB → top (along seat tube)', 550, 850, 1, {when: manual}),
+      num('sH', 'Height, BB → top (along seat tube)', 550, 850, 1, {
+        when: manual,
+      }),
       num('sO', 'Seatpost setback', -20, 60, 1, {when: manual}),
       num('sN', 'Clamp → saddle nose', 80, 180, 1),
       {type: 'saddle', when: (s, id, saved) => isMatched(saved, id, s)},

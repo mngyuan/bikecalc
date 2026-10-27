@@ -71,8 +71,29 @@ export interface FitState {
   stage: Stage | null;
 }
 
-export const STEM_KEYS: readonly NumKey[] = ['len', 'ang', 'stack', 'gH', 'gE', 'gMin', 'gMax'];
-export const BAR_KEYS: readonly NumKey[] = ['dW', 'dReach', 'dDrop', 'dFlare', 'dOut', 'dSweep', 'hoodExt', 'hoodUp', 'rW', 'rRise', 'rSweep', 'rInboard'];
+export const STEM_KEYS: readonly NumKey[] = [
+  'len',
+  'ang',
+  'stack',
+  'gH',
+  'gE',
+  'gMin',
+  'gMax',
+];
+export const BAR_KEYS: readonly NumKey[] = [
+  'dW',
+  'dReach',
+  'dDrop',
+  'dFlare',
+  'dOut',
+  'dSweep',
+  'hoodExt',
+  'hoodUp',
+  'rW',
+  'rRise',
+  'rSweep',
+  'rInboard',
+];
 
 const GENERIC: BikeSettings = {
   show: true,
@@ -116,13 +137,38 @@ const GENERIC: BikeSettings = {
 
 // Example setups carried over from v2. Saddle and foot figures are examples.
 const OVERRIDES: Partial<Record<FitBikeID, Partial<BikeSettings>>> = {
-  'fuji-alterr-2025': {stemPreset: 'happy110', below: 37, steerLen: 87, matchTo: 'surly-cross-check-2012', tyreW: 54, q: 175},
+  'fuji-alterr-2025': {
+    stemPreset: 'happy110',
+    below: 37,
+    steerLen: 87,
+    matchTo: 'surly-cross-check-2012',
+    tyreW: 54,
+    q: 175,
+  },
   // measured: 30 below + 40 stem + 10 above
-  'surly-cross-check-2012': {stemPreset: 'redshift80', below: 30, steerLen: 80, sO: 25, tyreW: 40, crank: 175, fender: 15},
-  'velo-orange-polyvalent-2026': {stemPreset: 'vo90_17', below: 20, steerLen: 60, matchTo: 'surly-cross-check-2012', tyreW: 48, fender: 15},
+  'surly-cross-check-2012': {
+    stemPreset: 'redshift80',
+    below: 30,
+    steerLen: 80,
+    sO: 25,
+    tyreW: 40,
+    crank: 175,
+    fender: 15,
+  },
+  'velo-orange-polyvalent-2026': {
+    stemPreset: 'vo90_17',
+    below: 20,
+    steerLen: 60,
+    matchTo: 'surly-cross-check-2012',
+    tyreW: 48,
+    fender: 15,
+  },
 };
 
-const DEFAULT_BIKES: FitBikeID[] = ['fuji-alterr-2025', 'surly-cross-check-2012'];
+const DEFAULT_BIKES: FitBikeID[] = [
+  'fuji-alterr-2025',
+  'surly-cross-check-2012',
+];
 
 export function stemFields(id: StemID): Partial<BikeSettings> {
   const {label: _label, ...rest} = STEM_DB[id];
@@ -143,7 +189,11 @@ function applyPresets(s: BikeSettings): BikeSettings {
 }
 
 export const defaultsFor = (id: FitBikeID): BikeSettings =>
-  applyPresets({...GENERIC, size: geometryOf(id).defaultSize, ...OVERRIDES[id]});
+  applyPresets({
+    ...GENERIC,
+    size: geometryOf(id).defaultSize,
+    ...OVERRIDES[id],
+  });
 
 /* ---------- storage ---------- */
 
@@ -151,8 +201,10 @@ const KEY = 'bikecalc:fit';
 const VERSION = 1;
 
 type Obj = Record<string, unknown>;
-const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
-const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+const isObj = (v: unknown): v is Obj =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+const num = (v: unknown, d: number) =>
+  typeof v === 'number' && Number.isFinite(v) ? v : d;
 
 // Keep only known fields of the right type, then fill the rest from defaults.
 function normalizeBike(id: FitBikeID, raw: unknown): BikeSettings {
@@ -243,7 +295,8 @@ export function syncStage(st: FitState): FitState {
   if (stage && !st.saved.bikes.includes(stage.id)) stage = null;
   if (stage && isDirty({...st, stage})) return {...st, stage};
   const vis = st.saved.bikes.filter((k) => st.saved.bike[k].show);
-  stage = vis.length === 1 ? {id: vis[0], data: {...st.saved.bike[vis[0]]}} : null;
+  stage =
+    vis.length === 1 ? {id: vis[0], data: {...st.saved.bike[vis[0]]}} : null;
   return {...st, stage};
 }
 
@@ -285,23 +338,40 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
       return syncStage(patch(st, a.id, (s) => ({...s, size: a.value})));
     case 'stemPreset':
       return syncStage(
-        patch(st, a.id, (s) => ({...s, stemPreset: a.value, ...(a.value ? stemFields(a.value) : {})})),
+        patch(st, a.id, (s) => ({
+          ...s,
+          stemPreset: a.value,
+          ...(a.value ? stemFields(a.value) : {}),
+        })),
       );
     case 'barPreset':
       return syncStage(
-        patch(st, a.id, (s) => ({...s, barPreset: a.value, ...(a.value ? barFields(a.value) : {})})),
+        patch(st, a.id, (s) => ({
+          ...s,
+          barPreset: a.value,
+          ...(a.value ? barFields(a.value) : {}),
+        })),
       );
     case 'stemType':
-      return syncStage(patch(st, a.id, (s) => ({...s, stemType: a.value, stemPreset: ''})));
+      return syncStage(
+        patch(st, a.id, (s) => ({...s, stemType: a.value, stemPreset: ''})),
+      );
     case 'barType':
-      return syncStage(patch(st, a.id, (s) => ({...s, barType: a.value, barPreset: ''})));
+      return syncStage(
+        patch(st, a.id, (s) => ({...s, barType: a.value, barPreset: ''})),
+      );
     case 'match':
       return syncStage(
         patch(st, a.id, (s) => {
           // unmatching: keep the saddle where it was by writing out its numbers
           if (!a.value && isMatched(st.saved, a.id, s)) {
             const G = solve(st.saved, a.id, s);
-            return {...s, matchTo: '', sH: Math.round(G.sH), sO: Math.round(G.sO)};
+            return {
+              ...s,
+              matchTo: '',
+              sH: Math.round(G.sH),
+              sO: Math.round(G.sO),
+            };
           }
           return {...s, matchTo: a.value};
         }),
@@ -317,19 +387,36 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
         return {...s, matchTo: '', sH: Math.round(G.sH), sO: Math.round(G.sO)};
       };
       const bike = {...st.saved.bike};
-      for (const k of st.saved.bikes) if (k !== a.id) bike[k] = unmatch(k, bike[k]);
-      const stage = st.stage && st.stage.id !== a.id ? {...st.stage, data: unmatch(st.stage.id, st.stage.data)} : null;
-      return syncStage({stage, saved: {...st.saved, bike, bikes: st.saved.bikes.filter((k) => k !== a.id)}});
+      for (const k of st.saved.bikes)
+        if (k !== a.id) bike[k] = unmatch(k, bike[k]);
+      const stage =
+        st.stage && st.stage.id !== a.id
+          ? {...st.stage, data: unmatch(st.stage.id, st.stage.data)}
+          : null;
+      return syncStage({
+        stage,
+        saved: {
+          ...st.saved,
+          bike,
+          bikes: st.saved.bikes.filter((k) => k !== a.id),
+        },
+      });
     }
     case 'add': {
       if (st.saved.bikes.includes(a.id)) return st;
       const next = patchSaved(st, a.id, (s) => ({...s, show: true}));
-      return syncStage({...next, saved: {...next.saved, bikes: [...next.saved.bikes, a.id]}});
+      return syncStage({
+        ...next,
+        saved: {...next.saved, bikes: [...next.saved.bikes, a.id]},
+      });
     }
     case 'saveStage': {
       if (!st.stage) return st;
       const {show: _show, ...rest} = st.stage.data;
-      return syncStage({...patchSaved(st, st.stage.id, (s) => ({...s, ...rest})), stage: null});
+      return syncStage({
+        ...patchSaved(st, st.stage.id, (s) => ({...s, ...rest})),
+        stage: null,
+      });
     }
     case 'resetStage':
       return syncStage({...st, stage: null});

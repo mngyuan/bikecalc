@@ -2,7 +2,12 @@
 
 const form = (id: string, entries: Record<string, string | number>) =>
   `https://docs.google.com/forms/d/e/${id}/viewform?` +
-  new URLSearchParams({usp: 'pp_url', ...Object.fromEntries(Object.entries(entries).map(([k, v]) => [k, String(v)]))});
+  new URLSearchParams({
+    usp: 'pp_url',
+    ...Object.fromEntries(
+      Object.entries(entries).map(([k, v]) => [k, String(v)]),
+    ),
+  });
 
 export const tireFormURL = (width: number, bsd: number) =>
   form('1FAIpQLSdS4NBfBk0IQzMqWQmZAiXVB6gVFUQMV0RltprMolS2PQldzg', {
@@ -10,7 +15,8 @@ export const tireFormURL = (width: number, bsd: number) =>
     'entry.233968638': bsd,
   });
 
-const CASSETTE_FORM = '1FAIpQLSdSh3Y0tpJTfAZOjLuBVre508ZaTbL2fC1HtGmr8pqh-v16hw';
+const CASSETTE_FORM =
+  '1FAIpQLSdSh3Y0tpJTfAZOjLuBVre508ZaTbL2fC1HtGmr8pqh-v16hw';
 
 export const cassetteFormURL = (sprockets: number[]) =>
   form(CASSETTE_FORM, {

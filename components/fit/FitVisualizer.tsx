@@ -1,4 +1,11 @@
-import {type Dispatch, type ReactNode, useEffect, useMemo, useReducer, useRef} from 'react';
+import {
+  type Dispatch,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from 'react';
 import {AppHeader, MobileHeader} from '@/components/AppHeader';
 import {NumberField, Section, Segmented} from '@/components/controls';
 import {BAR_DB, BIKE_DB, STEM_DB, type BarID, type StemID} from '@/lib/data';
@@ -13,7 +20,14 @@ import {
   STAGED_COLOR,
 } from '@/lib/fit/bikes';
 import {SECTIONS, type SectionItem, TIPS} from '@/lib/fit/sections';
-import {dropEnds, isMatched, solve, type Solved, strikeAngle, widthGain} from '@/lib/fit/solve';
+import {
+  dropEnds,
+  isMatched,
+  solve,
+  type Solved,
+  strikeAngle,
+  widthGain,
+} from '@/lib/fit/solve';
 import {
   editTarget,
   type FitAction,
@@ -44,16 +58,34 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
     const fit = {bike, bikes};
     return new Map(bikes.map((id) => [id, solve(fit, id)]));
   }, [bike, bikes]);
-  const GS = useMemo(() => (stage ? solve({bike, bikes}, stage.id, stage.data, true) : null), [bike, bikes, stage]);
-  const strikes = useMemo(() => new Map([...Gs].map(([id, G]) => [id, strikeAngle(G)])), [Gs]);
+  const GS = useMemo(
+    () => (stage ? solve({bike, bikes}, stage.id, stage.data, true) : null),
+    [bike, bikes, stage],
+  );
+  const strikes = useMemo(
+    () => new Map([...Gs].map(([id, G]) => [id, strikeAngle(G)])),
+    [Gs],
+  );
   const stagedStrike = useMemo(() => (GS ? strikeAngle(GS) : null), [GS]);
   const solved = (id: FitBikeID) => Gs.get(id) as Solved;
 
   const visible = saved.bikes.filter((k) => saved.bike[k].show);
-  const readout: ReadoutProps = {st, solved, GS: dirty ? GS : null, visible, strikes, stagedStrike};
-  const drawn: Drawn[] = visible.map((id) => ({G: solved(id), color: colorOf(id)}));
+  const readout: ReadoutProps = {
+    st,
+    solved,
+    GS: dirty ? GS : null,
+    visible,
+    strikes,
+    stagedStrike,
+  };
+  const drawn: Drawn[] = visible.map((id) => ({
+    G: solved(id),
+    color: colorOf(id),
+  }));
   const stagedDrawn: Drawn | null =
-    dirty && stage && GS && saved.bike[stage.id].show ? {G: GS, color: STAGED_COLOR} : null;
+    dirty && stage && GS && saved.bike[stage.id].show
+      ? {G: GS, color: STAGED_COLOR}
+      : null;
 
   return (
     <div className="app">
@@ -75,7 +107,10 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
           <div className="card-body">
             <Section title="Rider assumptions" defaultOpen>
               <div className="row">
-                <label htmlFor="g-shoulder" data-tip="Distance between the centres of your shoulder joints">
+                <label
+                  htmlFor="g-shoulder"
+                  data-tip="Distance between the centres of your shoulder joints"
+                >
                   Shoulder joint width
                 </label>
                 <NumberField
@@ -84,11 +119,16 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
                   max={520}
                   step={5}
                   value={saved.shoulder}
-                  onChange={(v) => dispatch({type: 'global', key: 'shoulder', value: v})}
+                  onChange={(v) =>
+                    dispatch({type: 'global', key: 'shoulder', value: v})
+                  }
                 />
               </div>
               <div className="row">
-                <label htmlFor="g-arm" data-tip="Straight line from shoulder to palm while riding">
+                <label
+                  htmlFor="g-arm"
+                  data-tip="Straight line from shoulder to palm while riding"
+                >
                   Shoulder → hand distance
                 </label>
                 <NumberField
@@ -97,7 +137,9 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
                   max={750}
                   step={5}
                   value={saved.arm}
-                  onChange={(v) => dispatch({type: 'global', key: 'arm', value: v})}
+                  onChange={(v) =>
+                    dispatch({type: 'global', key: 'arm', value: v})
+                  }
                 />
               </div>
               <p className="note">
@@ -121,9 +163,10 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
                 <Hero {...readout} />
               </div>
               <p className="note hero-foot">
-                The hand point is where your palm rests: on the hoods for drops, on the GP3 wing for the riser. Toe
-                clearance is measured 25mm above the pedal spindle with the crank level and forward. All values
-                in mm.
+                The hand point is where your palm rests: on the hoods for drops,
+                on the GP3 wing for the riser. Toe clearance is measured 25mm
+                above the pedal spindle with the crank level and forward. All
+                values in mm.
               </p>
               <Readout {...readout} part="warnings" />
             </div>
@@ -165,10 +208,18 @@ function BikeCardWithStage(props: {
             <i className="key" />
             Unsaved changes, drawn dashed on the boards
           </span>
-          <button type="button" className="reset" onClick={() => dispatch({type: 'resetStage'})}>
+          <button
+            type="button"
+            className="reset"
+            onClick={() => dispatch({type: 'resetStage'})}
+          >
             Reset
           </button>
-          <button type="button" className="save" onClick={() => dispatch({type: 'saveStage'})}>
+          <button
+            type="button"
+            className="save"
+            onClick={() => dispatch({type: 'saveStage'})}
+          >
             Save
           </button>
         </div>
@@ -177,7 +228,17 @@ function BikeCardWithStage(props: {
   );
 }
 
-function BikeCard({id, st, G, dispatch}: {id: FitBikeID; st: FitState; G: Solved; dispatch: Dispatch<FitAction>}) {
+function BikeCard({
+  id,
+  st,
+  G,
+  dispatch,
+}: {
+  id: FitBikeID;
+  st: FitState;
+  G: Solved;
+  dispatch: Dispatch<FitAction>;
+}) {
   const s = editTarget(st, id);
   const geo = geometryOf(id);
   const name = bikeName(id);
@@ -198,7 +259,12 @@ function BikeCard({id, st, G, dispatch}: {id: FitBikeID; st: FitState; G: Solved
             </option>
           ))}
         </select>
-        <button type="button" className="x" aria-label={`Remove ${name}`} onClick={() => dispatch({type: 'remove', id})}>
+        <button
+          type="button"
+          className="x"
+          aria-label={`Remove ${name}`}
+          onClick={() => dispatch({type: 'remove', id})}
+        >
           Remove
         </button>
       </div>
@@ -206,7 +272,15 @@ function BikeCard({id, st, G, dispatch}: {id: FitBikeID; st: FitState; G: Solved
         {SECTIONS.map((sec) => (
           <Section key={sec.title} title={sec.title} defaultOpen={sec.open}>
             {sec.items.map((it, i) => (
-              <Item key={i} item={it} id={id} st={st} G={G} dispatch={dispatch} section={sec.title} />
+              <Item
+                key={i}
+                item={it}
+                id={id}
+                st={st}
+                G={G}
+                dispatch={dispatch}
+                section={sec.title}
+              />
             ))}
           </Section>
         ))}
@@ -240,7 +314,13 @@ function Item({
             id={uid}
             aria-label={`${section} preset`}
             value={s.stemPreset}
-            onChange={(e) => dispatch({type: 'stemPreset', id, value: e.target.value as StemID | ''})}
+            onChange={(e) =>
+              dispatch({
+                type: 'stemPreset',
+                id,
+                value: e.target.value as StemID | '',
+              })
+            }
           >
             <option value="">Custom</option>
             {Object.entries(STEM_DB).map(([k, v]) => (
@@ -258,7 +338,13 @@ function Item({
             id={uid}
             aria-label={`${section} preset`}
             value={s.barPreset}
-            onChange={(e) => dispatch({type: 'barPreset', id, value: e.target.value as BarID | ''})}
+            onChange={(e) =>
+              dispatch({
+                type: 'barPreset',
+                id,
+                value: e.target.value as BarID | '',
+              })
+            }
           >
             <option value="">Custom</option>
             {Object.entries(BAR_DB).map(([k, v]) => (
@@ -330,7 +416,13 @@ function Item({
             id={uid}
             className="wide"
             value={isMatched(st.saved, id, s) ? s.matchTo : ''}
-            onChange={(e) => dispatch({type: 'match', id, value: e.target.value as FitBikeID | ''})}
+            onChange={(e) =>
+              dispatch({
+                type: 'match',
+                id,
+                value: e.target.value as FitBikeID | '',
+              })
+            }
           >
             <option value="">Set manually</option>
             {others.map((k) => (
@@ -362,13 +454,21 @@ function Item({
       );
     case 'num': {
       if (item.when && !item.when(s, id, st.saved)) return null;
-      const set = (v: number) => dispatch({type: 'set', id, key: item.k, value: v});
+      const set = (v: number) =>
+        dispatch({type: 'set', id, key: item.k, value: v});
       return (
         <div className="row">
           <label htmlFor={uid} data-tip={TIPS[item.k]}>
             {item.label}
           </label>
-          <NumberField id={uid} min={item.min} max={item.max} step={item.step} value={s[item.k]} onChange={set} />
+          <NumberField
+            id={uid}
+            min={item.min}
+            max={item.max}
+            step={item.step}
+            value={s[item.k]}
+            onChange={set}
+          />
           {item.slider && (
             <input
               type="range"
@@ -386,7 +486,13 @@ function Item({
   }
 }
 
-function Toolbar({saved, dispatch}: {saved: FitSettings; dispatch: Dispatch<FitAction>}) {
+function Toolbar({
+  saved,
+  dispatch,
+}: {
+  saved: FitSettings;
+  dispatch: Dispatch<FitAction>;
+}) {
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -460,14 +566,21 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
       ny = GS.N[1] - O.N[1];
     return (
       <>
-        <span className="eyebrow">Staged changes vs saved {bikeShort(stage.id)}</span>
+        <span className="eyebrow">
+          Staged changes vs saved {bikeShort(stage.id)}
+        </span>
         <Big dx={dx} dy={dy} />
         <div>
-          <span className="chip hi">Hands move {r(Math.hypot(dx, dy))} mm relative to the saddle</span>
+          <span className="chip hi">
+            Hands move {r(Math.hypot(dx, dy))} mm relative to the saddle
+          </span>
         </div>
         <p className="note">
-          {Math.hypot(nx, ny) >= 1 ? `Saddle nose moves ${sgn(nx)} fwd, ${sgn(ny)} up. ` : ''}
-          The dashed outline shows the staged version. Save to keep it or Reset to go back.
+          {Math.hypot(nx, ny) >= 1
+            ? `Saddle nose moves ${sgn(nx)} fwd, ${sgn(ny)} up. `
+            : ''}
+          The dashed outline shows the staged version. Save to keep it or Reset
+          to go back.
         </p>
       </>
     );
@@ -494,7 +607,8 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
         <Big dx={dx} dy={dy} />
         <div>
           <span className={`chip ${distAdj <= tol ? 'ok' : 'warn'}`}>
-            {r(dist)} mm apart{Math.abs(gain) >= 1 ? ` · ${r(distAdj)} width-adjusted` : ''}
+            {r(dist)} mm apart
+            {Math.abs(gain) >= 1 ? ` · ${r(distAdj)} width-adjusted` : ''}
           </span>
         </div>
         <p className="note">
@@ -510,8 +624,9 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
     <>
       <span className="eyebrow">Hand position</span>
       <p className="note">
-        {visible.length < 2 ? 'Show two bikes' : 'Hide all but two bikes'} to compare hand positions. The first one
-        shown is compared against the second.
+        {visible.length < 2 ? 'Show two bikes' : 'Hide all but two bikes'} to
+        compare hand positions. The first one shown is compared against the
+        second.
       </p>
     </>
   );
@@ -557,7 +672,12 @@ const ROWS: [string, (G: Solved, strike: number | null) => ReactNode][] = [
     (G) =>
       G.s.stemType === 'std' ? (
         <>
-          {r(G.base - G.s.hs)} / {G.above < -0.5 ? <span className="warnTxt">{sgn(G.above)}</span> : r(G.above)}
+          {r(G.base - G.s.hs)} /{' '}
+          {G.above < -0.5 ? (
+            <span className="warnTxt">{sgn(G.above)}</span>
+          ) : (
+            r(G.above)
+          )}
         </>
       ) : (
         `${r(G.base - G.s.hs)} / ${r(G.insert ?? 0)} in stem`
@@ -567,23 +687,48 @@ const ROWS: [string, (G: Solved, strike: number | null) => ReactNode][] = [
   ['Tyre → pedal spindle', (G) => r(G.spindle)],
   [
     'Toe clearance (straight)',
-    (G) => (G.clear < 0 ? <span className="warnTxt">{sgn(G.clear)} overlap</span> : r(G.clear)),
+    (G) =>
+      G.clear < 0 ? (
+        <span className="warnTxt">{sgn(G.clear)} overlap</span>
+      ) : (
+        r(G.clear)
+      ),
   ],
   [
     'Toe strike from',
-    (_G, a) => (a == null ? 'none to 60°' : <span className="warnTxt">{a}° steer</span>),
+    (_G, a) =>
+      a == null ? 'none to 60°' : <span className="warnTxt">{a}° steer</span>,
   ],
   ['BB height', (G) => r(G.bbH)],
 ];
 
-function columns({st, solved, GS, visible, strikes, stagedStrike}: ReadoutProps): Col[] {
+function columns({
+  st,
+  solved,
+  GS,
+  visible,
+  strikes,
+  stagedStrike,
+}: ReadoutProps): Col[] {
   const cols: Col[] = [];
   for (const id of visible) {
     const G = solved(id);
     const size = geometryOf(id).sizes[st.saved.bike[id].size]?.label ?? '';
-    cols.push({id, G, label: `${bikeShort(id)} ${size}`, dot: colorOf(id).c, strike: strikes.get(id) ?? null});
+    cols.push({
+      id,
+      G,
+      label: `${bikeShort(id)} ${size}`,
+      dot: colorOf(id).c,
+      strike: strikes.get(id) ?? null,
+    });
     if (GS && st.stage?.id === id) {
-      cols.push({id, G: GS, label: `${bikeShort(id)} · staged`, dot: STAGED_COLOR.c, strike: stagedStrike});
+      cols.push({
+        id,
+        G: GS,
+        label: `${bikeShort(id)} · staged`,
+        dot: STAGED_COLOR.c,
+        strike: stagedStrike,
+      });
     }
   }
   return cols;

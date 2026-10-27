@@ -1,6 +1,13 @@
 import {useState} from 'react';
 import {AppHeader, MobileHeader} from '@/components/AppHeader';
-import {Combobox, ExternalIcon, NumberField, type Option, Section, Segmented} from '@/components/controls';
+import {
+  Combobox,
+  ExternalIcon,
+  NumberField,
+  type Option,
+  Section,
+  Segmented,
+} from '@/components/controls';
 import {
   BIKE_DB,
   type BikeID,
@@ -14,7 +21,12 @@ import {
   TIRE_DB,
   type TireID,
 } from '@/lib/data';
-import {bikeFormURL, cassetteFormURL, hubFormURL, tireFormURL} from '@/lib/forms';
+import {
+  bikeFormURL,
+  cassetteFormURL,
+  hubFormURL,
+  tireFormURL,
+} from '@/lib/forms';
 import {
   clampSel,
   configFromBike,
@@ -38,26 +50,39 @@ const bikeLabel = (id: BikeID) => {
   const b = getBike(id);
   return b.year ? `${b.name} (${b.year})` : b.name;
 };
-const BIKE_OPTIONS: Option<BikeID>[] = GEAR_BIKES.map((id) => ({value: id, label: bikeLabel(id)}));
-const TIRE_OPTIONS: Option<TireID>[] = (Object.keys(TIRE_DB) as TireID[]).map((k) => ({value: k, label: k}));
-const CASSETTE_OPTIONS: Option<CassetteID>[] = (Object.keys(CASSETTE_DB) as CassetteID[]).map((k) => ({
+const BIKE_OPTIONS: Option<BikeID>[] = GEAR_BIKES.map((id) => ({
+  value: id,
+  label: bikeLabel(id),
+}));
+const TIRE_OPTIONS: Option<TireID>[] = (Object.keys(TIRE_DB) as TireID[]).map(
+  (k) => ({value: k, label: k}),
+);
+const CASSETTE_OPTIONS: Option<CassetteID>[] = (
+  Object.keys(CASSETTE_DB) as CassetteID[]
+).map((k) => ({
   value: k,
   label: k,
 }));
 
 const TIPS = {
   tire: "The part of the wheel which sits on the wheel's rim. Its actual diameter varies from its imperial naming, which affects gear inches and meters development.",
-  width: 'The width in millimeters of the inflated tire. ETRTO stands for European Tire & Rim Technical Organization.',
+  width:
+    'The width in millimeters of the inflated tire. ETRTO stands for European Tire & Rim Technical Organization.',
   bsd: 'The inner diameter in millimeters of the tire. ETRTO stands for European Tire & Rim Technical Organization.',
-  diameter: 'The outer diameter in inches of the inflated tire, calculated from ETRTO size. Used to calculate gear inches.',
-  circumference: 'The distance in millimeters the tire travels in one revolution. Used to calculate meters development.',
+  diameter:
+    'The outer diameter in inches of the inflated tire, calculated from ETRTO size. Used to calculate gear inches.',
+  circumference:
+    'The distance in millimeters the tire travels in one revolution. Used to calculate meters development.',
   ratios:
     "How fast the hub's output turns for each turn of the sprocket: 1 is direct drive, below 1 is easier, above 1 is harder.",
 };
 
 const resize = (list: number[], n: number) =>
-  n <= list.length ? list.slice(0, n) : [...list, ...Array(n - list.length).fill(list.at(-1) ?? 32)];
-const count = (v: number, max: number) => Math.max(1, Math.min(max, Math.round(v)));
+  n <= list.length
+    ? list.slice(0, n)
+    : [...list, ...Array(n - list.length).fill(list.at(-1) ?? 32)];
+const count = (v: number, max: number) =>
+  Math.max(1, Math.min(max, Math.round(v)));
 
 // Frame drawn for a bike: its own geometry if the catalog has it, else the reference.
 function frameFor(id: BikeID | 'custom') {
@@ -68,7 +93,9 @@ function frameFor(id: BikeID | 'custom') {
 
 export function GearCalculator() {
   const [bikeID, setBikeID] = useState<BikeID | 'custom'>(DEFAULT_GEAR_BIKE);
-  const [cfg, setCfg] = useState<GearConfig>(() => configFromBike(DEFAULT_GEAR_BIKE) as GearConfig);
+  const [cfg, setCfg] = useState<GearConfig>(
+    () => configFromBike(DEFAULT_GEAR_BIKE) as GearConfig,
+  );
   const [metric, setMetric] = useState<MetricKey>('gearInches');
   const [cadence, setCadence] = useState(DEFAULT_CADENCE_RPM);
   const [pinned, setPinned] = useState<GearSel>(() => defaultSel(cfg));
@@ -76,7 +103,8 @@ export function GearCalculator() {
 
   const sel = clampSel(hover ?? pinned, cfg);
   const pinnedSel = clampSel(pinned, cfg);
-  const update = (patch: Partial<GearConfig>) => setCfg((c) => ({...c, ...patch}));
+  const update = (patch: Partial<GearConfig>) =>
+    setCfg((c) => ({...c, ...patch}));
   const hub = hubRatios(cfg);
   const frame = frameFor(bikeID);
   const stock = isStock(cfg, bikeID);
@@ -104,29 +132,45 @@ export function GearCalculator() {
     const c = CASSETTE_DB[id];
     if (isSprocketCassette(c)) {
       update({cassetteID: id, sprockets: [...c.sprockets], ratios: null});
-      if (hub) setPinned((p) => ({...p, sprocket: Math.floor(c.sprockets.length / 2), hub: 0}));
+      if (hub)
+        setPinned((p) => ({
+          ...p,
+          sprocket: Math.floor(c.sprockets.length / 2),
+          hub: 0,
+        }));
     } else {
       // moving to a hub from a cassette: start from one sprocket, not the whole cassette
       const wasHub = !!hub;
       update({
         cassetteID: id,
         ratios: [...c.ratios],
-        sprockets: wasHub ? cfg.sprockets : [cfg.sprockets[Math.floor(cfg.sprockets.length / 2)] ?? 18],
+        sprockets: wasHub
+          ? cfg.sprockets
+          : [cfg.sprockets[Math.floor(cfg.sprockets.length / 2)] ?? 18],
       });
-      setPinned((p) => ({...p, sprocket: 0, hub: Math.floor(c.ratios.length / 2)}));
+      setPinned((p) => ({
+        ...p,
+        sprocket: 0,
+        hub: Math.floor(c.ratios.length / 2),
+      }));
     }
   };
 
   // Editing sprockets of a catalog cassette makes it custom. A hub keeps its
   // catalog entry, since bikes fit their own sprockets to a hub.
-  const cassetteAfterSprocketEdit = (): GearConfig['cassetteID'] => (cfg.ratios ? cfg.cassetteID : 'custom');
+  const cassetteAfterSprocketEdit = (): GearConfig['cassetteID'] =>
+    cfg.ratios ? cfg.cassetteID : 'custom';
   // Editing hub ratios always makes it a custom hub
-  const setRatios = (ratios: number[]) => update({ratios, cassetteID: 'custom'});
+  const setRatios = (ratios: number[]) =>
+    update({ratios, cassetteID: 'custom'});
 
   return (
     <div className="app">
       <aside>
-        <AppHeader title={TITLE} sub="Calculate gear inches, meters development, and more for your bike." />
+        <AppHeader
+          title={TITLE}
+          sub="Calculate gear inches, meters development, and more for your bike."
+        />
         <div className="card">
           <div className="card-head" style={{background: 'var(--hi)'}}>
             <div className="grow">
@@ -144,7 +188,9 @@ export function GearCalculator() {
             {!stock && (
               <div className="rows" style={{paddingTop: 10}}>
                 <p className="note">
-                  {bikeID === 'custom' ? 'Custom setup.' : `Modified from the stock ${BIKE_DB[bikeID].name}.`}
+                  {bikeID === 'custom'
+                    ? 'Custom setup.'
+                    : `Modified from the stock ${BIKE_DB[bikeID].name}.`}
                 </p>
                 <a
                   className="submit"
@@ -170,25 +216,41 @@ export function GearCalculator() {
                 <label htmlFor="etrto-w" data-tip={TIPS.width}>
                   ETRTO width (mm)
                 </label>
-                <NumberField id="etrto-w" min={10} max={130} value={cfg.width} onChange={(v) => update({width: v, tireID: 'custom'})} />
+                <NumberField
+                  id="etrto-w"
+                  min={10}
+                  max={130}
+                  value={cfg.width}
+                  onChange={(v) => update({width: v, tireID: 'custom'})}
+                />
               </div>
               <div className="row">
                 <label htmlFor="etrto-d" data-tip={TIPS.bsd}>
                   ETRTO diameter (mm)
                 </label>
-                <NumberField id="etrto-d" min={150} max={700} value={cfg.bsd} onChange={(v) => update({bsd: v, tireID: 'custom'})} />
+                <NumberField
+                  id="etrto-d"
+                  min={150}
+                  max={700}
+                  value={cfg.bsd}
+                  onChange={(v) => update({bsd: v, tireID: 'custom'})}
+                />
               </div>
               <div className="row">
                 <span className="label" data-tip={TIPS.diameter}>
                   Tire diameter (in)
                 </span>
-                <div className="derived">{(tireDiameter(cfg.width, cfg.bsd) / 25.4).toFixed(2)}</div>
+                <div className="derived">
+                  {(tireDiameter(cfg.width, cfg.bsd) / 25.4).toFixed(2)}
+                </div>
               </div>
               <div className="row">
                 <span className="label" data-tip={TIPS.circumference}>
                   Tire circumference (mm)
                 </span>
-                <div className="derived">{Math.round(tireCircumference(cfg.width, cfg.bsd))}</div>
+                <div className="derived">
+                  {Math.round(tireCircumference(cfg.width, cfg.bsd))}
+                </div>
               </div>
               {cfg.tireID === 'custom' && (
                 <a
@@ -211,7 +273,9 @@ export function GearCalculator() {
                   min={1}
                   max={4}
                   value={cfg.chainrings.length}
-                  onChange={(v) => update({chainrings: resize(cfg.chainrings, count(v, 4))})}
+                  onChange={(v) =>
+                    update({chainrings: resize(cfg.chainrings, count(v, 4))})
+                  }
                 />
               </div>
               <div className="teeth">
@@ -222,7 +286,9 @@ export function GearCalculator() {
                     min={10}
                     max={80}
                     value={t}
-                    onChange={(v) => update({chainrings: cfg.chainrings.with(i, v)})}
+                    onChange={(v) =>
+                      update({chainrings: cfg.chainrings.with(i, v)})
+                    }
                   />
                 ))}
               </div>
@@ -245,7 +311,10 @@ export function GearCalculator() {
                   max={14}
                   value={cfg.sprockets.length}
                   onChange={(v) =>
-                    update({sprockets: resize(cfg.sprockets, count(v, 14)), cassetteID: cassetteAfterSprocketEdit()})
+                    update({
+                      sprockets: resize(cfg.sprockets, count(v, 14)),
+                      cassetteID: cassetteAfterSprocketEdit(),
+                    })
                   }
                 />
               </div>
@@ -257,7 +326,12 @@ export function GearCalculator() {
                     min={8}
                     max={60}
                     value={t}
-                    onChange={(v) => update({sprockets: cfg.sprockets.with(i, v), cassetteID: cassetteAfterSprocketEdit()})}
+                    onChange={(v) =>
+                      update({
+                        sprockets: cfg.sprockets.with(i, v),
+                        cassetteID: cassetteAfterSprocketEdit(),
+                      })
+                    }
                   />
                 ))}
               </div>
@@ -270,10 +344,17 @@ export function GearCalculator() {
                       min={1}
                       max={14}
                       value={cfg.ratios.length}
-                      onChange={(v) => cfg.ratios && setRatios(resize(cfg.ratios, count(v, 14)))}
+                      onChange={(v) =>
+                        cfg.ratios &&
+                        setRatios(resize(cfg.ratios, count(v, 14)))
+                      }
                     />
                   </div>
-                  <span className="label" style={{fontSize: 13}} data-tip={TIPS.ratios}>
+                  <span
+                    className="label"
+                    style={{fontSize: 13}}
+                    data-tip={TIPS.ratios}
+                  >
                     Hub ratios, gear 1 first
                   </span>
                   <div className="teeth">
@@ -285,7 +366,9 @@ export function GearCalculator() {
                         max={5}
                         step={0.01}
                         value={r}
-                        onChange={(v) => cfg.ratios && setRatios(cfg.ratios.with(i, v))}
+                        onChange={(v) =>
+                          cfg.ratios && setRatios(cfg.ratios.with(i, v))
+                        }
                       />
                     ))}
                   </div>
@@ -294,7 +377,11 @@ export function GearCalculator() {
               {cfg.cassetteID === 'custom' && (
                 <a
                   className="submit"
-                  href={cfg.ratios ? hubFormURL(cfg.ratios, cfg.sprockets) : cassetteFormURL(cfg.sprockets)}
+                  href={
+                    cfg.ratios
+                      ? hubFormURL(cfg.ratios, cfg.sprockets)
+                      : cassetteFormURL(cfg.sprockets)
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   data-tip={`Submit this configuration as a new ${cfg.ratios ? 'hub' : 'cassette'}.`}
@@ -306,8 +393,9 @@ export function GearCalculator() {
           </div>
         </div>
         <p className="note">
-          Bikes, tires and cassettes come from a catalog in this app. Missing one? Use the submit links, which appear
-          when a value no longer matches the catalog.
+          Bikes, tires and cassettes come from a catalog in this app. Missing
+          one? Use the submit links, which appear when a value no longer matches
+          the catalog.
         </p>
       </aside>
 
@@ -343,9 +431,16 @@ export function GearCalculator() {
             />
           </div>
         </section>
-        <GearBoard cfg={cfg} sel={sel} frame={frame} cadence={cadence} onCadence={setCadence} />
+        <GearBoard
+          cfg={cfg}
+          sel={sel}
+          frame={frame}
+          cadence={cadence}
+          onCadence={setCadence}
+        />
         <p className="foot-note">
-          Wheels, tires, chainrings and sprockets are drawn to scale on a {frame.label} frame.
+          Wheels, tires, chainrings and sprockets are drawn to scale on a{' '}
+          {frame.label} frame.
         </p>
       </main>
     </div>

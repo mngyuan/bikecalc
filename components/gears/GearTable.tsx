@@ -10,7 +10,8 @@ import {
   sameSel,
 } from '@/lib/gears';
 
-const fmtOr = (n: number, format: (n: number) => string) => (Number.isFinite(n) ? format(n) : '—');
+const fmtOr = (n: number, format: (n: number) => string) =>
+  Number.isFinite(n) ? format(n) : '—';
 
 // Heat-map table: chainrings down, sprockets across (smallest cog, the hardest
 // gear, on the left). With a hub: chainring × sprocket down, hub gears across.
@@ -35,7 +36,9 @@ export function GearTable({
 
   const cell = (s: GearSel, label: string) => {
     const v = m.value(gearRatio(cfg, s), cfg, cadence);
-    const t = Number.isFinite(v) ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0;
+    const t = Number.isFinite(v)
+      ? Math.max(0, Math.min(1, (v - lo) / (hi - lo)))
+      : 0;
     return (
       <td key={`${s.sprocket}-${s.hub}`}>
         <button
@@ -71,7 +74,12 @@ export function GearTable({
           <th scope="row">
             {ring} × {cog}
           </th>
-          {gears.map((h) => cell({ring: ri, sprocket: si, hub: h}, `${ring} × ${cog}, hub gear ${h + 1}`))}
+          {gears.map((h) =>
+            cell(
+              {ring: ri, sprocket: si, hub: h},
+              `${ring} × ${cog}, hub gear ${h + 1}`,
+            ),
+          )}
         </tr>
       )),
     );
@@ -86,7 +94,9 @@ export function GearTable({
     body = cfg.chainrings.map((ring, ri) => (
       <tr key={ri}>
         <th scope="row">{ring}T</th>
-        {cfg.sprockets.map((cog, si) => cell({ring: ri, sprocket: si, hub: 0}, `${ring} × ${cog}`))}
+        {cfg.sprockets.map((cog, si) =>
+          cell({ring: ri, sprocket: si, hub: 0}, `${ring} × ${cog}`),
+        )}
       </tr>
     ));
   }
@@ -117,7 +127,8 @@ export function GearTable({
 const explain = (cadence: number): Record<MetricKey, string> => ({
   gearInches:
     'Gear inches: the diameter of the wheel a bike with no gearing (1:1) would need to feel the same. Lower is easier to pedal.',
-  development: 'Development: how far the bike travels for one full turn of the pedals. Lower is easier to pedal.',
+  development:
+    'Development: how far the bike travels for one full turn of the pedals. Lower is easier to pedal.',
   speed: `Speed: how fast you would be traveling on flat ground pedaling at ${cadence} rotations per minute.`,
 });
 
@@ -172,7 +183,9 @@ export function GearHero({
           </span>
         </div>
         <div className="chips">
-          <span className="chip hi">Wheel turns {fmtOr(ratio, (n) => n.toFixed(2))}× per pedal turn</span>
+          <span className="chip hi">
+            Wheel turns {fmtOr(ratio, (n) => n.toFixed(2))}× per pedal turn
+          </span>
           <span className="chip plain">{cadence} rpm</span>
         </div>
         <p className="note">

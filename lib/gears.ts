@@ -71,7 +71,8 @@ export function isStock(cfg: GearConfig, id: BikeID | 'custom'): boolean {
 }
 
 // Hub ratios for an internally geared hub, gear 1 first; null for a cassette
-export const hubRatios = (cfg: GearConfig): readonly number[] | null => cfg.ratios;
+export const hubRatios = (cfg: GearConfig): readonly number[] | null =>
+  cfg.ratios;
 
 // A gear is a chainring, a sprocket and (with a hub) a hub gear, by index
 export interface GearSel {
@@ -98,7 +99,11 @@ export function clampSel(sel: GearSel, cfg: GearConfig): GearSel {
 }
 
 export const sameSel = (a: GearSel | null, b: GearSel | null) =>
-  !!a && !!b && a.ring === b.ring && a.sprocket === b.sprocket && a.hub === b.hub;
+  !!a &&
+  !!b &&
+  a.ring === b.ring &&
+  a.sprocket === b.sprocket &&
+  a.hub === b.hub;
 
 // Wheel turns per crank turn. Hub ratios are output over input speed, so
 // they multiply the chain ratio (v1 divided by them, inverting the hub).
@@ -133,7 +138,8 @@ export const METRICS: Record<MetricKey, Metric> = {
     label: 'Development',
     unit: 'm',
     range: [1, 10],
-    value: (ratio, cfg) => (tireCircumference(cfg.width, cfg.bsd) * ratio) / 1000,
+    value: (ratio, cfg) =>
+      (tireCircumference(cfg.width, cfg.bsd) * ratio) / 1000,
     format: (n) => n.toFixed(1),
   },
   speed: {
@@ -141,7 +147,10 @@ export const METRICS: Record<MetricKey, Metric> = {
     unit: 'km/h',
     range: [1, 50],
     value: (ratio, cfg, cadence) =>
-      (((tireCircumference(cfg.width, cfg.bsd) * ratio) / 1000) * cadence * 60) / 1000,
+      (((tireCircumference(cfg.width, cfg.bsd) * ratio) / 1000) *
+        cadence *
+        60) /
+      1000,
     format: (n) => n.toFixed(1),
   },
 };

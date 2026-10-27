@@ -76,18 +76,24 @@ export function solve(
     insert: number | null = null;
   if (s.stemType === 'std') {
     const a = rad(s.ang);
-    K = add(ax(base + s.stack / 2 + s.len * Math.sin(a)), mul(fw, s.len * Math.cos(a)));
+    K = add(
+      ax(base + s.stack / 2 + s.len * Math.sin(a)),
+      mul(fw, s.len * Math.cos(a)),
+    );
     stemTop = base + s.stack;
     above = s.steerLen - s.below - s.stack;
     if (above < -0.5) warns.push(`needs ${Math.round(-above)} mm more steerer`);
   } else {
     insert = s.steerLen - s.below;
     if (insert > s.gMax) {
-      warns.push(`steerer ${Math.round(insert - s.gMax)} mm too long for this stem`);
+      warns.push(
+        `steerer ${Math.round(insert - s.gMax)} mm too long for this stem`,
+      );
       base = s.hs + s.steerLen - s.gMax;
       insert = s.gMax;
     }
-    if (insert < s.gMin - 0.5) warns.push(`only ${Math.round(insert)} mm in stem (min ${s.gMin})`);
+    if (insert < s.gMin - 0.5)
+      warns.push(`only ${Math.round(insert)} mm in stem (min ${s.gMin})`);
     K = add(ax(base + s.gH), mul(fw, s.gE));
     stemTop = base + s.gH;
   }
@@ -231,7 +237,12 @@ export function dropEnds(s: BikeSettings) {
     bendW = W + s.dDrop * Math.tan(rad(s.dFlare)),
     o = rad(s.dOut || 0);
   const bendX = s.dReach - 50;
-  return {bendW, bendX, endW: bendW + ext * Math.sin(o), endX: bendX - ext * Math.cos(o)};
+  return {
+    bendW,
+    bendX,
+    endW: bendW + ext * Math.sin(o),
+    endX: bendX - ext * Math.cos(o),
+  };
 }
 
 // extra forward reach from hands at width wB vs wA, for a straight arm

@@ -6,7 +6,10 @@ export const SP = (p: Vec) => `${f(p[0])},${f(-p[1])}`;
 export const TP = (p: Vec) => `${f(p[0])},${f(p[1])}`;
 export const NS = 'non-scaling-stroke';
 
-type LineProps = {a: Vec; b: Vec; c: string; w?: number} & Omit<SVGProps<SVGLineElement>, 'stroke'>;
+type LineProps = {a: Vec; b: Vec; c: string; w?: number} & Omit<
+  SVGProps<SVGLineElement>,
+  'stroke'
+>;
 
 export function SideLine({a, b, c, w = 2.4, ...rest}: LineProps) {
   return (
@@ -40,4 +43,5 @@ export function TopLine({a, b, c, w = 2.4, ...rest}: LineProps) {
   );
 }
 
-export const polyPoints = (pts: Vec[], P: (p: Vec) => string) => pts.map(P).join(' ');
+export const polyPoints = (pts: Vec[], P: (p: Vec) => string) =>
+  pts.map(P).join(' ');
