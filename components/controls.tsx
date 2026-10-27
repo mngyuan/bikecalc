@@ -66,7 +66,11 @@ export function Section({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <details className="sec" open={open} onToggle={(e) => setOpen(e.currentTarget.open)}>
+    <details
+      className="sec"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
       <summary>{title}</summary>
       <div className="rows">{children}</div>
     </details>
@@ -87,7 +91,12 @@ export function Segmented<T extends string>({
   return (
     <div className="seg" role="group" aria-label={label}>
       {options.map(([v, l]) => (
-        <button key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}>
+        <button
+          key={v}
+          type="button"
+          aria-pressed={value === v}
+          onClick={() => onChange(v)}
+        >
           {l}
         </button>
       ))}
@@ -127,22 +136,44 @@ export function Combobox<T extends string>({
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button type="button" className="combo" role="combobox" aria-expanded={open} aria-label={label}>
-          <span className={current ? '' : 'placeholder'}>{current?.label ?? customLabel}</span>
+        <button
+          type="button"
+          className="combo"
+          role="combobox"
+          aria-expanded={open}
+          aria-label={label}
+        >
+          <span className={current ? '' : 'placeholder'}>
+            {current?.label ?? customLabel}
+          </span>
           <Chevron />
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="combo-pop" align="start" sideOffset={6} collisionPadding={16}>
+        <Popover.Content
+          className="combo-pop"
+          align="start"
+          sideOffset={6}
+          collisionPadding={16}
+        >
           <Command loop label={label}>
             <Command.Input placeholder={placeholder} />
             <Command.List>
               <Command.Empty>{emptyMessage}</Command.Empty>
-              <Command.Item value={`__custom ${customLabel}`} data-current={value === 'custom'} onSelect={() => pick('custom')}>
+              <Command.Item
+                value={`__custom ${customLabel}`}
+                data-current={value === 'custom'}
+                onSelect={() => pick('custom')}
+              >
                 {customLabel}
               </Command.Item>
               {options.map((o) => (
-                <Command.Item key={o.value} value={o.label} data-current={o.value === value} onSelect={() => pick(o.value)}>
+                <Command.Item
+                  key={o.value}
+                  value={o.label}
+                  data-current={o.value === value}
+                  onSelect={() => pick(o.value)}
+                >
                   {o.label}
                 </Command.Item>
               ))}
@@ -156,7 +187,17 @@ export function Combobox<T extends string>({
 
 export function Chevron() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="m6 9 6 6 6-6" />
     </svg>
   );
@@ -164,7 +205,17 @@ export function Chevron() {
 
 export function ExternalIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
     </svg>
   );

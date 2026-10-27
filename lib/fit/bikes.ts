@@ -40,7 +40,11 @@ export interface BikeColor {
 export function colorOf(id: FitBikeID): BikeColor {
   const i = FIT_BIKES.indexOf(id);
   const slot = i >= 0 && i < SLOTS.length ? SLOTS[i] : '--bx';
-  return {c: `var(${slot})`, soft: `var(${slot}-soft)`, chip: `var(${slot}-chip)`};
+  return {
+    c: `var(${slot})`,
+    soft: `var(${slot}-soft)`,
+    chip: `var(${slot}-chip)`,
+  };
 }
 
 export const STAGED_COLOR: BikeColor = {

@@ -48,7 +48,10 @@ export interface Bike {
 // Sizes that share most numbers: spread the shared ones into every size.
 const withCommon = (
   common: Omit<FrameSize, 'label' | 'stack' | 'reach' | 'ht' | 'st'>,
-  sizes: Record<string, Pick<FrameSize, 'label' | 'stack' | 'reach' | 'ht' | 'st'>>,
+  sizes: Record<
+    string,
+    Pick<FrameSize, 'label' | 'stack' | 'reach' | 'ht' | 'st'>
+  >,
 ): Record<string, FrameSize> =>
   Object.fromEntries(
     Object.entries(sizes).map(([k, z]) => [k, {...common, ...z}]),
@@ -175,7 +178,20 @@ export const BIKE_DB = {
       defaultSize: '52',
       ring: 82,
       sizes: {
-        '52': {label: '52cm', stack: 494.8, reach: 403, hta: 70, sta: 72, ht: 110, drop: 38, cs: 436.4, off: 50, st: 520, tt: 0, bsd: 559},
+        '52': {
+          label: '52cm',
+          stack: 494.8,
+          reach: 403,
+          hta: 70,
+          sta: 72,
+          ht: 110,
+          drop: 38,
+          cs: 436.4,
+          off: 50,
+          st: 520,
+          tt: 0,
+          bsd: 559,
+        },
       },
     },
   },
@@ -188,7 +204,20 @@ export const BIKE_DB = {
       defaultSize: '52',
       ring: 101,
       sizes: {
-        '52': {label: '52cm', stack: 528, reach: 389.7, hta: 72, sta: 73.5, ht: 91, drop: 66, cs: 419.8, off: 44, st: 520, tt: 0.7, bsd: 622},
+        '52': {
+          label: '52cm',
+          stack: 528,
+          reach: 389.7,
+          hta: 72,
+          sta: 73.5,
+          ht: 91,
+          drop: 66,
+          cs: 419.8,
+          off: 44,
+          st: 520,
+          tt: 0.7,
+          bsd: 622,
+        },
       },
     },
   },
@@ -221,6 +250,9 @@ export const shortName = (bike: Bike) => bike.short ?? bike.name;
 
 // The gear calculator draws this frame for bikes without their own geometry.
 // It is the same 52cm Cross Check the old three.js view was modelled on.
-export const REFERENCE_FRAME = {bike: 'surly-cross-check-2012', size: '52'} as const;
+export const REFERENCE_FRAME = {
+  bike: 'surly-cross-check-2012',
+  size: '52',
+} as const;
 
 export const DEFAULT_GEAR_BIKE: BikeID = 'surly-disc-trucker';

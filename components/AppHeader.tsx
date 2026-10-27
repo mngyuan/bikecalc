@@ -2,7 +2,13 @@ import {NavLink} from 'react-router';
 
 // Brand, route switcher and page title. Rendered at the top of the sidebar,
 // and again at the top of main on narrow screens where the sidebar moves below.
-export function AppHeader({title, sub}: {title: [string, string]; sub?: string}) {
+export function AppHeader({
+  title,
+  sub,
+}: {
+  title: [string, string];
+  sub?: string;
+}) {
   return (
     <header>
       <div className="brand">

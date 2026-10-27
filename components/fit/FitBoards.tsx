@@ -1,7 +1,14 @@
 // Side and top boards for the fit visualizer, ported from v2's drawSide/drawTop.
 import {BBMarker, Board, Grid} from '@/components/board/Board';
 import {Fender, Frame, Ground, Wheel} from '@/components/board/BikeParts';
-import {NS, SP, SideLine, TP, TopLine, polyPoints} from '@/components/board/svg';
+import {
+  NS,
+  SP,
+  SideLine,
+  TP,
+  TopLine,
+  polyPoints,
+} from '@/components/board/svg';
 import type {BikeColor} from '@/lib/fit/bikes';
 import {dropEnds, footPoly, sat, type Solved, tyrePoly} from '@/lib/fit/solve';
 import {add, f, mul, rad, sub, type Vec} from '@/lib/vec';
@@ -43,13 +50,29 @@ function BikeSide({G, color}: Drawn) {
     <g opacity={0.9}>
       <Ground F={G} x0={X0} x1={X1} c={c} />
       {[G.RA, G.FA].map((ctr, i) => (
-        <Wheel key={i} center={ctr} R={G.R} rim={G.g.bsd / 2} c={c} soft={soft} />
+        <Wheel
+          key={i}
+          center={ctr}
+          R={G.R}
+          rim={G.g.bsd / 2}
+          c={c}
+          soft={soft}
+        />
       ))}
       {s.fender > 0 && <Fender F={G} gap={s.fender} c={c} />}
       <Frame F={G} c={c} />
 
       {/* drivetrain + foot */}
-      <circle cx={0} cy={0} r={G.ring} fill="none" stroke={c} strokeWidth={1.4} vectorEffect={NS} opacity={0.7} />
+      <circle
+        cx={0}
+        cy={0}
+        r={G.ring}
+        fill="none"
+        stroke={c}
+        strokeWidth={1.4}
+        vectorEffect={NS}
+        opacity={0.7}
+      />
       <SideLine a={[0, 0]} b={G.P} c={c} w={4} />
       <path
         d={`M${SP([tx - 270, sole + 6])} L${SP([tx - 35, sole])} Q${SP([tx, sole])} ${SP([tx, sole + 28])} Q${SP([tx - 10, sole + 58])} ${SP([tx - 80, sole + 70])} L${SP([tx - 230, sole + 92])} Q${SP([tx - 270, sole + 92])} ${SP([tx - 272, sole + 50])} Z`}
@@ -58,22 +81,58 @@ function BikeSide({G, color}: Drawn) {
         strokeWidth={1.6}
         vectorEffect={NS}
       />
-      <circle cx={f(G.P[0])} cy={0} r={9} fill="var(--panel)" stroke={c} strokeWidth={2} vectorEffect={NS} />
+      <circle
+        cx={f(G.P[0])}
+        cy={0}
+        r={9}
+        fill="var(--panel)"
+        stroke={c}
+        strokeWidth={2}
+        vectorEffect={NS}
+      />
 
       {/* headset, spacers, steerer */}
-      <polygon points={polyPoints(axRect(G, 0, s.hs, 46), SP)} fill={soft} stroke={c} strokeWidth={1.2} vectorEffect={NS} />
+      <polygon
+        points={polyPoints(axRect(G, 0, s.hs, 46), SP)}
+        fill={soft}
+        stroke={c}
+        strokeWidth={1.2}
+        vectorEffect={NS}
+      />
       {G.base - s.hs > 0 && (
-        <polygon points={polyPoints(axRect(G, s.hs, G.base, 36), SP)} fill={soft} stroke={c} strokeWidth={1.2} vectorEffect={NS} />
+        <polygon
+          points={polyPoints(axRect(G, s.hs, G.base, 36), SP)}
+          fill={soft}
+          stroke={c}
+          strokeWidth={1.2}
+          vectorEffect={NS}
+        />
       )}
       {spacerTicks.map((a) => (
-        <SideLine key={a} a={add(G.ax(a), mul(G.fw, -18))} b={add(G.ax(a), mul(G.fw, 18))} c={c} w={0.6} opacity={0.45} />
+        <SideLine
+          key={a}
+          a={add(G.ax(a), mul(G.fw, -18))}
+          b={add(G.ax(a), mul(G.fw, 18))}
+          c={c}
+          w={0.6}
+          opacity={0.45}
+        />
       ))}
       {s.stemType === 'std' ? (
         <>
-          <polygon points={polyPoints(axRect(G, G.base, G.stemTop, 40), SP)} fill="var(--board)" stroke={c} strokeWidth={2} vectorEffect={NS} />
+          <polygon
+            points={polyPoints(axRect(G, G.base, G.stemTop, 40), SP)}
+            fill="var(--board)"
+            stroke={c}
+            strokeWidth={2}
+            vectorEffect={NS}
+          />
           {G.above > 0.5 && (
             <polygon
-              points={polyPoints(axRect(G, G.stemTop, G.stemTop + G.above, 36), SP)}
+              points={polyPoints(
+                axRect(G, G.stemTop, G.stemTop + G.above, 36),
+                SP,
+              )}
               fill={soft}
               stroke={c}
               strokeWidth={1.2}
@@ -82,7 +141,13 @@ function BikeSide({G, color}: Drawn) {
           )}
           <SideLine a={G.ax(G.base + s.stack / 2)} b={K} c={c} w={7} />
           {G.above < -0.5 && (
-            <SideLine a={G.ax(s.hs + s.steerLen)} b={G.ax(G.stemTop)} c="var(--warn)" w={3} strokeDasharray="3 3" />
+            <SideLine
+              a={G.ax(s.hs + s.steerLen)}
+              b={G.ax(G.stemTop)}
+              c="var(--warn)"
+              w={3}
+              strokeDasharray="3 3"
+            />
           )}
         </>
       ) : (
@@ -95,7 +160,15 @@ function BikeSide({G, color}: Drawn) {
           vectorEffect={NS}
         />
       )}
-      <circle cx={f(K[0])} cy={f(-K[1])} r={17} fill="var(--board)" stroke={c} strokeWidth={2} vectorEffect={NS} />
+      <circle
+        cx={f(K[0])}
+        cy={f(-K[1])}
+        r={17}
+        fill="var(--board)"
+        stroke={c}
+        strokeWidth={2}
+        vectorEffect={NS}
+      />
 
       {/* bars */}
       {s.barType === 'drop' ? (
@@ -108,7 +181,14 @@ function BikeSide({G, color}: Drawn) {
             strokeLinecap="round"
             vectorEffect={NS}
           />
-          <path d={`M${R_(s.dReach - 24, 4)} L${R_(s.dReach + s.hoodExt, s.hoodUp)}`} stroke={c} strokeWidth={11} strokeLinecap="round" opacity={0.55} vectorEffect={NS} />
+          <path
+            d={`M${R_(s.dReach - 24, 4)} L${R_(s.dReach + s.hoodExt, s.hoodUp)}`}
+            stroke={c}
+            strokeWidth={11}
+            strokeLinecap="round"
+            opacity={0.55}
+            vectorEffect={NS}
+          />
           <path
             d={`M${R_(s.dReach + s.hoodExt - 4, s.hoodUp - 6)} Q${R_(s.dReach + 18, -s.dDrop * 0.25)} ${R_(s.dReach + 4, -s.dDrop * 0.66)}`}
             fill="none"
@@ -128,7 +208,16 @@ function BikeSide({G, color}: Drawn) {
             strokeLinecap="round"
             vectorEffect={NS}
           />
-          <ellipse cx={f(G.hand[0] - 12)} cy={f(-G.hand[1] + 4)} rx={42} ry={20} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
+          <ellipse
+            cx={f(G.hand[0] - 12)}
+            cy={f(-G.hand[1] + 4)}
+            rx={42}
+            ry={20}
+            fill={soft}
+            stroke={c}
+            strokeWidth={1.6}
+            vectorEffect={NS}
+          />
         </>
       )}
 
@@ -151,7 +240,15 @@ function BikeSide({G, color}: Drawn) {
       />
 
       {/* contact markers */}
-      <circle cx={f(G.hand[0])} cy={f(-G.hand[1])} r={11} fill={c} stroke="var(--board)" strokeWidth={2} vectorEffect={NS} />
+      <circle
+        cx={f(G.hand[0])}
+        cy={f(-G.hand[1])}
+        r={11}
+        fill={c}
+        stroke="var(--board)"
+        strokeWidth={2}
+        vectorEffect={NS}
+      />
       <path d={`M${SP([nx, y])} l-12,-14 l24,0 z`} fill={c} />
     </g>
   );
@@ -163,19 +260,55 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
     K = G.K,
     rr = G.R;
   const ty = tyrePoly(G, steer);
-  const sx = G.ax(G.base + (s.stemType === 'std' ? s.stack / 2 : s.gH * 0.6))[0];
+  const sx = G.ax(
+    G.base + (s.stemType === 'std' ? s.stack / 2 : s.gH * 0.6),
+  )[0];
   const kx = K[0];
   const nx = G.N[0];
   return (
     <g opacity={0.9}>
-      <rect x={f(G.RA[0] - rr)} y={f(-s.tyreW / 2)} width={f(2 * rr)} height={f(s.tyreW)} rx={f(s.tyreW / 2)} fill={soft} stroke={c} strokeWidth={2} vectorEffect={NS} />
+      <rect
+        x={f(G.RA[0] - rr)}
+        y={f(-s.tyreW / 2)}
+        width={f(2 * rr)}
+        height={f(s.tyreW)}
+        rx={f(s.tyreW / 2)}
+        fill={soft}
+        stroke={c}
+        strokeWidth={2}
+        vectorEffect={NS}
+      />
       <TopLine a={[0, -38]} b={[G.RA[0], -64]} c={c} w={2} />
       <TopLine a={[0, 38]} b={[G.RA[0], 64]} c={c} w={2} />
-      <rect x={f(G.ST[0])} y={-14} width={f(G.T[0] - G.ST[0])} height={28} rx={6} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
-      <circle cx={f(G.T[0])} cy={0} r={22} fill="none" stroke={c} strokeWidth={2} vectorEffect={NS} />
+      <rect
+        x={f(G.ST[0])}
+        y={-14}
+        width={f(G.T[0] - G.ST[0])}
+        height={28}
+        rx={6}
+        fill={soft}
+        stroke={c}
+        strokeWidth={1.6}
+        vectorEffect={NS}
+      />
+      <circle
+        cx={f(G.T[0])}
+        cy={0}
+        r={22}
+        fill="none"
+        stroke={c}
+        strokeWidth={2}
+        vectorEffect={NS}
+      />
 
       {/* front tyre (chord at toe height), rotated */}
-      <polygon points={polyPoints(ty, TP)} fill={soft} stroke={c} strokeWidth={2} vectorEffect={NS} />
+      <polygon
+        points={polyPoints(ty, TP)}
+        fill={soft}
+        stroke={c}
+        strokeWidth={2}
+        vectorEffect={NS}
+      />
       <circle cx={f(G.pivot[0])} cy={0} r={6} fill={c} />
 
       {/* feet */}
@@ -185,16 +318,45 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
         const col = hit ? 'var(--warn)' : c;
         return (
           <g key={side}>
-            <polygon points={polyPoints(fp, TP)} fill={hit ? 'var(--warn-soft)' : soft} stroke={col} strokeWidth={hit ? 2.6 : 1.6} vectorEffect={NS} />
-            <TopLine a={[0, side * 30]} b={[G.P[0], side * (s.q / 2)]} c={c} w={3.5} />
-            <line x1={f(G.P[0])} x2={f(G.P[0])} y1={f((side * s.q) / 2)} y2={f(side * (s.q / 2 + 100))} stroke={col} strokeWidth={2.4} vectorEffect={NS} />
+            <polygon
+              points={polyPoints(fp, TP)}
+              fill={hit ? 'var(--warn-soft)' : soft}
+              stroke={col}
+              strokeWidth={hit ? 2.6 : 1.6}
+              vectorEffect={NS}
+            />
+            <TopLine
+              a={[0, side * 30]}
+              b={[G.P[0], side * (s.q / 2)]}
+              c={c}
+              w={3.5}
+            />
+            <line
+              x1={f(G.P[0])}
+              x2={f(G.P[0])}
+              y1={f((side * s.q) / 2)}
+              y2={f(side * (s.q / 2 + 100))}
+              stroke={col}
+              strokeWidth={2.4}
+              vectorEffect={NS}
+            />
           </g>
         );
       })}
 
       {/* stem and bars turn with the steering */}
       <g transform={`rotate(${f(steer)} ${f(sx)} 0)`}>
-        <rect x={f(Math.min(sx, kx))} y={-17} width={f(Math.abs(kx - sx))} height={34} rx={8} fill="var(--board)" stroke={c} strokeWidth={2} vectorEffect={NS} />
+        <rect
+          x={f(Math.min(sx, kx))}
+          y={-17}
+          width={f(Math.abs(kx - sx))}
+          height={34}
+          rx={8}
+          fill="var(--board)"
+          stroke={c}
+          strokeWidth={2}
+          vectorEffect={NS}
+        />
         {s.barType === 'drop'
           ? ([1, -1] as const).map((sd) => {
               const W = s.dW / 2,
@@ -212,7 +374,17 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
                     strokeLinejoin="round"
                     vectorEffect={NS}
                   />
-                  <rect x={f(kx + r - 24)} y={f(sd * W - 14)} width={f(s.hoodExt + 28)} height={28} rx={12} fill={soft} stroke={c} strokeWidth={1.6} vectorEffect={NS} />
+                  <rect
+                    x={f(kx + r - 24)}
+                    y={f(sd * W - 14)}
+                    width={f(s.hoodExt + 28)}
+                    height={28}
+                    rx={12}
+                    fill={soft}
+                    stroke={c}
+                    strokeWidth={1.6}
+                    vectorEffect={NS}
+                  />
                   <circle cx={f(G.hand[0])} cy={f(sd * W)} r={10} fill={c} />
                 </g>
               );
@@ -262,9 +434,19 @@ function BikeTop({G, color, steer}: Drawn & {steer: number}) {
 }
 
 // Bikes are listed top-first, so draw them in reverse; the staged copy goes on top.
-export function SideBoard({bikes, staged}: {bikes: Drawn[]; staged: Drawn | null}) {
+export function SideBoard({
+  bikes,
+  staged,
+}: {
+  bikes: Drawn[];
+  staged: Drawn | null;
+}) {
   return (
-    <Board tag="Side" label="Side view of the shown bikes" viewBox={[X0, -SIDE.y1, X1 - X0, SIDE.y1 - SIDE.y0]}>
+    <Board
+      tag="Side"
+      label="Side view of the shown bikes"
+      viewBox={[X0, -SIDE.y1, X1 - X0, SIDE.y1 - SIDE.y0]}
+    >
       {(scale) => (
         <>
           <Grid x0={X0} x1={X1} y0={SIDE.y0} y1={SIDE.y1} flip scale={scale} />
@@ -304,14 +486,39 @@ export function TopBoard({
           <label htmlFor="steer">
             Steer <span className="num">{steer}°</span>
           </label>
-          <input type="range" id="steer" min={0} max={45} step={1} value={steer} onChange={(e) => onSteer(+e.target.value)} />
+          <input
+            type="range"
+            id="steer"
+            min={0}
+            max={45}
+            step={1}
+            value={steer}
+            onChange={(e) => onSteer(+e.target.value)}
+          />
         </div>
       }
     >
       {(scale) => (
         <>
-          <Grid x0={X0} x1={X1} y0={-TOP.y} y1={TOP.y} flip={false} scale={scale} />
-          <line x1={X0} x2={X1} y1={0} y2={0} stroke="var(--ink)" strokeWidth={1} vectorEffect={NS} opacity={0.35} strokeDasharray="2 4" />
+          <Grid
+            x0={X0}
+            x1={X1}
+            y0={-TOP.y}
+            y1={TOP.y}
+            flip={false}
+            scale={scale}
+          />
+          <line
+            x1={X0}
+            x2={X1}
+            y1={0}
+            y2={0}
+            stroke="var(--ink)"
+            strokeWidth={1}
+            vectorEffect={NS}
+            opacity={0.35}
+            strokeDasharray="2 4"
+          />
           {[...bikes].reverse().map((b) => (
             <BikeTop key={b.G.id} {...b} steer={steer} />
           ))}

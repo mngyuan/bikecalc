@@ -5,7 +5,11 @@ import type {Route} from './+types/fit';
 
 export const meta = () => [
   {title: 'Fit Visualizer · Bike Calc'},
-  {name: 'description', content: 'Compare hand, saddle and toe positions across bikes, stems and bars.'},
+  {
+    name: 'description',
+    content:
+      'Compare hand, saddle and toe positions across bikes, stems and bars.',
+  },
 ];
 
 // Settings live in localStorage, so they are read in the browser. The

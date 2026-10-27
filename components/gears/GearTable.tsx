@@ -10,7 +10,8 @@ import {
   sameSel,
 } from '@/lib/gears';
 
-const fmtOr = (n: number, format: (n: number) => string) => (Number.isFinite(n) ? format(n) : '—');
+const fmtOr = (n: number, format: (n: number) => string) =>
+  Number.isFinite(n) ? format(n) : '—';
 
 // Heat-map table: chainrings down, sprockets across (smallest cog, the hardest
 // gear, on the left). With a hub: chainring × sprocket down, hub gears across.
@@ -35,7 +36,9 @@ export function GearTable({
 
   const cell = (s: GearSel, label: string) => {
     const v = m.value(gearRatio(cfg, s), cfg, cadence);
-    const t = Number.isFinite(v) ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0;
+    const t = Number.isFinite(v)
+      ? Math.max(0, Math.min(1, (v - lo) / (hi - lo)))
+      : 0;
     return (
       <td key={`${s.sprocket}-${s.hub}`}>
         <button
@@ -71,7 +74,12 @@ export function GearTable({
           <th scope="row">
             {ring} × {cog}
           </th>
-          {gears.map((h) => cell({ring: ri, sprocket: si, hub: h}, `${ring} × ${cog}, hub gear ${h + 1}`))}
+          {gears.map((h) =>
+            cell(
+              {ring: ri, sprocket: si, hub: h},
+              `${ring} × ${cog}, hub gear ${h + 1}`,
+            ),
+          )}
         </tr>
       )),
     );
@@ -86,7 +94,9 @@ export function GearTable({
     body = cfg.chainrings.map((ring, ri) => (
       <tr key={ri}>
         <th scope="row">{ring}T</th>
-        {cfg.sprockets.map((cog, si) => cell({ring: ri, sprocket: si, hub: 0}, `${ring} × ${cog}`))}
+        {cfg.sprockets.map((cog, si) =>
+          cell({ring: ri, sprocket: si, hub: 0}, `${ring} × ${cog}`),
+        )}
       </tr>
     ));
   }
@@ -110,6 +120,7 @@ export function GearTable({
           {lo}–{hi} {m.unit}
         </span>
       </div>
+      <p className="note">{EXPLAIN[metric]}</p>
     </>
   );
 }
@@ -117,8 +128,10 @@ export function GearTable({
 const EXPLAIN: Record<MetricKey, string> = {
   gearInches:
     'Gear inches: the diameter of the wheel a bike with no gearing (1:1) would need to feel the same. Lower is easier to pedal.',
-  development: 'Development: how far the bike travels for one full turn of the pedals. Lower is easier to pedal.',
-  speed: 'Speed: how fast you would go on flat ground pedalling at the cadence set on the drawing.',
+  development:
+    'Development: how far the bike travels for one full turn of the pedals. Lower is easier to pedal.',
+  speed:
+    'Speed: how fast you would be traveling on flat ground pedaling at that cadence.',
 };
 
 export function GearHero({
@@ -142,10 +155,32 @@ export function GearHero({
   const range = gearRange(cfg);
   const m = METRICS[metric];
 
+  // Rings and sprockets are numbered from the last one, as in the table header
+  const gear =
+    `front ${cfg.chainrings.length - sel.ring} / rear ${cfg.sprockets.length - sel.sprocket}` +
+    (hub ? ` / hub gear ${sel.hub + 1}` : '');
   const detail: Record<MetricKey, string> = {
-    gearInches: `Like riding a ${fmtOr(gi, (n) => n.toFixed(1))}" wheel on a bike with no gears.`,
-    development: `The bike travels ${fmtOr(dev, (n) => n.toFixed(2))} m for every full turn of the pedals.`,
-    speed: `At ${cadence} rpm on flat ground you would ride ${fmtOr(spd, (n) => n.toFixed(1))} km/h.`,
+    gearInches: `Feels like riding a ${fmtOr(gi, (n) => n.toFixed(2))}" tire on a 1:1 gear bike. If your shifters have gear indicators, they'd show ${gear}.`,
+    development: `The bike travels ${fmtOr(dev, (n) => n.toFixed(2))}m per full pedal revolution.`,
+    speed: `You would travel at ${fmtOr(spd, (n) => n.toFixed(2))} km/h at ${cadence} RPM cadence.`,
+  };
+
+  const bigNumber: Record<MetricKey, ReactNode> = {
+    gearInches: (
+      <span>
+        {fmtOr(gi, (n) => n.toFixed(1))} <small>in</small>
+      </span>
+    ),
+    development: (
+      <span>
+        {fmtOr(dev, (n) => n.toFixed(2))} <small>m</small>
+      </span>
+    ),
+    speed: (
+      <span>
+        {fmtOr(spd, (n) => n.toFixed(1))} <small>km/h</small>
+      </span>
+    ),
   };
 
   return (
@@ -154,28 +189,9 @@ export function GearHero({
         <span className="eyebrow">
           Gear {ring}T × {cog}T{hub ? ` · hub gear ${sel.hub + 1}` : ''}
         </span>
-        <div className="big">
-          <span>
-            {fmtOr(gi, (n) => n.toFixed(1))} <small>in</small>
-          </span>{' '}
-          ·{' '}
-          <span>
-            {fmtOr(dev, (n) => n.toFixed(2))} <small>m</small>
-          </span>{' '}
-          ·{' '}
-          <span>
-            {fmtOr(spd, (n) => n.toFixed(1))} <small>km/h</small>
-          </span>
-        </div>
-        <div className="chips">
-          <span className="chip hi">Wheel turns {fmtOr(ratio, (n) => n.toFixed(2))}× per pedal turn</span>
-          <span className="chip plain">{cadence} rpm</span>
-        </div>
-        <p className="note">
-          {detail[metric]} {EXPLAIN[metric]}
-        </p>
+        <div className="big">{bigNumber[metric]}</div>
+        <p className="note">{detail[metric]}</p>
       </div>
-      <p className="note hero-foot">Point at a cell to preview that gear on the drawing; click or tap to keep it selected.</p>
       {range && (
         <div className="stats">
           <div>
