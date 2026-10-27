@@ -478,6 +478,9 @@ select {
 .note a {
   color: inherit;
 }
+.tablewrap .note {
+  padding: 6px 10px;
+}
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
@@ -745,6 +748,7 @@ a:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 6px;
+  justify-content: space-between;
 }
 .hero-body {
   display: flex;

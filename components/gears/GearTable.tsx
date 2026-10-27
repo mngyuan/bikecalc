@@ -120,17 +120,19 @@ export function GearTable({
           {lo}–{hi} {m.unit}
         </span>
       </div>
+      <p className="note">{EXPLAIN[metric]}</p>
     </>
   );
 }
 
-const explain = (cadence: number): Record<MetricKey, string> => ({
+const EXPLAIN: Record<MetricKey, string> = {
   gearInches:
     'Gear inches: the diameter of the wheel a bike with no gearing (1:1) would need to feel the same. Lower is easier to pedal.',
   development:
     'Development: how far the bike travels for one full turn of the pedals. Lower is easier to pedal.',
-  speed: `Speed: how fast you would be traveling on flat ground pedaling at ${cadence} rotations per minute.`,
-});
+  speed:
+    'Speed: how fast you would be traveling on flat ground pedaling at that cadence.',
+};
 
 export function GearHero({
   cfg,
@@ -155,12 +157,30 @@ export function GearHero({
 
   // Rings and sprockets are numbered from the last one, as in the table header
   const gear =
-    `In chainring ${cfg.chainrings.length - sel.ring} / sprocket ${cfg.sprockets.length - sel.sprocket}` +
+    `front ${cfg.chainrings.length - sel.ring} / rear ${cfg.sprockets.length - sel.sprocket}` +
     (hub ? ` / hub gear ${sel.hub + 1}` : '');
   const detail: Record<MetricKey, string> = {
-    gearInches: `${gear}, you would be riding a ${fmtOr(gi, (n) => n.toFixed(2))}" tire on a 1:1 gear bike.`,
-    development: `${gear}, the bike travels ${fmtOr(dev, (n) => n.toFixed(2))}m per full pedal revolution.`,
-    speed: `${gear}, you would travel at ${fmtOr(spd, (n) => n.toFixed(2))} km/h at ${cadence} RPM cadence.`,
+    gearInches: `Feels like riding a ${fmtOr(gi, (n) => n.toFixed(2))}" tire on a 1:1 gear bike. If your shifters have gear indicators, they'd show ${gear}.`,
+    development: `The bike travels ${fmtOr(dev, (n) => n.toFixed(2))}m per full pedal revolution.`,
+    speed: `You would travel at ${fmtOr(spd, (n) => n.toFixed(2))} km/h at ${cadence} RPM cadence.`,
+  };
+
+  const bigNumber: Record<MetricKey, ReactNode> = {
+    gearInches: (
+      <span>
+        {fmtOr(gi, (n) => n.toFixed(1))} <small>in</small>
+      </span>
+    ),
+    development: (
+      <span>
+        {fmtOr(dev, (n) => n.toFixed(2))} <small>m</small>
+      </span>
+    ),
+    speed: (
+      <span>
+        {fmtOr(spd, (n) => n.toFixed(1))} <small>km/h</small>
+      </span>
+    ),
   };
 
   return (
@@ -169,28 +189,8 @@ export function GearHero({
         <span className="eyebrow">
           Gear {ring}T × {cog}T{hub ? ` · hub gear ${sel.hub + 1}` : ''}
         </span>
-        <div className="big">
-          <span>
-            {fmtOr(gi, (n) => n.toFixed(1))} <small>in</small>
-          </span>{' '}
-          ·{' '}
-          <span>
-            {fmtOr(dev, (n) => n.toFixed(2))} <small>m</small>
-          </span>{' '}
-          ·{' '}
-          <span>
-            {fmtOr(spd, (n) => n.toFixed(1))} <small>km/h</small>
-          </span>
-        </div>
-        <div className="chips">
-          <span className="chip hi">
-            Wheel turns {fmtOr(ratio, (n) => n.toFixed(2))}× per pedal turn
-          </span>
-          <span className="chip plain">{cadence} rpm</span>
-        </div>
-        <p className="note">
-          {detail[metric]} {explain(cadence)[metric]}
-        </p>
+        <div className="big">{bigNumber[metric]}</div>
+        <p className="note">{detail[metric]}</p>
       </div>
       {range && (
         <div className="stats">
