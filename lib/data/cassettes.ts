@@ -301,6 +301,9 @@ export const CASSETTE_DB = {
   'Shimano CS-R9200-12 12 Speed 11-34T': {
     sprockets: [11, 12, 13, 14, 15, 17, 19, 21, 24, 27, 30, 34],
   },
+  'SRAM XPLR XG-1371 13 Speed 10-46T': {
+    sprockets: [10, 11, 12, 13, 15, 17, 19, 21, 24, 28, 32, 38, 46],
+  },
   'Sturmey Archer BSR': {
     // THink this is the same hub as S-RF3
     ratios: [0.75, 1, 1.3333333],

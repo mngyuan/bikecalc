@@ -1,80 +1,45 @@
-import type {CassetteID} from './cassettes';
-import type {TireID} from './tires';
+import type {BarID} from './cockpit';
+import type {DrivetrainID} from './drivetrains';
+import {FRAME_DB, type FrameID, wheelsOf} from './frames';
+import {TIRE_DB, type TireID} from './tires';
 
-// One catalog for both tools. A bike can carry a stock drivetrain (used by
-// the gear calculator), a frame geometry (used by the fit visualizer), or
-// both. When the gear calculator shows a bike with geometry, it draws that
-// frame; otherwise it falls back to REFERENCE_FRAME.
-
-export interface Drivetrain {
-  tire: TireID;
-  chainringTeeth: readonly number[];
-  cassette: CassetteID;
-  // Needs to be separately specified for internally geared hubs
-  sprockets?: readonly number[];
-}
-
-// One frame size. Lengths in mm, angles in degrees.
-export interface FrameSize {
-  label: string;
-  stack: number;
-  reach: number;
-  hta: number; // head tube angle
-  sta: number; // seat tube angle
-  ht: number; // head tube length
-  drop: number; // bottom bracket drop below the axle line
-  cs: number; // chainstay length
-  off: number; // fork offset
-  st: number; // seat tube length, BB centre to top
-  tt: number; // top tube slope, degrees
-  bsd: number; // bead seat diameter of the wheels the frame is built for
-}
-
-export interface Geometry {
-  source: string;
-  defaultSize: string;
-  sizes: Record<string, FrameSize>;
-  ring: number; // chainring radius drawn in the fit view when no drivetrain is known
-}
-
+// A complete bike as sold: a drivetrain and tires, and the frame when its
+// geometry is in the catalog. The gear calculator lists these; the fit
+// visualizer lists frames. Without a frame, the gear calculator draws
+// REFERENCE_FRAME.
 export interface Bike {
   name: string;
-  short?: string; // compact label for pills and table headers
   year?: string;
-  drivetrain?: Drivetrain;
-  geometry?: Geometry;
+  // With a frame, the bike comes in all its sizes; `size` is the one shown first
+  frame?: {id: FrameID; size: string};
+  // Stock options; the first of each is shown first
+  drivetrains: readonly DrivetrainID[];
+  tires: readonly TireID[];
+  // The maker's cockpit for each frame size, used by the fit visualizer
+  setup?: {
+    stemAng: number;
+    sizes: Record<string, SizeSetup>;
+  };
 }
 
-// Sizes that share most numbers: spread the shared ones into every size.
-const withCommon = (
-  common: Omit<FrameSize, 'label' | 'stack' | 'reach' | 'ht' | 'st'>,
-  sizes: Record<
-    string,
-    Pick<FrameSize, 'label' | 'stack' | 'reach' | 'ht' | 'st'>
-  >,
-): Record<string, FrameSize> =>
-  Object.fromEntries(
-    Object.entries(sizes).map(([k, z]) => [k, {...common, ...z}]),
-  );
+export interface SizeSetup {
+  stemLen: number;
+  bar: BarID;
+  crank: number;
+}
 
 export const BIKE_DB = {
   // Cannot identify this cassette
   // 'Bike Friday All-Packa 1x9'
   'bike-friday-all-packa-1x11': {
     name: 'Bike Friday All-Packa 1x11',
-    drivetrain: {
-      tire: 'Kenda Booster Pro 20"x2.4"',
-      chainringTeeth: [42],
-      cassette: 'SRAM PG-1130 11 Speed 11-42T',
-    },
+    drivetrains: ['42-sram-pg1130-11-42'],
+    tires: ['Kenda Booster Pro 20"x2.4"'],
   },
   'bike-friday-all-packa-1x12': {
     name: 'Bike Friday All-Packa 1x12',
-    drivetrain: {
-      tire: 'Kenda Booster Pro 20"x2.4"',
-      chainringTeeth: [42],
-      cassette: 'SRAM XPLR PG-1231 12 Speed 11-44T',
-    },
+    drivetrains: ['42-sram-xplr-pg1231-11-44'],
+    tires: ['Kenda Booster Pro 20"x2.4"'],
   },
   // Cannot identify this cassette, same one probably
   // 'Bike Friday All-Packa 2x'
@@ -82,163 +47,93 @@ export const BIKE_DB = {
   // 'Bike Friday All-Packa Rohloff'
   'brompton-a-line': {
     name: 'Brompton A Line',
-    drivetrain: {
-      tire: 'Schwalbe Kojak 16"',
-      chainringTeeth: [44],
-      cassette: 'Sturmey Archer BSR',
-      sprockets: [13],
-    },
+    drivetrains: ['44-sturmey-bsr-13'],
+    tires: ['Schwalbe Kojak 16"'],
   },
   'brompton-c-line-3': {
     // Discontinued
     name: 'Brompton C Line 3 speed',
-    drivetrain: {
-      tire: 'Schwalbe Marathon 16"',
-      chainringTeeth: [50],
-      cassette: 'Sturmey Archer BSR',
-      sprockets: [13],
-    },
+    drivetrains: ['50-sturmey-bsr-13'],
+    tires: ['Schwalbe Marathon 16"'],
   },
   'brompton-c-line-6': {
     name: 'Brompton C Line 6 speed',
-    drivetrain: {
-      tire: 'Schwalbe Marathon Racer 16"',
-      chainringTeeth: [50],
-      cassette: 'Sturmey Archer BWR',
-      sprockets: [13, 16],
-    },
+    drivetrains: ['50-sturmey-bwr-13-16'],
+    tires: ['Schwalbe Marathon Racer 16"'],
   },
   'brompton-g-line': {
     name: 'Brompton G Line',
-    drivetrain: {
-      tire: 'Schwalbe G-One Allround 20"',
-      chainringTeeth: [54],
-      cassette: 'Shimano Alfine 8 Speed Hub',
-      sprockets: [20],
-    },
+    drivetrains: ['54-alfine-8-20'],
+    tires: ['Schwalbe G-One Allround 20"'],
   },
   'brompton-t-line-12': {
     name: 'Brompton T Line 12 speed',
-    drivetrain: {
-      tire: 'Schwalbe One 16"',
-      chainringTeeth: [50],
-      cassette: 'Sturmey Archer BWR',
-      sprockets: [11, 13, 15, 18],
-    },
+    drivetrains: ['50-sturmey-bwr-11-13-15-18'],
+    tires: ['Schwalbe One 16"'],
   },
   'cranston-r9-max-9': {
     name: 'Cranston R9 Max 9 speed',
-    drivetrain: {
-      tire: 'Schwalbe Green Marathon 16"',
-      chainringTeeth: [53],
-      cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
-    },
+    drivetrains: ['53-alivio-hg400-11-32'],
+    tires: ['Schwalbe Green Marathon 16"'],
   },
   'cranston-r20-max-9': {
     name: 'Cranston R20 Max 9 speed',
-    drivetrain: {
-      tire: 'Schwalbe Green Marathon 20"',
-      chainringTeeth: [53],
-      cassette: 'Shimano Alivio CS-HG400 9 Speed 11-32T',
-    },
+    drivetrains: ['53-alivio-hg400-11-32'],
+    tires: ['Schwalbe Green Marathon 20"'],
   },
   'marin-larkspur-1': {
     name: 'Marin Larkspur 1',
-    drivetrain: {
-      tire: 'Vee GP Vee 27.5"x2.35"',
-      chainringTeeth: [38],
-      cassette: 'SunRace 10 Speed 11-51T',
-    },
+    drivetrains: ['38-sunrace-10-11-51'],
+    tires: ['Vee GP Vee 27.5"x2.35"'],
   },
   'fuji-feather-cx-plus': {
     name: 'Fuji Feather CX+',
-    drivetrain: {
-      tire: 'Kenda Flintridge 700x35c',
-      chainringTeeth: [48, 36],
-      cassette: 'Shimano CS-HG50-8 8 Speed 11-32T',
+    drivetrains: ['48-36-hg50-8-11-32'],
+    tires: ['Kenda Flintridge 700x35c'],
+  },
+  'fairlight-faran-3': {
+    name: 'Fairlight Faran 3.0',
+    year: '2026',
+    frame: {id: 'fairlight-faran-3-2026', size: '56R'},
+    drivetrains: [
+      'grx-rx610-1x12',
+      'grx-rx610-2x12',
+      'grx-rx820-1x12',
+      'grx-rx820-2x12',
+      'sram-force-e1-xplr-1x13',
+    ],
+    tires: [
+      'Panaracer GravelKing X1 TLR 700x45',
+      'Panaracer GravelKing X1 TLR 700x50',
+      'Panaracer GravelKing Slick TLR 700x40',
+      'Hutchinson BlackBird AS 700x34',
+      'Continental Terra Speed ProTection 700x45',
+      'Panaracer GravelKing Slick TLR 650x48',
+      'Continental Terra Hardpack 27.5"x2.0"',
+      'Hutchinson Touareg 650x47',
+      'Vittoria Mezcal III 27.5"x2.25"',
+      'Continental Race King ProTection 27.5"x2.2"',
+    ],
+    // Fairlight's typical setup by size. They don't name the stem, so its
+    // angle is a guess: a common 6° stem, rising.
+    setup: {
+      stemAng: 6,
+      sizes: {
+        '51T': {stemLen: 80, bar: 'fsaAdventure38', crank: 165},
+        '54R': {stemLen: 90, bar: 'fsaAdventure40', crank: 170},
+        '54T': {stemLen: 90, bar: 'fsaAdventure40', crank: 170},
+        '56R': {stemLen: 100, bar: 'fsaAdventure42', crank: 172.5},
+        '56T': {stemLen: 100, bar: 'fsaAdventure42', crank: 172.5},
+        '58R': {stemLen: 100, bar: 'fsaAdventure44', crank: 172.5},
+        '58T': {stemLen: 100, bar: 'fsaAdventure44', crank: 172.5},
+        '61T': {stemLen: 110, bar: 'fsaAdventure44', crank: 175},
+      },
     },
   },
   'surly-disc-trucker': {
     name: 'Surly Disc Trucker',
-    drivetrain: {
-      tire: 'Surly ExtraTerrestrial 26"x46',
-      chainringTeeth: [48, 36, 26],
-      cassette: 'Shimano Alivio CS-HG400 9 Speed 11-34T',
-    },
-  },
-
-  // Geometry from Bike Insights (Alterr 52, Cross Check 52) and Velo Orange
-  // (Polyvalent). Listed in the order the fit visualizer assigns colours.
-  'fuji-alterr-2025': {
-    name: 'Fuji Alterr',
-    short: 'Alterr',
-    year: '2025',
-    geometry: {
-      source: 'Bike Insights',
-      defaultSize: '52',
-      ring: 82,
-      sizes: {
-        '52': {
-          label: '52cm',
-          stack: 494.8,
-          reach: 403,
-          hta: 70,
-          sta: 72,
-          ht: 110,
-          drop: 38,
-          cs: 436.4,
-          off: 50,
-          st: 520,
-          tt: 0,
-          bsd: 559,
-        },
-      },
-    },
-  },
-  'surly-cross-check-2012': {
-    name: 'Surly Cross Check',
-    short: 'Cross Check',
-    year: '2012',
-    geometry: {
-      source: 'Bike Insights',
-      defaultSize: '52',
-      ring: 101,
-      sizes: {
-        '52': {
-          label: '52cm',
-          stack: 528,
-          reach: 389.7,
-          hta: 72,
-          sta: 73.5,
-          ht: 91,
-          drop: 66,
-          cs: 419.8,
-          off: 44,
-          st: 520,
-          tt: 0.7,
-          bsd: 622,
-        },
-      },
-    },
-  },
-  'velo-orange-polyvalent-2026': {
-    name: 'Velo Orange Polyvalent',
-    short: 'Polyvalent',
-    year: '2026',
-    geometry: {
-      source: 'Velo Orange',
-      defaultSize: 'M',
-      ring: 82,
-      sizes: withCommon(
-        {hta: 73, sta: 72, drop: 67, cs: 429.8, off: 60, tt: 0, bsd: 584},
-        {
-          S: {label: 'S', stack: 528, reach: 359, ht: 99, st: 510},
-          M: {label: 'M', stack: 558, reach: 369, ht: 131, st: 540},
-          L: {label: 'L', stack: 589, reach: 379, ht: 163, st: 570},
-          XL: {label: 'XL', stack: 619, reach: 399, ht: 195, st: 600},
-        },
-      ),
-    },
+    drivetrains: ['48-36-26-alivio-hg400-11-34'],
+    tires: ['Surly ExtraTerrestrial 26"x46'],
   },
 } as const satisfies Record<string, Bike>;
 
@@ -246,13 +141,36 @@ export type BikeID = keyof typeof BIKE_DB;
 
 export const bikeIDs = Object.keys(BIKE_DB) as BikeID[];
 export const getBike = (id: BikeID): Bike => BIKE_DB[id];
-export const shortName = (bike: Bike) => bike.short ?? bike.name;
 
-// The gear calculator draws this frame for bikes without their own geometry.
-// It is the same 52cm Cross Check the old three.js view was modelled on.
-export const REFERENCE_FRAME = {
-  bike: 'surly-cross-check-2012',
-  size: '52',
-} as const;
+// Every stock tire must fit every size of the bike's frame.
+for (const id of bikeIDs) {
+  const {frame, tires} = getBike(id);
+  if (!frame) continue;
+  const sizes = Object.keys(FRAME_DB[frame.id].sizes);
+  if (!sizes.includes(frame.size))
+    throw new Error(`${id}: ${frame.id} has no size ${frame.size}`);
+  for (const k of sizes)
+    for (const tire of tires)
+      if (!wheelsOf(frame.id, k).includes(TIRE_DB[tire].ETRTOSize[1]))
+        throw new Error(`${id}: ${tire} does not fit ${frame.id} ${k}`);
+}
+
+// The first catalog bike built on a frame
+const bikeOnFrame = (frameID: FrameID): Bike | undefined =>
+  bikeIDs.map(getBike).find((b) => b.frame?.id === frameID);
+
+// The stock setup for a frame size, from the first bike built on that frame
+export function stockSetup(
+  frameID: FrameID,
+  size: string,
+): {stemAng: number; size: SizeSetup} | null {
+  const setup = bikeOnFrame(frameID)?.setup;
+  const z = setup?.sizes[size];
+  return setup && z ? {stemAng: setup.stemAng, size: z} : null;
+}
+
+// Stock tires for a frame, from the first bike built on it
+export const stockTires = (frameID: FrameID): readonly TireID[] =>
+  bikeOnFrame(frameID)?.tires ?? [];
 
 export const DEFAULT_GEAR_BIKE: BikeID = 'surly-disc-trucker';

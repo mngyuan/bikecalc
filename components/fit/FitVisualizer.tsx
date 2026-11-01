@@ -7,8 +7,19 @@ import {
   useRef,
 } from 'react';
 import {AppHeader, MobileHeader} from '@/components/AppHeader';
-import {NumberField, Section, Segmented} from '@/components/controls';
-import {BAR_DB, BIKE_DB, STEM_DB, type BarID, type StemID} from '@/lib/data';
+import {Combobox, NumberField, Section, Segmented} from '@/components/controls';
+import {
+  BAR_DB,
+  type BarID,
+  STEM_DB,
+  type StemID,
+  stockTires,
+  TIRE_DB,
+  type TireID,
+  wheelName,
+  wheelsOf,
+} from '@/lib/data';
+
 import {
   bikeName,
   bikeShort,
@@ -40,6 +51,8 @@ import {
 } from '@/lib/fit/state';
 import {sgn, sub} from '@/lib/vec';
 import {type Drawn, SideBoard, TopBoard} from './FitBoards';
+
+const tireIDs = Object.keys(TIRE_DB) as TireID[];
 
 const TITLE: [string, string] = ['Fit', 'Visualizer'];
 const r = Math.round;
@@ -80,7 +93,7 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
   };
   const drawn: Drawn[] = visible.map((id) => ({
     G: solved(id),
-    color: colorOf(id),
+    color: colorOf(id, saved.bikes),
   }));
   const stagedDrawn: Drawn | null =
     dirty && stage && GS && saved.bike[stage.id].show
@@ -244,7 +257,10 @@ function BikeCard({
   const name = bikeName(id);
   return (
     <div className={`card${st.saved.bike[id].show ? '' : ' off'}`}>
-      <div className="card-head" style={{background: colorOf(id).chip}}>
+      <div
+        className="card-head"
+        style={{background: colorOf(id, st.saved.bikes).chip}}
+      >
         <div className="grow">
           <b>{name}</b> <small>{bikeYear(id)}</small>
         </div>
@@ -396,6 +412,42 @@ function Item({
           </div>
         </div>
       );
+    case 'tire': {
+      const wheels = wheelsOf(id, s.size);
+      const options = tireIDs
+        .filter((t) => wheels.includes(TIRE_DB[t].ETRTOSize[1]))
+        .map((t) => ({value: t, label: t}));
+      const stock = stockTires(id);
+      return (
+        <>
+          <div data-tip={TIPS.tire}>
+            <Combobox
+              label={`${bikeName(id)} tire`}
+              value={s.tireID}
+              options={options}
+              onChange={(value) => dispatch({type: 'tire', id, value})}
+              placeholder="Search tires..."
+              emptyMessage="No tire found."
+              featured={
+                stock.length
+                  ? {
+                      heading: 'Stock options',
+                      values: stock,
+                      restHeading: 'Other tires that fit',
+                    }
+                  : undefined
+              }
+            />
+          </div>
+          <div className="row">
+            <span className="label" data-tip={TIPS.bsd}>
+              Wheel size
+            </span>
+            <div className="derived">{wheelName(s.bsd)}</div>
+          </div>
+        </>
+      );
+    }
     case 'match': {
       // skip bikes whose saddle already follows this one, which would make a loop
       const followsThis = (k: FitBikeID): boolean => {
@@ -513,7 +565,10 @@ function Toolbar({
           aria-pressed={saved.bike[id].show}
           onClick={() => dispatch({type: 'toggle', id})}
         >
-          <span className="dot" style={{background: colorOf(id).c}} />
+          <span
+            className="dot"
+            style={{background: colorOf(id, saved.bikes).c}}
+          />
           {bikeShort(id)}
         </button>
       ))}
@@ -530,8 +585,11 @@ function Toolbar({
                   dispatch({type: 'add', id: k});
                 }}
               >
-                <span className="dot" style={{background: colorOf(k).c}} />
-                {BIKE_DB[k].name}
+                <span
+                  className="dot"
+                  style={{background: colorOf(k, [...saved.bikes, k]).c}}
+                />
+                {bikeName(k)}
               </button>
             ))
           ) : (
@@ -586,7 +644,8 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
     );
   }
   if (visible.length === 2) {
-    const [a, c] = visible,
+    // the second bike in the list, against the first
+    const [c, a] = visible,
       A = solved(a),
       C = solved(c);
     const relA = sub(A.hand, A.N),
@@ -625,8 +684,8 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
       <span className="eyebrow">Hand position</span>
       <p className="note">
         {visible.length < 2 ? 'Show two bikes' : 'Hide all but two bikes'} to
-        compare hand positions. The first one shown is compared against the
-        second.
+        compare hand positions. The second one added is compared against the
+        first.
       </p>
     </>
   );
@@ -718,7 +777,7 @@ function columns({
       id,
       G,
       label: `${bikeShort(id)} ${size}`,
-      dot: colorOf(id).c,
+      dot: colorOf(id, st.saved.bikes).c,
       strike: strikes.get(id) ?? null,
     });
     if (GS && st.stage?.id === id) {
@@ -745,7 +804,10 @@ function Readout(props: ReadoutProps & {part: 'warnings' | 'table'}) {
       w.forEach((t, i) =>
         items.push(
           <div className="warn-item" key={`${col.label}-${i}`}>
-            <span className="dot" style={{background: colorOf(col.id).c}} />
+            <span
+              className="dot"
+              style={{background: colorOf(col.id, props.st.saved.bikes).c}}
+            />
             <b>{col.label}</b>
             <span>{t}</span>
           </div>,

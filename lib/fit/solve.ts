@@ -62,7 +62,7 @@ export function solve(
   staged = false,
 ): Solved {
   const s = st,
-    g = frameSize(id, s.size);
+    g = {...frameSize(id, s.size), bsd: s.bsd}; // drawn on the chosen wheels
   const F = solveFrame(g, g.bsd / 2 + s.tyreW);
   const {h, fw, T, FA, R, ax, seatDir} = F;
   const sa = rad(g.sta);

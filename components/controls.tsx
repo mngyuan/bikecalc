@@ -118,6 +118,7 @@ export function Combobox<T extends string>({
   placeholder,
   emptyMessage = 'No results found.',
   customLabel = 'Custom',
+  featured,
 }: {
   value: T | 'custom';
   options: Option<T>[];
@@ -126,9 +127,27 @@ export function Combobox<T extends string>({
   placeholder: string;
   emptyMessage?: string;
   customLabel?: string;
+  // Options listed first under their own heading, divided from the rest
+  featured?: {heading: string; values: readonly T[]; restHeading: string};
 }) {
   const [open, setOpen] = useState(false);
   const current = options.find((o) => o.value === value);
+  // in the order `featured` gives
+  const top = (featured?.values ?? []).flatMap(
+    (v) => options.find((o) => o.value === v) ?? [],
+  );
+  const rest = top.length ? options.filter((o) => !top.includes(o)) : options;
+  const items = (list: Option<T>[]) =>
+    list.map((o) => (
+      <Command.Item
+        key={o.value}
+        value={o.label}
+        data-current={o.value === value}
+        onSelect={() => pick(o.value)}
+      >
+        {o.label}
+      </Command.Item>
+    ));
   const pick = (v: T | 'custom') => {
     setOpen(false);
     onChange(v);
@@ -167,16 +186,19 @@ export function Combobox<T extends string>({
               >
                 {customLabel}
               </Command.Item>
-              {options.map((o) => (
-                <Command.Item
-                  key={o.value}
-                  value={o.label}
-                  data-current={o.value === value}
-                  onSelect={() => pick(o.value)}
-                >
-                  {o.label}
-                </Command.Item>
-              ))}
+              {featured && top.length ? (
+                <>
+                  <Command.Group heading={featured.heading}>
+                    {items(top)}
+                  </Command.Group>
+                  <Command.Separator />
+                  <Command.Group heading={featured.restHeading}>
+                    {items(rest)}
+                  </Command.Group>
+                </>
+              ) : (
+                items(options)
+              )}
             </Command.List>
           </Command>
         </Popover.Content>

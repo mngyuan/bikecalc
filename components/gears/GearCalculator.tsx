@@ -9,17 +9,25 @@ import {
   Segmented,
 } from '@/components/controls';
 import {
-  BIKE_DB,
   type BikeID,
   bikeIDs,
-  getBike,
   CASSETTE_DB,
   type CassetteID,
   DEFAULT_GEAR_BIKE,
+  type DrivetrainID,
+  drivetrainIDs,
+  drivetrainLabel,
+  type FrameID,
+  fitTire,
+  frameIDs,
+  getBike,
+  getFrame,
   isSprocketCassette,
   REFERENCE_FRAME,
   TIRE_DB,
   type TireID,
+  tireFields,
+  wheelsOf,
 } from '@/lib/data';
 import {
   bikeFormURL,
@@ -30,12 +38,16 @@ import {
 import {
   clampSel,
   configFromBike,
+  crankOf,
   DEFAULT_CADENCE_RPM,
   defaultSel,
+  drivetrainFields,
+  frameOf,
   type GearConfig,
   type GearSel,
   hubRatios,
   isStock,
+  matchDrivetrain,
   type MetricKey,
   tireCircumference,
   tireDiameter,
@@ -45,15 +57,21 @@ import {GearHero, GearTable} from './GearTable';
 
 const TITLE: [string, string] = ['Gear', 'Calculator'];
 
-const GEAR_BIKES = bikeIDs.filter((id) => getBike(id).drivetrain);
-const bikeLabel = (id: BikeID) => {
-  const b = getBike(id);
-  return b.year ? `${b.name} (${b.year})` : b.name;
-};
-const BIKE_OPTIONS: Option<BikeID>[] = GEAR_BIKES.map((id) => ({
+const withYear = (b: {name: string; year?: string}) =>
+  b.year ? `${b.name} (${b.year})` : b.name;
+const BIKE_OPTIONS: Option<BikeID>[] = bikeIDs.map((id) => ({
   value: id,
-  label: bikeLabel(id),
+  label: withYear(getBike(id)),
 }));
+const FRAME_OPTIONS: Option<FrameID>[] = frameIDs.map((id) => ({
+  value: id,
+  label: withYear(getFrame(id)),
+}));
+const DRIVETRAIN_OPTIONS: Option<DrivetrainID>[] = drivetrainIDs.map((id) => ({
+  value: id,
+  label: drivetrainLabel(id),
+}));
+
 const TIRE_OPTIONS: Option<TireID>[] = (Object.keys(TIRE_DB) as TireID[]).map(
   (k) => ({value: k, label: k}),
 );
@@ -84,17 +102,10 @@ const resize = (list: number[], n: number) =>
 const count = (v: number, max: number) =>
   Math.max(1, Math.min(max, Math.round(v)));
 
-// Frame drawn for a bike: its own geometry if the catalog has it, else the reference.
-function frameFor(id: BikeID | 'custom') {
-  const geo = id !== 'custom' ? getBike(id).geometry : undefined;
-  if (geo) return geo.sizes[geo.defaultSize];
-  return BIKE_DB[REFERENCE_FRAME.bike].geometry.sizes[REFERENCE_FRAME.size];
-}
-
 export function GearCalculator() {
   const [bikeID, setBikeID] = useState<BikeID | 'custom'>(DEFAULT_GEAR_BIKE);
-  const [cfg, setCfg] = useState<GearConfig>(
-    () => configFromBike(DEFAULT_GEAR_BIKE) as GearConfig,
+  const [cfg, setCfg] = useState<GearConfig>(() =>
+    configFromBike(DEFAULT_GEAR_BIKE),
   );
   const [metric, setMetric] = useState<MetricKey>('gearInches');
   const [cadence, setCadence] = useState(DEFAULT_CADENCE_RPM);
@@ -106,24 +117,50 @@ export function GearCalculator() {
   const update = (patch: Partial<GearConfig>) =>
     setCfg((c) => ({...c, ...patch}));
   const hub = hubRatios(cfg);
-  const frame = frameFor(bikeID);
+  const frame = frameOf(cfg);
+  const crankLen = crankOf(cfg);
+  const frameName = getFrame(cfg.frameID ?? REFERENCE_FRAME.frame).name;
   const stock = isStock(cfg, bikeID);
+  const bike = bikeID === 'custom' ? null : getBike(bikeID);
+  // A bike's stock options are listed first in the tire and drivetrain pickers
+  const stockOptions = <T extends string>(
+    values: readonly T[] | undefined,
+    restHeading: string,
+  ) => (values ? {heading: 'Stock options', values, restHeading} : undefined);
 
   const pickBike = (id: BikeID | 'custom') => {
     setBikeID(id);
     // "Custom" keeps the current numbers as a starting point
     if (id === 'custom') return;
     const next = configFromBike(id);
-    if (next) {
-      setCfg(next);
-      setPinned(defaultSel(next));
-    }
+    setCfg(next);
+    setPinned(defaultSel(next));
+  };
+
+  // A frame size built for other wheels swaps in a tire that fits them
+  const pickFrameSize = (frameID: FrameID, size: string) =>
+    update({
+      frameID,
+      frameSize: size,
+      ...fitTire(cfg, wheelsOf(frameID, size)),
+    });
+
+  const pickFrame = (id: FrameID | 'custom') =>
+    id === 'custom'
+      ? update({frameID: null, frameSize: ''})
+      : pickFrameSize(id, getFrame(id).defaultSize);
+
+  const pickDrivetrain = (id: DrivetrainID | 'custom') => {
+    // "Custom" keeps the current numbers to edit
+    if (id === 'custom') return;
+    const next = {...cfg, ...drivetrainFields(id)};
+    setCfg(next);
+    setPinned(defaultSel(next));
   };
 
   const pickTire = (id: TireID | 'custom') => {
     if (id === 'custom') return update({tireID: 'custom'});
-    const [width, bsd] = TIRE_DB[id].ETRTOSize;
-    update({tireID: id, width, bsd});
+    update(tireFields(id));
   };
 
   const pickCassette = (id: CassetteID | 'custom') => {
@@ -190,7 +227,7 @@ export function GearCalculator() {
                 <p className="note">
                   {bikeID === 'custom'
                     ? 'Custom setup.'
-                    : `Modified from the stock ${BIKE_DB[bikeID].name}.`}
+                    : `Modified from the stock ${getBike(bikeID).name}.`}
                 </p>
                 <a
                   className="submit"
@@ -203,11 +240,44 @@ export function GearCalculator() {
                 </a>
               </div>
             )}
+            <Section title="Frame" defaultOpen>
+              <Combobox
+                label="Frame"
+                value={cfg.frameID ?? 'custom'}
+                options={FRAME_OPTIONS}
+                onChange={pickFrame}
+                placeholder="Search frames..."
+                emptyMessage="No frame found."
+                customLabel="No frame chosen"
+              />
+              {cfg.frameID && (
+                <div className="row">
+                  <label htmlFor="frame-size">Size</label>
+                  <select
+                    id="frame-size"
+                    value={cfg.frameSize}
+                    onChange={(e) =>
+                      cfg.frameID && pickFrameSize(cfg.frameID, e.target.value)
+                    }
+                  >
+                    {Object.entries(getFrame(cfg.frameID).sizes).map(
+                      ([k, z]) => (
+                        <option key={k} value={k}>
+                          {z.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+              )}
+            </Section>
+
             <Section title="Tire" defaultOpen>
               <Combobox
                 label="Tire"
                 value={cfg.tireID}
                 options={TIRE_OPTIONS}
+                featured={stockOptions(bike?.tires, 'All tires')}
                 onChange={pickTire}
                 placeholder="Search tires..."
                 emptyMessage="No tire found."
@@ -263,6 +333,18 @@ export function GearCalculator() {
                   Submit this tire <ExternalIcon />
                 </a>
               )}
+            </Section>
+
+            <Section title="Drivetrain" defaultOpen>
+              <Combobox
+                label="Drivetrain"
+                value={matchDrivetrain(cfg)}
+                options={DRIVETRAIN_OPTIONS}
+                featured={stockOptions(bike?.drivetrains, 'All drivetrains')}
+                onChange={pickDrivetrain}
+                placeholder="Search drivetrains..."
+                emptyMessage="No drivetrain found."
+              />
             </Section>
 
             <Section title="Chainrings" defaultOpen>
@@ -393,9 +475,9 @@ export function GearCalculator() {
           </div>
         </div>
         <p className="note">
-          Bikes, tires and cassettes come from a catalog in this app. Missing
-          one? Use the submit links, which appear when a value no longer matches
-          the catalog.
+          Bikes, frames, drivetrains, tires and cassettes come from a catalog in
+          this app. Missing one? Use the submit links, which appear when a value
+          no longer matches the catalog.
         </p>
       </aside>
 
@@ -435,12 +517,14 @@ export function GearCalculator() {
           cfg={cfg}
           sel={sel}
           frame={frame}
+          crankLen={crankLen}
           cadence={cadence}
           onCadence={setCadence}
         />
         <p className="foot-note">
-          Wheels, tires, chainrings and sprockets are drawn to scale on a{' '}
-          {frame.label} frame.
+          Wheels, tires, chainrings, sprockets and {crankLen} mm cranks are
+          drawn to scale on a {frameName} {frame.label} frame
+          {cfg.frameID ? '' : ' (no frame chosen)'}.
         </p>
       </main>
     </div>

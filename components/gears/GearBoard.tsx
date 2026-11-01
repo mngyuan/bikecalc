@@ -14,7 +14,6 @@ import {NS, SP} from '@/components/board/svg';
 import type {FrameSize} from '@/lib/data';
 import {solveFrame} from '@/lib/frame';
 import {
-  CRANK_LENGTH_MM,
   type GearConfig,
   type GearSel,
   gearRatio,
@@ -51,12 +50,14 @@ export function GearBoard({
   cfg,
   sel,
   frame,
+  crankLen,
   cadence,
   onCadence,
 }: {
   cfg: GearConfig;
   sel: GearSel;
   frame: FrameSize;
+  crankLen: number;
   cadence: number;
   onCadence: (v: number) => void;
 }) {
@@ -193,7 +194,12 @@ export function GearBoard({
               />
             )}
 
-            <Crank crank={crank} pedalA={pedalA} pedalB={pedalB} />
+            <Crank
+              crank={crank}
+              pedalA={pedalA}
+              pedalB={pedalB}
+              len={crankLen}
+            />
 
             {/* labels */}
             <g className="glabel" fontSize={fs} textAnchor="middle">
@@ -276,12 +282,13 @@ function Crank({
   crank,
   pedalA,
   pedalB,
+  len: L,
 }: {
   crank: Ref<SVGGElement>;
   pedalA: Ref<SVGGElement>;
   pedalB: Ref<SVGGElement>;
+  len: number;
 }) {
-  const L = CRANK_LENGTH_MM;
   const pedal = (
     <rect
       x={-45}

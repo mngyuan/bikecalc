@@ -1,3 +1,17 @@
+// Short names for wheel sizes, by bead seat diameter (650b is also 27.5",
+// 700c also 29")
+const WHEEL_NAMES: Record<number, string> = {
+  305: '16" (305)',
+  349: '16" (349)',
+  355: '18"',
+  406: '20"',
+  507: '24"',
+  559: '26"',
+  584: '650b',
+  622: '700c',
+};
+export const wheelName = (bsd: number) => WHEEL_NAMES[bsd] ?? `${bsd} mm`;
+
 // Ordered by ETRTO size: diameter then width then name
 // ETRTOSize is [width mm, bead seat diameter mm]
 
@@ -64,6 +78,11 @@ export const TIRE_DB = {
   'Schwalbe Nobby Nic 27.5"': {ETRTOSize: [60, 584]},
   'Schwalbe Rock Razor 27.5"': {ETRTOSize: [60, 584]},
   'Vee GP Vee 27.5"x2.35"': {ETRTOSize: [60, 584]},
+  'Hutchinson Touareg 650x47': {ETRTOSize: [47, 584]},
+  'Panaracer GravelKing Slick TLR 650x48': {ETRTOSize: [48, 584]},
+  'Continental Terra Hardpack 27.5"x2.0"': {ETRTOSize: [50, 584]},
+  'Continental Race King ProTection 27.5"x2.2"': {ETRTOSize: [55, 584]},
+  'Vittoria Mezcal III 27.5"x2.25"': {ETRTOSize: [57, 584]},
   'Continental Contact Urban 700c 28': {ETRTOSize: [28, 622]},
   'Continental Contact Urban 700c 32': {ETRTOSize: [32, 622]},
   'Continental Contact Urban 700c 35': {ETRTOSize: [35, 622]},
@@ -90,5 +109,48 @@ export const TIRE_DB = {
   'Schwalbe Super Moto 29"': {ETRTOSize: [60, 622]},
   'Specialized Ground Control Grid T7 29"x2.2"': {ETRTOSize: [54, 622]},
   'Kenda Flintridge 700x35c': {ETRTOSize: [35, 622]},
+  'Hutchinson BlackBird AS 700x34': {ETRTOSize: [34, 622]},
+  'Panaracer GravelKing Slick TLR 700x40': {ETRTOSize: [40, 622]},
+  'Continental Terra Speed ProTection 700x45': {ETRTOSize: [45, 622]},
+  'Panaracer GravelKing X1 TLR 700x45': {ETRTOSize: [45, 622]},
+  'Panaracer GravelKing X1 TLR 700x50': {ETRTOSize: [50, 622]},
 } as const;
 export type TireID = keyof typeof TIRE_DB;
+
+// A tire choice: a catalog tire, or 'custom' with its own numbers
+export interface TireFields {
+  tireID: TireID | 'custom';
+  width: number; // ETRTO width, mm
+  bsd: number; // ETRTO bead seat diameter, mm
+}
+
+export function tireFields(id: TireID): TireFields {
+  const [width, bsd] = TIRE_DB[id].ETRTOSize;
+  return {tireID: id, width, bsd};
+}
+
+// The catalog tire on a wheel size whose width is closest to `width`
+export function tireForWheel(bsd: number, width: number): TireID | null {
+  let best: TireID | null = null;
+  for (const id of Object.keys(TIRE_DB) as TireID[]) {
+    const [w, d] = TIRE_DB[id].ETRTOSize;
+    if (d !== bsd) continue;
+    if (
+      !best ||
+      Math.abs(w - width) < Math.abs(TIRE_DB[best].ETRTOSize[0] - width)
+    )
+      best = id;
+  }
+  return best;
+}
+
+// The tire for a frame taking `wheels` (the size it's built for first): the
+// current tire if it fits, otherwise the closest catalog tire for the
+// built-for size, otherwise the same width marked custom.
+export function fitTire(t: TireFields, wheels: readonly number[]): TireFields {
+  if (wheels.includes(t.bsd))
+    return {tireID: t.tireID, width: t.width, bsd: t.bsd};
+  const bsd = wheels[0];
+  const id = tireForWheel(bsd, t.width);
+  return id ? tireFields(id) : {tireID: 'custom', width: t.width, bsd};
+}
