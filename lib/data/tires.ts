@@ -90,5 +90,10 @@ export const TIRE_DB = {
   'Schwalbe Super Moto 29"': {ETRTOSize: [60, 622]},
   'Specialized Ground Control Grid T7 29"x2.2"': {ETRTOSize: [54, 622]},
   'Kenda Flintridge 700x35c': {ETRTOSize: [35, 622]},
+  'Hutchinson BlackBird AS 700x34': {ETRTOSize: [34, 622]},
+  'Panaracer GravelKing Slick TLR 700x40': {ETRTOSize: [40, 622]},
+  'Continental Terra Speed ProTection 700x45': {ETRTOSize: [45, 622]},
+  'Panaracer GravelKing X1 TLR 700x45': {ETRTOSize: [45, 622]},
+  'Panaracer GravelKing X1 TLR 700x50': {ETRTOSize: [50, 622]},
 } as const;
 export type TireID = keyof typeof TIRE_DB;

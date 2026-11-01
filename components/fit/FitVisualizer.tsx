@@ -8,7 +8,7 @@ import {
 } from 'react';
 import {AppHeader, MobileHeader} from '@/components/AppHeader';
 import {NumberField, Section, Segmented} from '@/components/controls';
-import {BAR_DB, BIKE_DB, STEM_DB, type BarID, type StemID} from '@/lib/data';
+import {BAR_DB, STEM_DB, type BarID, type StemID} from '@/lib/data';
 import {
   bikeName,
   bikeShort,
@@ -80,7 +80,7 @@ export function FitVisualizer({initial}: {initial: FitSettings}) {
   };
   const drawn: Drawn[] = visible.map((id) => ({
     G: solved(id),
-    color: colorOf(id),
+    color: colorOf(id, saved.bikes),
   }));
   const stagedDrawn: Drawn | null =
     dirty && stage && GS && saved.bike[stage.id].show
@@ -244,7 +244,10 @@ function BikeCard({
   const name = bikeName(id);
   return (
     <div className={`card${st.saved.bike[id].show ? '' : ' off'}`}>
-      <div className="card-head" style={{background: colorOf(id).chip}}>
+      <div
+        className="card-head"
+        style={{background: colorOf(id, st.saved.bikes).chip}}
+      >
         <div className="grow">
           <b>{name}</b> <small>{bikeYear(id)}</small>
         </div>
@@ -513,7 +516,10 @@ function Toolbar({
           aria-pressed={saved.bike[id].show}
           onClick={() => dispatch({type: 'toggle', id})}
         >
-          <span className="dot" style={{background: colorOf(id).c}} />
+          <span
+            className="dot"
+            style={{background: colorOf(id, saved.bikes).c}}
+          />
           {bikeShort(id)}
         </button>
       ))}
@@ -530,8 +536,11 @@ function Toolbar({
                   dispatch({type: 'add', id: k});
                 }}
               >
-                <span className="dot" style={{background: colorOf(k).c}} />
-                {BIKE_DB[k].name}
+                <span
+                  className="dot"
+                  style={{background: colorOf(k, [...saved.bikes, k]).c}}
+                />
+                {bikeName(k)}
               </button>
             ))
           ) : (
@@ -718,7 +727,7 @@ function columns({
       id,
       G,
       label: `${bikeShort(id)} ${size}`,
-      dot: colorOf(id).c,
+      dot: colorOf(id, st.saved.bikes).c,
       strike: strikes.get(id) ?? null,
     });
     if (GS && st.stage?.id === id) {
@@ -745,7 +754,10 @@ function Readout(props: ReadoutProps & {part: 'warnings' | 'table'}) {
       w.forEach((t, i) =>
         items.push(
           <div className="warn-item" key={`${col.label}-${i}`}>
-            <span className="dot" style={{background: colorOf(col.id).c}} />
+            <span
+              className="dot"
+              style={{background: colorOf(col.id, props.st.saved.bikes).c}}
+            />
             <b>{col.label}</b>
             <span>{t}</span>
           </div>,

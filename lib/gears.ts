@@ -1,10 +1,16 @@
 import {
   type BikeID,
-  getBike,
   CASSETTE_DB,
   type CassetteID,
+  type DrivetrainID,
+  drivetrainIDs,
+  type FrameID,
+  frameSizeOf,
+  getBike,
+  getDrivetrain,
   isInternallyGearedHub,
   isSprocketCassette,
+  REFERENCE_FRAME,
   TIRE_DB,
   type TireID,
 } from './data';
@@ -22,6 +28,9 @@ export const pitchRadius = (teeth: number) =>
   CHAIN_PITCH_MM / (2 * Math.sin(Math.PI / teeth));
 
 export interface GearConfig {
+  // Frame drawn, and the size; null draws REFERENCE_FRAME
+  frameID: FrameID | null;
+  frameSize: string;
   tireID: TireID | 'custom';
   width: number; // ETRTO width, mm
   bsd: number; // ETRTO bead seat diameter, mm
@@ -33,15 +42,21 @@ export interface GearConfig {
   ratios: number[] | null;
 }
 
-export function configFromBike(id: BikeID): GearConfig | null {
-  const d = getBike(id).drivetrain;
-  if (!d) return null;
-  const [width, bsd] = TIRE_DB[d.tire].ETRTOSize;
+type TireFields = Pick<GearConfig, 'tireID' | 'width' | 'bsd'>;
+type DriveFields = Pick<
+  GearConfig,
+  'chainrings' | 'cassetteID' | 'sprockets' | 'ratios'
+>;
+
+export function tireFields(id: TireID): TireFields {
+  const [width, bsd] = TIRE_DB[id].ETRTOSize;
+  return {tireID: id, width, bsd};
+}
+
+export function drivetrainFields(id: DrivetrainID): DriveFields {
+  const d = getDrivetrain(id);
   const cassette = CASSETTE_DB[d.cassette];
   return {
-    tireID: d.tire,
-    width,
-    bsd,
     chainrings: [...d.chainringTeeth],
     cassetteID: d.cassette,
     sprockets: isSprocketCassette(cassette)
@@ -51,23 +66,75 @@ export function configFromBike(id: BikeID): GearConfig | null {
   };
 }
 
+export function configFromBike(id: BikeID): GearConfig {
+  const b = getBike(id);
+  return {
+    frameID: b.frame?.id ?? null,
+    frameSize: b.frame?.size ?? '',
+    ...tireFields(b.tires[0]),
+    ...drivetrainFields(b.drivetrains[0]),
+  };
+}
+
+// The frame size drawn for a config
+export const frameOf = (cfg: GearConfig) =>
+  cfg.frameID
+    ? frameSizeOf(cfg.frameID, cfg.frameSize)
+    : frameSizeOf(REFERENCE_FRAME.frame, REFERENCE_FRAME.size);
+
+// The catalog tire on a wheel size whose width is closest to `width`
+export function tireForWheel(bsd: number, width: number): TireID | null {
+  let best: TireID | null = null;
+  for (const id of Object.keys(TIRE_DB) as TireID[]) {
+    const [w, d] = TIRE_DB[id].ETRTOSize;
+    if (d !== bsd) continue;
+    if (
+      !best ||
+      Math.abs(w - width) < Math.abs(TIRE_DB[best].ETRTOSize[0] - width)
+    )
+      best = id;
+  }
+  return best;
+}
+
+// Tire fields for wheels of `bsd`: the current tire if it fits, otherwise
+// the closest catalog tire, otherwise the same width marked custom.
+export function fitTire(cfg: GearConfig, bsd: number): TireFields {
+  if (cfg.bsd === bsd)
+    return {tireID: cfg.tireID, width: cfg.width, bsd: cfg.bsd};
+  const id = tireForWheel(bsd, cfg.width);
+  return id ? tireFields(id) : {tireID: 'custom', width: cfg.width, bsd};
+}
+
 const sameList = (a: readonly number[], b: readonly number[]) =>
   a.length === b.length && a.every((n, i) => n === b[i]);
 
-// True when the config is exactly the bike's stock spec
+const sameDrive = (a: DriveFields, b: DriveFields) =>
+  a.cassetteID === b.cassetteID &&
+  sameList(a.chainrings, b.chainrings) &&
+  sameList(a.sprockets, b.sprockets) &&
+  sameList(a.ratios ?? [], b.ratios ?? []);
+
+// The catalog drivetrain the config matches, if any
+export const matchDrivetrain = (cfg: GearConfig): DrivetrainID | 'custom' =>
+  drivetrainIDs.find((id) => sameDrive(cfg, drivetrainFields(id))) ?? 'custom';
+
+// True when the config is one of the bike's stock options: its frame in any
+// size, one of its tires and one of its drivetrains
 export function isStock(cfg: GearConfig, id: BikeID | 'custom'): boolean {
   if (id === 'custom') return false;
-  const stock = configFromBike(id);
-  return (
-    !!stock &&
-    cfg.tireID === stock.tireID &&
-    cfg.width === stock.width &&
-    cfg.bsd === stock.bsd &&
-    cfg.cassetteID === stock.cassetteID &&
-    sameList(cfg.chainrings, stock.chainrings) &&
-    sameList(cfg.sprockets, stock.sprockets) &&
-    sameList(cfg.ratios ?? [], stock.ratios ?? [])
+  const b = getBike(id);
+  const frameOK = b.frame
+    ? cfg.frameID === b.frame.id
+    : cfg.frameID === null && cfg.frameSize === '';
+  const tireOK = b.tires.some((t) => {
+    const f = tireFields(t);
+    return cfg.tireID === t && cfg.width === f.width && cfg.bsd === f.bsd;
+  });
+  const driveOK = b.drivetrains.some((d) =>
+    sameDrive(cfg, drivetrainFields(d)),
   );
+  return frameOK && tireOK && driveOK;
 }
 
 // Hub ratios for an internally geared hub, gear 1 first; null for a cassette

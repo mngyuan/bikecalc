@@ -1,4 +1,4 @@
-import {BAR_DB, STEM_DB, type BarID, type StemID} from '../data';
+import {BAR_DB, type BarID, STEM_DB, type StemID, stockSetup} from '../data';
 import {FIT_BIKES, type FitBikeID, geometryOf, isFitBike} from './bikes';
 import {isMatched, solve} from './solve';
 
@@ -163,6 +163,8 @@ const OVERRIDES: Partial<Record<FitBikeID, Partial<BikeSettings>>> = {
     tyreW: 48,
     fender: 15,
   },
+  // built around 2.3" tyres
+  'singular-peregrine-2026': {tyreW: 58},
 };
 
 const DEFAULT_BIKES: FitBikeID[] = [
@@ -188,12 +190,34 @@ function applyPresets(s: BikeSettings): BikeSettings {
   };
 }
 
-export const defaultsFor = (id: FitBikeID): BikeSettings =>
-  applyPresets({
+// The maker's stem, bar and cranks for a frame size, when a catalog bike
+// built on the frame gives them
+function stockFields(id: FitBikeID, size: string): Partial<BikeSettings> {
+  const st = stockSetup(id, size);
+  if (!st) return {};
+  return {
+    stemPreset: '',
+    stemType: 'std',
+    len: st.size.stemLen,
+    ang: st.stemAng,
+    barPreset: st.size.bar,
+    ...barFields(st.size.bar),
+    crank: st.size.crank,
+  };
+}
+
+const hasFields = (s: BikeSettings, f: Partial<BikeSettings>) =>
+  (Object.keys(f) as (keyof BikeSettings)[]).every((k) => s[k] === f[k]);
+
+export const defaultsFor = (id: FitBikeID): BikeSettings => {
+  const size = geometryOf(id).defaultSize;
+  return applyPresets({
     ...GENERIC,
-    size: geometryOf(id).defaultSize,
+    size,
+    ...stockFields(id, size),
     ...OVERRIDES[id],
   });
+};
 
 /* ---------- storage ---------- */
 
@@ -335,7 +359,18 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
     case 'global':
       return {...st, saved: {...st.saved, [a.key]: a.value}};
     case 'size':
-      return syncStage(patch(st, a.id, (s) => ({...s, size: a.value})));
+      // Until the stock setup is edited, it follows the size
+      return syncStage(
+        patch(st, a.id, (s) => {
+          const was = stockFields(a.id, s.size);
+          const follows = Object.keys(was).length > 0 && hasFields(s, was);
+          return {
+            ...s,
+            size: a.value,
+            ...(follows ? stockFields(a.id, a.value) : {}),
+          };
+        }),
+      );
     case 'stemPreset':
       return syncStage(
         patch(st, a.id, (s) => ({
