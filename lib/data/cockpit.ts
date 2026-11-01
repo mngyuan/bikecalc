@@ -162,13 +162,12 @@ export const BAR_DB = {
     hoodExt: 35,
     hoodUp: 30,
   },
-  // FSA Adventure Compact, as fitted to the Faran. Named by the width printed
-  // on the bar, measured at the shifters; the drops are 60 mm wider.
-  // Outsweep isn't published.
+  // FSA Adventure Compact, as fitted to the Faran. Named by bar width; the
+  // shifters, and so the hoods, sit 8 mm wider. Outsweep isn't published.
   fsaAdventure38: {
     label: 'FSA Adventure Compact 38',
     barType: 'drop',
-    dW: 380,
+    dW: 388,
     dReach: 78,
     dDrop: 125,
     dFlare: 12,
@@ -180,7 +179,7 @@ export const BAR_DB = {
   fsaAdventure40: {
     label: 'FSA Adventure Compact 40',
     barType: 'drop',
-    dW: 400,
+    dW: 408,
     dReach: 78,
     dDrop: 125,
     dFlare: 12,
@@ -192,7 +191,7 @@ export const BAR_DB = {
   fsaAdventure42: {
     label: 'FSA Adventure Compact 42',
     barType: 'drop',
-    dW: 420,
+    dW: 428,
     dReach: 78,
     dDrop: 125,
     dFlare: 12,
@@ -204,7 +203,7 @@ export const BAR_DB = {
   fsaAdventure44: {
     label: 'FSA Adventure Compact 44',
     barType: 'drop',
-    dW: 440,
+    dW: 448,
     dReach: 78,
     dDrop: 125,
     dFlare: 12,
@@ -216,7 +215,7 @@ export const BAR_DB = {
   fsaAdventure46: {
     label: 'FSA Adventure Compact 46',
     barType: 'drop',
-    dW: 460,
+    dW: 468,
     dReach: 78,
     dDrop: 125,
     dFlare: 12,

@@ -1,6 +1,6 @@
 import type {BarID} from './cockpit';
 import type {DrivetrainID} from './drivetrains';
-import {FRAME_DB, type FrameID} from './frames';
+import {FRAME_DB, type FrameID, wheelsOf} from './frames';
 import {TIRE_DB, type TireID} from './tires';
 
 // A complete bike as sold: a drivetrain and tires, and the frame when its
@@ -108,6 +108,11 @@ export const BIKE_DB = {
       'Panaracer GravelKing Slick TLR 700x40',
       'Hutchinson BlackBird AS 700x34',
       'Continental Terra Speed ProTection 700x45',
+      'Panaracer GravelKing Slick TLR 650x48',
+      'Continental Terra Hardpack 27.5"x2.0"',
+      'Hutchinson Touareg 650x47',
+      'Vittoria Mezcal III 27.5"x2.25"',
+      'Continental Race King ProTection 27.5"x2.2"',
     ],
     // Fairlight's typical setup by size. They don't name the stem, so its
     // angle is a guess: a common 6° stem, rising.
@@ -141,12 +146,12 @@ export const getBike = (id: BikeID): Bike => BIKE_DB[id];
 for (const id of bikeIDs) {
   const {frame, tires} = getBike(id);
   if (!frame) continue;
-  const sizes: Record<string, {bsd: number}> = FRAME_DB[frame.id].sizes;
-  if (!(frame.size in sizes))
+  const sizes = Object.keys(FRAME_DB[frame.id].sizes);
+  if (!sizes.includes(frame.size))
     throw new Error(`${id}: ${frame.id} has no size ${frame.size}`);
-  for (const [k, z] of Object.entries(sizes))
+  for (const k of sizes)
     for (const tire of tires)
-      if (z.bsd !== TIRE_DB[tire].ETRTOSize[1])
+      if (!wheelsOf(frame.id, k).includes(TIRE_DB[tire].ETRTOSize[1]))
         throw new Error(`${id}: ${tire} does not fit ${frame.id} ${k}`);
 }
 

@@ -11,6 +11,7 @@ import {
   isInternallyGearedHub,
   isSprocketCassette,
   REFERENCE_FRAME,
+  stockSetup,
   TIRE_DB,
   type TireID,
 } from './data';
@@ -82,6 +83,11 @@ export const frameOf = (cfg: GearConfig) =>
     ? frameSizeOf(cfg.frameID, cfg.frameSize)
     : frameSizeOf(REFERENCE_FRAME.frame, REFERENCE_FRAME.size);
 
+// The crank length drawn: the stock length for the frame size when known
+export const crankOf = (cfg: GearConfig) =>
+  (cfg.frameID && stockSetup(cfg.frameID, cfg.frameSize)?.size.crank) ||
+  CRANK_LENGTH_MM;
+
 // The catalog tire on a wheel size whose width is closest to `width`
 export function tireForWheel(bsd: number, width: number): TireID | null {
   let best: TireID | null = null;
@@ -97,11 +103,16 @@ export function tireForWheel(bsd: number, width: number): TireID | null {
   return best;
 }
 
-// Tire fields for wheels of `bsd`: the current tire if it fits, otherwise
-// the closest catalog tire, otherwise the same width marked custom.
-export function fitTire(cfg: GearConfig, bsd: number): TireFields {
-  if (cfg.bsd === bsd)
+// Tire fields for a frame taking `wheels` (the size it's built for first):
+// the current tire if it fits, otherwise the closest catalog tire for the
+// built-for size, otherwise the same width marked custom.
+export function fitTire(
+  cfg: GearConfig,
+  wheels: readonly number[],
+): TireFields {
+  if (wheels.includes(cfg.bsd))
     return {tireID: cfg.tireID, width: cfg.width, bsd: cfg.bsd};
+  const bsd = wheels[0];
   const id = tireForWheel(bsd, cfg.width);
   return id ? tireFields(id) : {tireID: 'custom', width: cfg.width, bsd};
 }

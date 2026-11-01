@@ -19,13 +19,13 @@ import {
   drivetrainLabel,
   type FrameID,
   frameIDs,
-  frameSizeOf,
   getBike,
   getFrame,
   isSprocketCassette,
   REFERENCE_FRAME,
   TIRE_DB,
   type TireID,
+  wheelsOf,
 } from '@/lib/data';
 import {
   bikeFormURL,
@@ -36,6 +36,7 @@ import {
 import {
   clampSel,
   configFromBike,
+  crankOf,
   DEFAULT_CADENCE_RPM,
   defaultSel,
   drivetrainFields,
@@ -71,18 +72,6 @@ const DRIVETRAIN_OPTIONS: Option<DrivetrainID>[] = drivetrainIDs.map((id) => ({
   label: drivetrainLabel(id),
 }));
 
-// A bike's stock options go first, marked, then the rest of the catalog
-function stockFirst<T extends string>(
-  options: Option<T>[],
-  stock: readonly T[],
-): Option<T>[] {
-  if (stock.length < 2) return options;
-  const marked = stock.map((v) => ({
-    value: v,
-    label: `${options.find((o) => o.value === v)?.label ?? v} · stock option`,
-  }));
-  return [...marked, ...options.filter((o) => !stock.includes(o.value))];
-}
 const TIRE_OPTIONS: Option<TireID>[] = (Object.keys(TIRE_DB) as TireID[]).map(
   (k) => ({value: k, label: k}),
 );
@@ -129,14 +118,15 @@ export function GearCalculator() {
     setCfg((c) => ({...c, ...patch}));
   const hub = hubRatios(cfg);
   const frame = frameOf(cfg);
+  const crankLen = crankOf(cfg);
   const frameName = getFrame(cfg.frameID ?? REFERENCE_FRAME.frame).name;
   const stock = isStock(cfg, bikeID);
   const bike = bikeID === 'custom' ? null : getBike(bikeID);
-  const tireOptions = stockFirst(TIRE_OPTIONS, bike?.tires ?? []);
-  const drivetrainOptions = stockFirst(
-    DRIVETRAIN_OPTIONS,
-    bike?.drivetrains ?? [],
-  );
+  // A bike's stock options are listed first in the tire and drivetrain pickers
+  const stockOptions = <T extends string>(
+    values: readonly T[] | undefined,
+    restHeading: string,
+  ) => (values ? {heading: 'Stock options', values, restHeading} : undefined);
 
   const pickBike = (id: BikeID | 'custom') => {
     setBikeID(id);
@@ -152,7 +142,7 @@ export function GearCalculator() {
     update({
       frameID,
       frameSize: size,
-      ...fitTire(cfg, frameSizeOf(frameID, size).bsd),
+      ...fitTire(cfg, wheelsOf(frameID, size)),
     });
 
   const pickFrame = (id: FrameID | 'custom') =>
@@ -286,7 +276,8 @@ export function GearCalculator() {
               <Combobox
                 label="Tire"
                 value={cfg.tireID}
-                options={tireOptions}
+                options={TIRE_OPTIONS}
+                featured={stockOptions(bike?.tires, 'All tires')}
                 onChange={pickTire}
                 placeholder="Search tires..."
                 emptyMessage="No tire found."
@@ -348,7 +339,8 @@ export function GearCalculator() {
               <Combobox
                 label="Drivetrain"
                 value={matchDrivetrain(cfg)}
-                options={drivetrainOptions}
+                options={DRIVETRAIN_OPTIONS}
+                featured={stockOptions(bike?.drivetrains, 'All drivetrains')}
                 onChange={pickDrivetrain}
                 placeholder="Search drivetrains..."
                 emptyMessage="No drivetrain found."
@@ -525,12 +517,13 @@ export function GearCalculator() {
           cfg={cfg}
           sel={sel}
           frame={frame}
+          crankLen={crankLen}
           cadence={cadence}
           onCadence={setCadence}
         />
         <p className="foot-note">
-          Wheels, tires, chainrings and sprockets are drawn to scale on a{' '}
-          {frameName} {frame.label} frame
+          Wheels, tires, chainrings, sprockets and {crankLen} mm cranks are
+          drawn to scale on a {frameName} {frame.label} frame
           {cfg.frameID ? '' : ' (no frame chosen)'}.
         </p>
       </main>

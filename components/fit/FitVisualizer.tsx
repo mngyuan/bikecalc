@@ -595,7 +595,8 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
     );
   }
   if (visible.length === 2) {
-    const [a, c] = visible,
+    // the second bike in the list, against the first
+    const [c, a] = visible,
       A = solved(a),
       C = solved(c);
     const relA = sub(A.hand, A.N),
@@ -634,8 +635,8 @@ function Hero({st, solved, GS, visible}: ReadoutProps) {
       <span className="eyebrow">Hand position</span>
       <p className="note">
         {visible.length < 2 ? 'Show two bikes' : 'Hide all but two bikes'} to
-        compare hand positions. The first one shown is compared against the
-        second.
+        compare hand positions. The second one added is compared against the
+        first.
       </p>
     </>
   );

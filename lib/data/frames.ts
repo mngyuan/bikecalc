@@ -25,6 +25,8 @@ export interface Frame {
   defaultSize: string;
   ring: number; // chainring radius drawn in the fit view
   sizes: Record<string, FrameSize>;
+  // Other wheel sizes (bead seat diameters) every size also takes
+  altBsd?: readonly number[];
 }
 
 // A geometry chart read column by column, the way makers publish them.
@@ -136,6 +138,7 @@ export const FRAME_DB = {
     source: 'Fairlight Cycles',
     defaultSize: '56R',
     ring: 82,
+    altBsd: [584],
     sizes: sizeTable(['51T', '54R', '54T', '56R', '56T', '58R', '58T', '61T'], {
       stack: [570, 558, 590, 576, 611, 594, 630, 650],
       reach: [370, 388, 378, 396, 386, 404, 394, 402],
@@ -231,6 +234,12 @@ export const isFrameID = (v: unknown): v is FrameID =>
 export function frameSizeOf(id: FrameID, size: string): FrameSize {
   const f = getFrame(id);
   return f.sizes[size] ?? f.sizes[f.defaultSize];
+}
+
+// Wheel sizes a frame size takes, the one it's built for first
+export function wheelsOf(id: FrameID, size: string): number[] {
+  const f = getFrame(id);
+  return [frameSizeOf(id, size).bsd, ...(f.altBsd ?? [])];
 }
 
 // The gear calculator draws this frame when no frame is chosen.
