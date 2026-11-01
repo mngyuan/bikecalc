@@ -155,18 +155,22 @@ for (const id of bikeIDs) {
         throw new Error(`${id}: ${tire} does not fit ${frame.id} ${k}`);
 }
 
+// The first catalog bike built on a frame
+const bikeOnFrame = (frameID: FrameID): Bike | undefined =>
+  bikeIDs.map(getBike).find((b) => b.frame?.id === frameID);
+
 // The stock setup for a frame size, from the first bike built on that frame
 export function stockSetup(
   frameID: FrameID,
   size: string,
 ): {stemAng: number; size: SizeSetup} | null {
-  for (const id of bikeIDs) {
-    const b = getBike(id);
-    if (b.frame?.id !== frameID || !b.setup) continue;
-    const z = b.setup.sizes[size];
-    return z ? {stemAng: b.setup.stemAng, size: z} : null;
-  }
-  return null;
+  const setup = bikeOnFrame(frameID)?.setup;
+  const z = setup?.sizes[size];
+  return setup && z ? {stemAng: setup.stemAng, size: z} : null;
 }
+
+// Stock tires for a frame, from the first bike built on it
+export const stockTires = (frameID: FrameID): readonly TireID[] =>
+  bikeOnFrame(frameID)?.tires ?? [];
 
 export const DEFAULT_GEAR_BIKE: BikeID = 'surly-disc-trucker';

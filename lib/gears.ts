@@ -12,7 +12,7 @@ import {
   isSprocketCassette,
   REFERENCE_FRAME,
   stockSetup,
-  TIRE_DB,
+  tireFields,
   type TireID,
 } from './data';
 
@@ -43,16 +43,10 @@ export interface GearConfig {
   ratios: number[] | null;
 }
 
-type TireFields = Pick<GearConfig, 'tireID' | 'width' | 'bsd'>;
 type DriveFields = Pick<
   GearConfig,
   'chainrings' | 'cassetteID' | 'sprockets' | 'ratios'
 >;
-
-export function tireFields(id: TireID): TireFields {
-  const [width, bsd] = TIRE_DB[id].ETRTOSize;
-  return {tireID: id, width, bsd};
-}
 
 export function drivetrainFields(id: DrivetrainID): DriveFields {
   const d = getDrivetrain(id);
@@ -87,35 +81,6 @@ export const frameOf = (cfg: GearConfig) =>
 export const crankOf = (cfg: GearConfig) =>
   (cfg.frameID && stockSetup(cfg.frameID, cfg.frameSize)?.size.crank) ||
   CRANK_LENGTH_MM;
-
-// The catalog tire on a wheel size whose width is closest to `width`
-export function tireForWheel(bsd: number, width: number): TireID | null {
-  let best: TireID | null = null;
-  for (const id of Object.keys(TIRE_DB) as TireID[]) {
-    const [w, d] = TIRE_DB[id].ETRTOSize;
-    if (d !== bsd) continue;
-    if (
-      !best ||
-      Math.abs(w - width) < Math.abs(TIRE_DB[best].ETRTOSize[0] - width)
-    )
-      best = id;
-  }
-  return best;
-}
-
-// Tire fields for a frame taking `wheels` (the size it's built for first):
-// the current tire if it fits, otherwise the closest catalog tire for the
-// built-for size, otherwise the same width marked custom.
-export function fitTire(
-  cfg: GearConfig,
-  wheels: readonly number[],
-): TireFields {
-  if (wheels.includes(cfg.bsd))
-    return {tireID: cfg.tireID, width: cfg.width, bsd: cfg.bsd};
-  const bsd = wheels[0];
-  const id = tireForWheel(bsd, cfg.width);
-  return id ? tireFields(id) : {tireID: 'custom', width: cfg.width, bsd};
-}
 
 const sameList = (a: readonly number[], b: readonly number[]) =>
   a.length === b.length && a.every((n, i) => n === b[i]);

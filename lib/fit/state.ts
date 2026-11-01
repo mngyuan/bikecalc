@@ -1,4 +1,17 @@
-import {BAR_DB, type BarID, STEM_DB, type StemID, stockSetup} from '../data';
+import {
+  BAR_DB,
+  type BarID,
+  STEM_DB,
+  type StemID,
+  fitTire,
+  stockSetup,
+  stockTires,
+  TIRE_DB,
+  type TireFields,
+  type TireID,
+  tireFields,
+  wheelsOf,
+} from '../data';
 import {FIT_BIKES, type FitBikeID, geometryOf, isFitBike} from './bikes';
 import {isMatched, solve} from './solve';
 
@@ -37,6 +50,8 @@ export interface BikeSettings {
   sH: number; // BB to saddle top, along the seat tube
   sO: number; // seatpost setback
   sN: number; // rail clamp to saddle nose
+  tireID: TireID | 'custom'; // sets bsd and tyreW; editing either makes it custom
+  bsd: number; // wheel bead seat diameter; one the frame size takes
   tyreW: number;
   crank: number;
   toe: number; // shoe tip ahead of the pedal spindle
@@ -80,6 +95,7 @@ export const STEM_KEYS: readonly NumKey[] = [
   'gMin',
   'gMax',
 ];
+export const TIRE_KEYS: readonly NumKey[] = ['bsd', 'tyreW'];
 export const BAR_KEYS: readonly NumKey[] = [
   'dW',
   'dReach',
@@ -128,6 +144,8 @@ const GENERIC: BikeSettings = {
   sH: 720,
   sO: 0,
   sN: 125,
+  tireID: 'custom',
+  bsd: 0, // set per frame in defaultsFor
   tyreW: 40,
   crank: 170,
   toe: 100,
@@ -209,11 +227,34 @@ function stockFields(id: FitBikeID, size: string): Partial<BikeSettings> {
 const hasFields = (s: BikeSettings, f: Partial<BikeSettings>) =>
   (Object.keys(f) as (keyof BikeSettings)[]).every((k) => s[k] === f[k]);
 
+// Tire fields as fit settings name them: tyreW is the width
+const tireOf = (s: BikeSettings): TireFields => ({
+  tireID: s.tireID,
+  width: s.tyreW,
+  bsd: s.bsd,
+});
+const withTire = (s: BikeSettings, t: TireFields): BikeSettings => ({
+  ...s,
+  tireID: t.tireID,
+  tyreW: t.width,
+  bsd: t.bsd,
+});
+// Keep the tire if the frame size takes it, else swap to one that fits
+const fitTireTo = (id: FitBikeID, s: BikeSettings): BikeSettings =>
+  withTire(s, fitTire(tireOf(s), wheelsOf(id, s.size)));
+
 export const defaultsFor = (id: FitBikeID): BikeSettings => {
   const size = geometryOf(id).defaultSize;
+  const stock = stockTires(id)[0];
+  const tire = stock
+    ? tireFields(stock)
+    : {
+        tireID: 'custom' as const,
+        width: GENERIC.tyreW,
+        bsd: wheelsOf(id, size)[0],
+      };
   return applyPresets({
-    ...GENERIC,
-    size,
+    ...withTire({...GENERIC, size}, tire),
     ...stockFields(id, size),
     ...OVERRIDES[id],
   });
@@ -240,6 +281,12 @@ function normalizeBike(id: FitBikeID, raw: unknown): BikeSettings {
   }
   const geo = geometryOf(id);
   if (!(s.size in geo.sizes)) s.size = geo.defaultSize;
+  // a catalog tire must still match its numbers
+  if (s.tireID !== 'custom') {
+    const t = TIRE_DB[s.tireID]?.ETRTOSize;
+    if (!t || t[0] !== s.tyreW || t[1] !== s.bsd) s.tireID = 'custom';
+  }
+  Object.assign(s, fitTireTo(id, s));
   if (s.stemPreset && !(s.stemPreset in STEM_DB)) s.stemPreset = '';
   if (s.barPreset && !(s.barPreset in BAR_DB)) s.barPreset = '';
   if (s.stemType !== 'std' && s.stemType !== 'goose') s.stemType = 'std';
@@ -286,6 +333,7 @@ export function saveSettings(s: FitSettings) {
 
 export type FitAction =
   | {type: 'set'; id: FitBikeID; key: NumKey; value: number}
+  | {type: 'tire'; id: FitBikeID; value: TireID | 'custom'}
   | {type: 'size'; id: FitBikeID; value: string}
   | {type: 'stemPreset'; id: FitBikeID; value: StemID | ''}
   | {type: 'barPreset'; id: FitBikeID; value: BarID | ''}
@@ -355,7 +403,17 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
         [a.key]: a.value,
         stemPreset: STEM_KEYS.includes(a.key) ? '' : s.stemPreset,
         barPreset: BAR_KEYS.includes(a.key) ? '' : s.barPreset,
+        tireID: TIRE_KEYS.includes(a.key) ? 'custom' : s.tireID,
       }));
+    case 'tire':
+      // "Custom" keeps the current numbers to edit
+      return syncStage(
+        patch(st, a.id, (s) =>
+          a.value === 'custom'
+            ? {...s, tireID: 'custom'}
+            : withTire(s, tireFields(a.value)),
+        ),
+      );
     case 'global':
       return {...st, saved: {...st.saved, [a.key]: a.value}};
     case 'size':
@@ -364,11 +422,11 @@ export function fitReducer(st: FitState, a: FitAction): FitState {
         patch(st, a.id, (s) => {
           const was = stockFields(a.id, s.size);
           const follows = Object.keys(was).length > 0 && hasFields(s, was);
-          return {
+          return fitTireTo(a.id, {
             ...s,
             size: a.value,
             ...(follows ? stockFields(a.id, a.value) : {}),
-          };
+          });
         }),
       );
     case 'stemPreset':

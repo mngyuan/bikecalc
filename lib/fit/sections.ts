@@ -33,7 +33,10 @@ export const TIPS: Record<string, string> = {
   sN: 'Distance from the rail clamp to the saddle nose',
   _sH: 'Saddle height this bike needs to match the other',
   _sO: 'Post setback this bike needs to match the other',
-  tyreW: 'Actual tyre width; sets the wheel diameter',
+  tire: 'Tires this frame size takes; sets the wheel size and tyre width',
+  bsd: 'Wheel size, from the tire',
+  tyreW:
+    'Tyre width; sets the wheel diameter. Editing it makes the tire custom',
   crank: 'Crank arm length, BB centre to pedal spindle',
   toe: 'How far your shoe tip sits ahead of the spindle',
   q: 'Distance between the outer faces of the crank arms',
@@ -58,6 +61,7 @@ export type SectionItem =
   | {type: 'stemType'}
   | {type: 'barType'}
   | {type: 'match'}
+  | {type: 'tire'}
   | {type: 'above'}
   | {type: 'saddle'; when: When};
 
@@ -148,9 +152,10 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
-    title: 'Feet & tyre',
+    title: 'Feet & wheels',
     open: false,
     items: [
+      {type: 'tire'},
       num('tyreW', 'Tyre width', 28, 70, 1),
       num('crank', 'Crank length', 150, 180, 2.5),
       num('toe', 'Shoe toe ahead of spindle', 60, 150, 1),

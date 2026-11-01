@@ -18,6 +18,7 @@ import {
   drivetrainIDs,
   drivetrainLabel,
   type FrameID,
+  fitTire,
   frameIDs,
   getBike,
   getFrame,
@@ -25,6 +26,7 @@ import {
   REFERENCE_FRAME,
   TIRE_DB,
   type TireID,
+  tireFields,
   wheelsOf,
 } from '@/lib/data';
 import {
@@ -40,7 +42,6 @@ import {
   DEFAULT_CADENCE_RPM,
   defaultSel,
   drivetrainFields,
-  fitTire,
   frameOf,
   type GearConfig,
   type GearSel,
@@ -50,7 +51,6 @@ import {
   type MetricKey,
   tireCircumference,
   tireDiameter,
-  tireFields,
 } from '@/lib/gears';
 import {GearBoard} from './GearBoard';
 import {GearHero, GearTable} from './GearTable';

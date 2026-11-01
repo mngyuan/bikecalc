@@ -130,7 +130,8 @@ export const FRAME_DB = {
 
   // Geometry copied from the makers' sites. None publish top tube slope, so
   // tt is estimated: the angle from the seat tube top to a point 20 mm down
-  // the head tube. The 650b/700c frames are drawn with 700c wheels.
+  // the head tube. The 650b/700c frames are listed as built for 700c; altBsd
+  // adds 650b where the maker offers it.
   'fairlight-faran-3-2026': {
     name: 'Fairlight Faran 3.0',
     short: 'Faran 3.0',

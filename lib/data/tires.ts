@@ -1,3 +1,17 @@
+// Short names for wheel sizes, by bead seat diameter (650b is also 27.5",
+// 700c also 29")
+const WHEEL_NAMES: Record<number, string> = {
+  305: '16" (305)',
+  349: '16" (349)',
+  355: '18"',
+  406: '20"',
+  507: '24"',
+  559: '26"',
+  584: '650b',
+  622: '700c',
+};
+export const wheelName = (bsd: number) => WHEEL_NAMES[bsd] ?? `${bsd} mm`;
+
 // Ordered by ETRTO size: diameter then width then name
 // ETRTOSize is [width mm, bead seat diameter mm]
 
@@ -102,3 +116,41 @@ export const TIRE_DB = {
   'Panaracer GravelKing X1 TLR 700x50': {ETRTOSize: [50, 622]},
 } as const;
 export type TireID = keyof typeof TIRE_DB;
+
+// A tire choice: a catalog tire, or 'custom' with its own numbers
+export interface TireFields {
+  tireID: TireID | 'custom';
+  width: number; // ETRTO width, mm
+  bsd: number; // ETRTO bead seat diameter, mm
+}
+
+export function tireFields(id: TireID): TireFields {
+  const [width, bsd] = TIRE_DB[id].ETRTOSize;
+  return {tireID: id, width, bsd};
+}
+
+// The catalog tire on a wheel size whose width is closest to `width`
+export function tireForWheel(bsd: number, width: number): TireID | null {
+  let best: TireID | null = null;
+  for (const id of Object.keys(TIRE_DB) as TireID[]) {
+    const [w, d] = TIRE_DB[id].ETRTOSize;
+    if (d !== bsd) continue;
+    if (
+      !best ||
+      Math.abs(w - width) < Math.abs(TIRE_DB[best].ETRTOSize[0] - width)
+    )
+      best = id;
+  }
+  return best;
+}
+
+// The tire for a frame taking `wheels` (the size it's built for first): the
+// current tire if it fits, otherwise the closest catalog tire for the
+// built-for size, otherwise the same width marked custom.
+export function fitTire(t: TireFields, wheels: readonly number[]): TireFields {
+  if (wheels.includes(t.bsd))
+    return {tireID: t.tireID, width: t.width, bsd: t.bsd};
+  const bsd = wheels[0];
+  const id = tireForWheel(bsd, t.width);
+  return id ? tireFields(id) : {tireID: 'custom', width: t.width, bsd};
+}

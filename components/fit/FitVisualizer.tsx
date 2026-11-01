@@ -7,8 +7,19 @@ import {
   useRef,
 } from 'react';
 import {AppHeader, MobileHeader} from '@/components/AppHeader';
-import {NumberField, Section, Segmented} from '@/components/controls';
-import {BAR_DB, STEM_DB, type BarID, type StemID} from '@/lib/data';
+import {Combobox, NumberField, Section, Segmented} from '@/components/controls';
+import {
+  BAR_DB,
+  type BarID,
+  STEM_DB,
+  type StemID,
+  stockTires,
+  TIRE_DB,
+  type TireID,
+  wheelName,
+  wheelsOf,
+} from '@/lib/data';
+
 import {
   bikeName,
   bikeShort,
@@ -40,6 +51,8 @@ import {
 } from '@/lib/fit/state';
 import {sgn, sub} from '@/lib/vec';
 import {type Drawn, SideBoard, TopBoard} from './FitBoards';
+
+const tireIDs = Object.keys(TIRE_DB) as TireID[];
 
 const TITLE: [string, string] = ['Fit', 'Visualizer'];
 const r = Math.round;
@@ -399,6 +412,42 @@ function Item({
           </div>
         </div>
       );
+    case 'tire': {
+      const wheels = wheelsOf(id, s.size);
+      const options = tireIDs
+        .filter((t) => wheels.includes(TIRE_DB[t].ETRTOSize[1]))
+        .map((t) => ({value: t, label: t}));
+      const stock = stockTires(id);
+      return (
+        <>
+          <div data-tip={TIPS.tire}>
+            <Combobox
+              label={`${bikeName(id)} tire`}
+              value={s.tireID}
+              options={options}
+              onChange={(value) => dispatch({type: 'tire', id, value})}
+              placeholder="Search tires..."
+              emptyMessage="No tire found."
+              featured={
+                stock.length
+                  ? {
+                      heading: 'Stock options',
+                      values: stock,
+                      restHeading: 'Other tires that fit',
+                    }
+                  : undefined
+              }
+            />
+          </div>
+          <div className="row">
+            <span className="label" data-tip={TIPS.bsd}>
+              Wheel size
+            </span>
+            <div className="derived">{wheelName(s.bsd)}</div>
+          </div>
+        </>
+      );
+    }
     case 'match': {
       // skip bikes whose saddle already follows this one, which would make a loop
       const followsThis = (k: FitBikeID): boolean => {
